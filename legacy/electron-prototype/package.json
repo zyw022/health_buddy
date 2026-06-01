@@ -1,7 +1,0 @@
-{
-  "name": "health-buddy-electron-prototype",
-  "version": "0.1.0",
-  "private": true,
-  "main": "main.js",
-  "description": "Legacy Electron desktop pet prototype entry"
-}

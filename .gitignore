@@ -1,9 +1,3 @@
-<<<<<<< HEAD
-node_modules/
-package-lock.json
-.DS_Store
-*.log
-=======
 # Dependencies
 node_modules/
 
@@ -31,6 +25,7 @@ venv/
 *.swp
 .DS_Store
 Thumbs.db
+package-lock.json
 
 # Logs & temp
 *.log
@@ -47,4 +42,3 @@ out/
 
 # Test coverage
 coverage/
->>>>>>> aba567c1a69013dab92d873f38bde9a57719b2ab
