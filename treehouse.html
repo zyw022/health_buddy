@@ -101,6 +101,328 @@ body::after {
 }
 
 /* ============================================================
+   SCREEN SYSTEM — Multi-page routing
+   ============================================================ */
+#app-root {
+  width: 100%;
+  max-width: 960px;
+  position: relative;
+  z-index: 1;
+}
+.screen {
+  display: none;
+  width: 100%;
+}
+.screen.active {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  animation: screen-in 0.45s ease-out both;
+}
+@keyframes screen-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   SCREEN 1 — ENTRY: Animated Treehouse + Door
+   ============================================================ */
+.entry-scene {
+  position: relative;
+  width: 420px; height: 480px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+}
+/* Cozy dark-forest background for entry */
+.entry-bg {
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 60%, #1B3A1A 0%, #0D1F0D 60%, #050D05 100%);
+  z-index: 0;
+  animation: entry-bg-fade 1.5s ease-out both;
+}
+@keyframes entry-bg-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Mini treehouse */
+.entry-treehouse {
+  position: relative;
+  z-index: 2;
+  animation: treehouse-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes treehouse-appear {
+  from { opacity: 0; transform: translateY(60px) scale(0.7); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.entry-roof {
+  width: 200px; height: 60px;
+  background: linear-gradient(180deg, #8D6E63, #5D4037);
+  clip-path: polygon(0% 100%, 10% 15%, 50% 0%, 90% 15%, 100% 100%);
+  margin: 0 auto -4px;
+  position: relative;
+  z-index: 1;
+}
+.entry-house {
+  width: 160px; height: 120px;
+  background: linear-gradient(180deg, #6D4C41, #4E342E);
+  border-radius: 10px;
+  margin: 0 auto;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+  border: 3px solid #3E2723;
+}
+/* Warm window glow */
+.entry-window {
+  position: absolute;
+  top: 15px; left: 20px; right: 20px;
+  height: 40px;
+  background: radial-gradient(ellipse, rgba(255,200,100,0.6) 0%, rgba(255,150,50,0.2) 100%);
+  border-radius: 8px;
+  border: 2px solid #3E2723;
+  animation: window-glow 2s ease-in-out infinite alternate;
+}
+@keyframes window-glow {
+  from { box-shadow: 0 0 12px rgba(255,180,60,0.4); }
+  to   { box-shadow: 0 0 24px rgba(255,180,60,0.7), 0 0 40px rgba(255,150,30,0.3); }
+}
+
+/* The DOOR */
+.entry-door-wrap {
+  position: absolute;
+  bottom: 0; left: 50%;
+  transform: translateX(-50%);
+  width: 50px; height: 70px;
+  perspective: 400px;
+  z-index: 3;
+  animation: door-appear 0.8s ease-out 0.8s both;
+  cursor: pointer;
+}
+@keyframes door-appear {
+  from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.entry-door {
+  width: 100%; height: 100%;
+  background: linear-gradient(180deg, #A1887F, #6D4C41);
+  border-radius: 8px 8px 4px 4px;
+  border: 3px solid #4E342E;
+  position: relative;
+  transform-origin: left center;
+  transition: transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.entry-door.open {
+  transform: rotateY(-85deg);
+}
+.entry-door .door-knob {
+  position: absolute;
+  right: 8px; top: 50%;
+  width: 8px; height: 8px;
+  background: radial-gradient(circle, #FFD54F, #FF8F00);
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(255,180,0,0.6);
+}
+.entry-door:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.4), 0 0 20px rgba(255,200,100,0.3); }
+.entry-door:hover .door-knob { box-shadow: 0 0 10px rgba(255,200,0,0.8); }
+
+/* Glowing entrance behind door */
+.door-glow {
+  position: absolute;
+  bottom: 5px; left: 50%;
+  transform: translateX(-50%);
+  width: 40px; height: 65px;
+  background: radial-gradient(ellipse, rgba(255,220,140,0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+.door-glow.visible { opacity: 1; }
+
+/* Entry hint text */
+.entry-hint {
+  position: absolute;
+  bottom: -35px;
+  left: 50%; transform: translateX(-50%);
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  white-space: nowrap;
+  animation: hint-pulse 2s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes hint-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+/* Fireflies */
+.firefly {
+  position: fixed;
+  width: 4px; height: 4px;
+  background: #FFE082;
+  border-radius: 50%;
+  box-shadow: 0 0 8px 2px rgba(255,224,130,0.6);
+  pointer-events: none;
+  z-index: 1;
+  animation: firefly-float 4s ease-in-out infinite;
+}
+.firefly:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+.firefly:nth-child(2) { top: 35%; right: 18%; animation-delay: 1.5s; }
+.firefly:nth-child(3) { top: 55%; left: 22%; animation-delay: 3s; }
+.firefly:nth-child(4) { top: 25%; right: 25%; animation-delay: 2s; }
+.firefly:nth-child(5) { top: 45%; left: 75%; animation-delay: 0.8s; }
+@keyframes firefly-float {
+  0%, 100% { transform: translate(0, 0); opacity: 0.3; }
+  25% { transform: translate(15px, -20px); opacity: 0.8; }
+  50% { transform: translate(-10px, -35px); opacity: 0.4; }
+  75% { transform: translate(-18px, -15px); opacity: 0.7; }
+}
+
+/* ============================================================
+   SCREEN 2 — PET SELECTION
+   ============================================================ */
+.select-scene {
+  text-align: center;
+  padding: 40px 20px;
+}
+.select-scene h2 {
+  font-size: 24px; color: #FFF;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin-bottom: 8px;
+}
+.select-scene .subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.6);
+  margin-bottom: 24px;
+}
+.pet-card {
+  display: inline-block;
+  background: rgba(255,255,255,0.1);
+  border: 2px solid rgba(255,255,255,0.2);
+  border-radius: 20px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s;
+  backdrop-filter: blur(8px);
+}
+.pet-card:hover {
+  border-color: #FFD54F;
+  box-shadow: 0 0 30px rgba(255,200,60,0.3);
+  transform: translateY(-4px);
+}
+.pet-card canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+}
+.pet-card .pet-name {
+  margin-top: 10px;
+  font-size: 16px; color: #FFF;
+  font-weight: 600;
+}
+
+/* ============================================================
+   SCREEN 3 — CUSTOMIZE
+   ============================================================ */
+.custom-scene {
+  text-align: center;
+  padding: 40px 20px;
+  max-width: 440px;
+  position: relative;
+  z-index: 2;
+}
+.custom-scene h2 {
+  font-size: 22px; color: #FFF;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  margin-bottom: 6px;
+}
+.custom-scene .subtitle {
+  font-size: 13px; color: rgba(255,255,255,0.6);
+  margin-bottom: 20px;
+}
+.custom-preview {
+  margin-bottom: 20px;
+}
+.custom-preview canvas {
+  display: block;
+  margin: 0 auto;
+  image-rendering: pixelated;
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,0.3);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.custom-options {
+  display: flex; gap: 12px; justify-content: center;
+  flex-wrap: wrap; margin-bottom: 20px;
+}
+.custom-option {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px;
+  padding: 10px 18px;
+  color: #FFF;
+  font-size: 13px;
+  cursor: default;
+  backdrop-filter: blur(4px);
+}
+.custom-option .label {
+  font-size: 10px; color: rgba(255,255,255,0.5);
+  display: block; margin-bottom: 2px;
+}
+.custom-option .val {
+  font-weight: 600; font-size: 14px;
+}
+.name-input-wrap {
+  margin-bottom: 20px;
+}
+.name-input-wrap label {
+  display: block;
+  color: rgba(255,255,255,0.7);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.name-input {
+  width: 200px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  border: 2px solid rgba(255,255,255,0.25);
+  background: rgba(255,255,255,0.1);
+  color: #FFF;
+  font-size: 16px;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.3s;
+  backdrop-filter: blur(4px);
+}
+.name-input:focus {
+  border-color: #FFD54F;
+  box-shadow: 0 0 16px rgba(255,200,60,0.2);
+}
+.name-input::placeholder { color: rgba(255,255,255,0.3); }
+.btn-enter {
+  padding: 12px 36px;
+  background: linear-gradient(135deg, #FFD54F, #FF9800);
+  color: #3E2723;
+  border: none;
+  border-radius: 24px;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(255,152,0,0.35);
+}
+.btn-enter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(255,152,0,0.5);
+}
+.btn-enter:active { transform: scale(0.96); }
+.btn-enter:disabled {
+  opacity: 0.4; cursor: not-allowed; transform: none;
+  box-shadow: none;
+}
+
+/* ============================================================
    App Shell — Full Treehouse
    ============================================================ */
 .app-container {
@@ -876,11 +1198,84 @@ body::after {
 </head>
 <body>
 
-<div class="app-container">
+<div id="app-root">
 
   <!-- ============================================================ -->
-  <!-- CANOPY LAYER -->
+  <!-- SCREEN 1: ENTRY — Treehouse + Door Animation -->
   <!-- ============================================================ -->
+  <div id="screen-entry" class="screen active">
+    <div class="entry-bg"></div>
+    <div class="firefly"></div><div class="firefly"></div><div class="firefly"></div><div class="firefly"></div><div class="firefly"></div>
+    <div class="entry-scene">
+      <div class="entry-treehouse">
+        <div class="entry-roof"></div>
+        <div class="entry-house">
+          <div class="entry-window"></div>
+          <div class="entry-door-wrap" id="entryDoorWrap" onclick="openDoor()">
+            <div class="entry-door" id="entryDoor">
+              <div class="door-knob"></div>
+            </div>
+            <div class="door-glow" id="doorGlow"></div>
+          </div>
+        </div>
+      </div>
+      <div class="entry-hint">✨ 点击门进入 ✨</div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SCREEN 2: PET SELECTION -->
+  <!-- ============================================================ -->
+  <div id="screen-select" class="screen">
+    <div class="entry-bg" style="opacity:0.85;"></div>
+    <div class="select-scene">
+      <h2>🐣 选择你的小伙伴</h2>
+      <p class="subtitle">点击小鸟来选择它作为你的健康伴侣</p>
+      <div class="pet-card" onclick="selectPet()">
+        <canvas id="selectCanvas" width="120" height="120"></canvas>
+        <div class="pet-name">小叽 — 温和版</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SCREEN 3: CUSTOMIZE PET -->
+  <!-- ============================================================ -->
+  <div id="screen-customize" class="screen">
+    <div class="entry-bg" style="opacity:0.7;"></div>
+    <div class="custom-scene">
+      <h2>✨ 定制你的小伙伴</h2>
+      <p class="subtitle">给你的健康伴侣起个名字吧</p>
+      <div class="custom-preview">
+        <canvas id="customCanvas" width="100" height="100"></canvas>
+      </div>
+      <div class="custom-options">
+        <div class="custom-option"><span class="label">种类</span><span class="val">🐤 小鸟</span></div>
+        <div class="custom-option"><span class="label">毛色</span><span class="val">暖黄色</span></div>
+        <div class="custom-option"><span class="label">性别</span><span class="val">⚧ 保密</span></div>
+        <div class="custom-option"><span class="label">性格</span><span class="val">温和贴心</span></div>
+      </div>
+      <div class="name-input-wrap">
+        <label>给你的小伙伴取个名字</label>
+        <input type="text" class="name-input" id="petNameInput"
+               placeholder="输入名字..." maxlength="10">
+      </div>
+      <button class="btn-enter" id="btnEnterTreehouse" onclick="enterTreehouse()">
+        🏠 进入树屋
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- SCREEN 4: MAIN TREEHOUSE -->
+  <!-- ============================================================ -->
+  <div id="screen-main" class="screen">
+
+    <div class="app-container">
+
+      <!-- ============================================================ -->
+      <!-- CANOPY LAYER -->
+      <!-- ============================================================ -->
   <div class="canopy-layer">
     <div class="canopy-blob c1"></div>
     <div class="canopy-blob c2"></div>
@@ -907,7 +1302,7 @@ body::after {
     <!-- House Header -->
     <div class="house-header">
       <button class="btn-back" onclick="handleBack()">← 返回桌面</button>
-      <span class="house-title">🏠 树 屋</span>
+      <span class="house-title" id="houseTitle">🏠 树 屋</span>
       <button class="btn-icon" onclick="showToast('⚙️ 设置面板')">⚙️</button>
     </div>
 
@@ -1084,6 +1479,10 @@ body::after {
 
 </div><!-- /app-container -->
 
+  </div><!-- /screen-main -->
+
+</div><!-- /app-root -->
+
 <!-- ============================================================ -->
 <!-- MODAL OVERLAY -->
 <!-- ============================================================ -->
@@ -1103,6 +1502,175 @@ body::after {
 <!-- JavaScript -->
 <!-- ============================================================ -->
 <script>
+// ============================================================
+// SCREEN MANAGEMENT — Multi-page routing
+// ============================================================
+let petName = '';
+
+function navigateTo(screenId) {
+  var current = document.querySelector('.screen.active');
+  var next = document.getElementById(screenId);
+  if (!next || current === next) return;
+
+  // Hide current screen
+  if (current) {
+    current.classList.remove('active');
+  }
+
+  // Show next screen (brief delay for animation reset)
+  setTimeout(function () {
+    next.classList.add('active');
+  }, 50);
+
+  // Background transition
+  if (screenId === 'screen-main') {
+    document.body.style.background = '';
+  }
+}
+
+// ============================================================
+// SCREEN 1 — DOOR OPENING
+// ============================================================
+function openDoor() {
+  const door = document.getElementById('entryDoor');
+  const glow = document.getElementById('doorGlow');
+  if (door.classList.contains('open')) return;
+
+  // Show glow behind door
+  glow.classList.add('visible');
+
+  // Swing door open
+  setTimeout(() => {
+    door.classList.add('open');
+  }, 150);
+
+  // Navigate to pet selection after door opens
+  setTimeout(() => {
+    navigateTo('screen-select');
+    initSelectScreen();
+  }, 1100);
+}
+
+// ============================================================
+// SCREEN 2 — PET SELECTION
+// ============================================================
+let selectAnimId = null;
+let selectFrameData = { frames: null, action: 6, frame: 0, lastTime: 0, animId: null };
+
+async function initSelectScreen() {
+  const canvas = document.getElementById('selectCanvas');
+  if (!canvas) return;
+
+  // Preload action 6 frames
+  if (!selectFrameData.frames) {
+    selectFrameData.frames = [];
+    for (let i = 1; i <= 5; i++) {
+      const img = new Image();
+      img.src = 'animations/动作6/frame_' + String(i).padStart(2, '0') + '.png';
+      selectFrameData.frames.push(img);
+      await new Promise(r => { img.onload = r; img.onerror = r; });
+    }
+  }
+  selectFrameData.frame = 0;
+  selectFrameData.lastTime = 0;
+  if (selectFrameData.animId) cancelAnimationFrame(selectFrameData.animId);
+  drawSelectFrame();
+  selectFrameData.animId = requestAnimationFrame(animSelect);
+}
+
+function drawSelectFrame() {
+  const canvas = document.getElementById('selectCanvas');
+  if (!canvas || !selectFrameData.frames) return;
+  const ctx = canvas.getContext('2d');
+  const img = selectFrameData.frames[selectFrameData.frame];
+  if (!img || !img.complete) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const s = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+  const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+  ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+}
+
+function animSelect(ts) {
+  if (!selectFrameData.lastTime) selectFrameData.lastTime = ts;
+  if (ts - selectFrameData.lastTime >= 125) {
+    selectFrameData.frame = (selectFrameData.frame + 1) % 5;
+    selectFrameData.lastTime = ts;
+    drawSelectFrame();
+  }
+  selectFrameData.animId = requestAnimationFrame(animSelect);
+}
+
+function selectPet() {
+  navigateTo('screen-customize');
+  initCustomizeScreen();
+}
+
+// ============================================================
+// SCREEN 3 — CUSTOMIZE
+// ============================================================
+let customAnimId = null;
+let customFrameData = { frame: 0, lastTime: 0, animId: null };
+
+function initCustomizeScreen() {
+  const canvas = document.getElementById('customCanvas');
+  if (!canvas) return;
+  customFrameData.frame = 0;
+  customFrameData.lastTime = 0;
+  if (customFrameData.animId) cancelAnimationFrame(customFrameData.animId);
+  drawCustomFrame();
+  customFrameData.animId = requestAnimationFrame(animCustom);
+
+  // Reset input and focus
+  const input = document.getElementById('petNameInput');
+  if (input) {
+    input.value = '';
+    petName = '';
+    input.addEventListener('input', function () {
+      petName = input.value.trim();
+    });
+    setTimeout(function () { input.focus(); }, 350);
+  }
+}
+
+function drawCustomFrame() {
+  const canvas = document.getElementById('customCanvas');
+  if (!canvas || !selectFrameData.frames) return;
+  const ctx = canvas.getContext('2d');
+  const img = selectFrameData.frames[customFrameData.frame];
+  if (!img || !img.complete) return;
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const s = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
+  const dw = img.naturalWidth * s, dh = img.naturalHeight * s;
+  ctx.drawImage(img, (canvas.width - dw) / 2, (canvas.height - dh) / 2, dw, dh);
+}
+
+function animCustom(ts) {
+  if (!customFrameData.lastTime) customFrameData.lastTime = ts;
+  if (ts - customFrameData.lastTime >= 125) {
+    customFrameData.frame = (customFrameData.frame + 1) % 5;
+    customFrameData.lastTime = ts;
+    drawCustomFrame();
+  }
+  customFrameData.animId = requestAnimationFrame(animCustom);
+}
+
+function enterTreehouse() {
+  if (!petName) { showToast('请先给你的小伙伴取个名字吧~'); return; }
+  // Stop customize animation
+  if (customFrameData.animId) cancelAnimationFrame(customFrameData.animId);
+
+  // Update header title
+  document.getElementById('houseTitle').textContent = '🏠 ' + petName + ' 的树屋';
+
+  // Navigate to main treehouse
+  navigateTo('screen-main');
+
+  // Restart main treehouse init if needed
+  if (typeof animateTrendBars === 'function') {
+    setTimeout(animateTrendBars, 100);
+  }
+}
+
 // ============================================================
 // Toast
 // ============================================================
