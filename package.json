@@ -23,20 +23,24 @@
     "packages/*"
   ],
   "scripts": {
-    "dev:web": "yarn workspace @health-buddy/web dev",
-    "dev:desktop": "yarn workspace @health-buddy/desktop-pet dev",
-    "dev:server": "yarn workspace @health-buddy/server dev",
-    "build:all": "yarn workspaces run build",
-    "test:all": "yarn workspaces run test",
-    "lint:all": "yarn workspaces run lint",
-    "typecheck:all": "yarn workspaces run typecheck"
+    "dev:web": "npm run dev -w apps/web",
+    "dev:desktop": "npm run dev -w apps/desktop-pet",
+    "dev:server": "npm run dev -w apps/server",
+    "build:all": "npm run build --workspaces --if-present",
+    "test:all": "npm run test --workspaces --if-present",
+    "lint:all": "npm run lint --workspaces --if-present",
+    "typecheck:all": "npm run typecheck --workspaces --if-present",
+    "prototype": "electron legacy/electron-prototype/main.js",
+    "prototype:dev": "electron legacy/electron-prototype/main.js --dev",
+    "prototype:pet": "electron legacy/electron-prototype/main.js --pet-only"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^8.57.0",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "electron": "^30.0.0"
   },
   "engines": {
     "node": ">=20.0.0",

@@ -2,6 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   设计规范 CSS 变量（来源：legacy/electron-prototype/treehouse.html）
+   ============================================================ */
+:root {
+  /* 功能色 */
+  --color-mint-green:           #4CAF50;
+  --color-mint-green-light:     #E8F5E9;
+  --color-vitality-orange:      #FF9800;
+  --color-vitality-orange-light:#FFF3E0;
+  --color-sky-blue:             #2196F3;
+  --color-sky-blue-light:       #E3F2FD;
+  --color-sleep-purple:         #7C4DFF;
+  --color-sleep-purple-light:   #EDE7F6;
+  --color-heart-red:            #F44336;
+  --color-heart-red-light:      #FFEBEE;
+
+  /* 中性色 */
+  --color-bg-gray:              #F5F5F5;
+  --color-card-white:           #FFFFFF;
+  --color-text-primary:         #333333;
+  --color-text-secondary:       #757575;
+  --color-success-green:        #66BB6A;
+  --color-warning-yellow:       #FFC107;
+
+  /* 木质色调（树屋场景） */
+  --wood-dark:                  #5D4037;
+  --wood-mid:                   #795548;
+  --wood-light:                 #8D6E63;
+  --wood-plank:                 #A1887F;
+  --trunk-brown:                #6D4C41;
+  --bark-dark:                  #4E342E;
+  --canopy-green:               #4CAF50;
+  --canopy-green-dark:          #388E3C;
+
+  /* 气泡 */
+  --bubble-bg:                  #FFF8E1;
+
+  /* 圆角 & 阴影 */
+  --radius-card:                12px;
+  --shadow-card:                0 2px 8px rgba(0,0,0,0.08);
+  --shadow-window:              0 3px 10px rgba(0,0,0,0.12);
+}
+
 @layer base {
   * {
     box-sizing: border-box;
