@@ -15,9 +15,9 @@
     "test:all": "npm run test --workspaces --if-present",
     "lint:all": "npm run lint --workspaces --if-present",
     "typecheck:all": "npm run typecheck --workspaces --if-present",
-    "prototype": "electron legacy/electron-prototype",
-    "prototype:dev": "electron legacy/electron-prototype --dev",
-    "prototype:pet": "electron legacy/electron-prototype --pet-only"
+    "prototype": "electron legacy/electron-prototype/main.js",
+    "prototype:dev": "electron legacy/electron-prototype/main.js --dev",
+    "prototype:pet": "electron legacy/electron-prototype/main.js --pet-only"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

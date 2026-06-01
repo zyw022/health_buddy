@@ -320,6 +320,15 @@ function drawFrame() {
   // Clear canvas (transparent)
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+  // Fallback when sprite PNGs are missing
+  if (!img.naturalWidth || !img.naturalHeight) {
+    ctx.font = '64px serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('🐦', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+
   // Draw frame centered, maintaining aspect ratio
   const scale = Math.min(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
   const dw = img.naturalWidth * scale;
