@@ -1,0 +1,30 @@
+{
+  "name": "health-buddy",
+  "private": true,
+  "version": "0.1.0",
+  "description": "无穿戴健康监测桌宠 — Health Buddy",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "yarn workspace @health-buddy/web dev",
+    "dev:desktop": "yarn workspace @health-buddy/desktop-pet dev",
+    "dev:server": "yarn workspace @health-buddy/server dev",
+    "build:all": "yarn workspaces run build",
+    "test:all": "yarn workspaces run test",
+    "lint:all": "yarn workspaces run lint",
+    "typecheck:all": "yarn workspaces run typecheck"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "eslint": "^8.57.0",
+    "@typescript-eslint/eslint-plugin": "^7.9.0",
+    "@typescript-eslint/parser": "^7.9.0",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "yarn": ">=1.22.0"
+  }
+}

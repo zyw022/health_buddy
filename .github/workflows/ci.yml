@@ -1,0 +1,43 @@
+# TODO(phase-2): 启用真实 CI 检查
+#
+# name: CI
+# on: [push, pull_request]
+# jobs:
+#   typecheck:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-node@v4
+#         with: { node-version: '20', cache: 'npm' }
+#       - run: npm install
+#       - run: npm run typecheck:all
+#
+#   test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-node@v4
+#         with: { node-version: '20', cache: 'npm' }
+#       - run: npm install
+#       - run: npm run test:all
+#
+#   deploy-web:
+#     needs: [typecheck]
+#     if: github.ref == 'refs/heads/main'
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v4
+#       - uses: actions/setup-node@v4
+#         with: { node-version: '20', cache: 'npm' }
+#       - run: npm install && npm run -w @health-buddy/web build
+#       - uses: peaceiris/actions-gh-pages@v4
+#         with: { publish_dir: apps/web/dist }
+
+# 占位：PR 时至少能 lint 通过（MVP 阶段仅运行 web）
+name: CI (stub)
+on: [push, pull_request]
+jobs:
+  stub:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TODO(phase-2) - enable real CI steps"
