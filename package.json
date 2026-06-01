@@ -14,14 +14,18 @@
     "build:all": "npm run build --workspaces --if-present",
     "test:all": "npm run test --workspaces --if-present",
     "lint:all": "npm run lint --workspaces --if-present",
-    "typecheck:all": "npm run typecheck --workspaces --if-present"
+    "typecheck:all": "npm run typecheck --workspaces --if-present",
+    "prototype": "electron legacy/electron-prototype",
+    "prototype:dev": "electron legacy/electron-prototype --dev",
+    "prototype:pet": "electron legacy/electron-prototype --pet-only"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
     "eslint": "^8.57.0",
     "@typescript-eslint/eslint-plugin": "^7.9.0",
     "@typescript-eslint/parser": "^7.9.0",
-    "prettier": "^3.2.5"
+    "prettier": "^3.2.5",
+    "electron": "^30.0.0"
   },
   "engines": {
     "node": ">=20.0.0",

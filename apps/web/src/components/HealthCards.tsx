@@ -88,55 +88,55 @@ function sedentaryLabel(minutes: number): string {
 export const HealthCards: React.FC<Props> = ({ health, className = '' }) => {
   return (
     <div className={`space-y-3 ${className}`}>
-      {/* 久坐 */}
+      {/* 久坐 — var(--color-vitality-orange) */}
       <HealthCard
         icon="🪑"
         label="久坐时长"
         value={sedentaryLabel(health.sedentaryMinutes)}
-        color="rgba(255,152,0,0.3)"
+        color="rgba(255,152,0,0.25)"
         delay={0.1}
       />
 
-      {/* 疲劳 */}
+      {/* 疲劳 — var(--color-sleep-purple) */}
       <HealthCard
         icon="😪"
         label="疲劳指数"
         value={fatigueLabel(health.fatigueScore)}
         sub={`评分 ${health.fatigueScore}/100`}
-        color="rgba(156,39,176,0.3)"
+        color="rgba(124,77,255,0.25)"
         delay={0.2}
       />
 
-      {/* 心率（可选） */}
+      {/* 心率（可选） — var(--color-heart-red) */}
       {health.heartRateBpm && (
         <HealthCard
           icon="❤️"
           label="估算心率"
           value={`${health.heartRateBpm} bpm`}
           sub="来自摄像头 rPPG"
-          color="rgba(244,67,54,0.3)"
+          color="rgba(244,67,54,0.25)"
           delay={0.3}
         />
       )}
 
-      {/* 压力 */}
+      {/* 压力 — var(--color-sky-blue) */}
       {health.stressScore > 0 && (
         <HealthCard
           icon="🧠"
           label="压力水平"
           value={health.stressScore >= 60 ? '压力偏大' : '还好'}
-          color="rgba(33,150,243,0.3)"
+          color="rgba(33,150,243,0.25)"
           delay={0.35}
         />
       )}
 
-      {/* 补水提醒 */}
+      {/* 补水提醒 — var(--color-sky-blue) */}
       {health.hydrationReminderDue && (
         <HealthCard
           icon="💧"
           label="喝水提醒"
           value="该补充水分了"
-          color="rgba(0,188,212,0.3)"
+          color="rgba(3,169,244,0.25)"
           delay={0.4}
         />
       )}
@@ -156,18 +156,18 @@ export const HealthCards: React.FC<Props> = ({ health, className = '' }) => {
         <div className="text-white/60 text-xs mb-1">今日指标</div>
         <ProgressBar
           value={Math.min(100, Math.round((health.sedentaryMinutes / 60) * 50))}
-          color="#FF9800"
+          color="var(--color-vitality-orange)"
           label="久坐压力"
         />
         <ProgressBar
           value={health.fatigueScore}
-          color="#9C27B0"
+          color="var(--color-sleep-purple)"
           label="疲劳度"
         />
         {health.stressScore > 0 && (
           <ProgressBar
             value={health.stressScore}
-            color="#2196F3"
+            color="var(--color-sky-blue)"
             label="压力值"
           />
         )}
