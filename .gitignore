@@ -1,4 +1,50 @@
+<<<<<<< HEAD
 node_modules/
 package-lock.json
 .DS_Store
 *.log
+=======
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+.expo/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Logs & temp
+*.log
+npm-debug.log*
+.cache/
+tmp/
+
+# Electron
+out/
+
+# SQLite local data
+*.db
+*.sqlite
+
+# Test coverage
+coverage/
+>>>>>>> aba567c1a69013dab92d873f38bde9a57719b2ab

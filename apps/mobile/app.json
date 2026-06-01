@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "Health Buddy",
+    "slug": "health-buddy-mobile",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a1a2e"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSMotionUsageDescription": "用于检测运动状态（步行、通勤），帮助小鸟了解你的活动情况。",
+        "NSHealthShareUsageDescription": "用于读取步数，仅使用增量数据，不上传原始记录。"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a1a2e"
+      },
+      "permissions": [
+        "android.permission.ACTIVITY_RECOGNITION",
+        "android.permission.FOREGROUND_SERVICE"
+      ]
+    },
+    "plugins": [
+      "expo-sensors"
+    ]
+  }
+}

@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: #1a1a2e;
+    font-family: 'Noto Sans SC', sans-serif;
+    overflow: hidden;
+    user-select: none;
+  }
+}
+
+@layer utilities {
+  .perspective-800 {
+    perspective: 800px;
+  }
+
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+
+  /* 帧动画：用于序列帧驱动小鸟动作 */
+  .pet-idle {
+    animation: petIdle 0.8s steps(4) infinite;
+  }
+
+  .pet-yawn {
+    animation: petYawn 1.2s steps(6) forwards;
+  }
+
+  .pet-stretch {
+    animation: petStretch 1s steps(5) forwards;
+  }
+
+  .pet-happy {
+    animation: petHappy 0.6s steps(4) infinite;
+  }
+}
+
+/* 树屋场景灯光效果 */
+.treehouse-glow {
+  filter: drop-shadow(0 0 20px rgba(255, 200, 100, 0.4));
+}
+
+/* 对话气泡箭头 */
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 20px;
+  border-width: 10px 8px 0;
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.95) transparent transparent;
+}
+
+/* 打字机动画 */
+.typewriter-text {
+  overflow: hidden;
+  white-space: nowrap;
+  border-right: 2px solid currentColor;
+  animation:
+    typing 1.5s steps(30) forwards,
+    blink-caret 0.8s step-end infinite;
+}
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blink-caret {
+  0%, 100% { border-color: transparent; }
+  50% { border-color: currentColor; }
+}
+
+/* 淡入动画 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease forwards;
+}
