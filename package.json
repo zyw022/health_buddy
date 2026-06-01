@@ -1,0 +1,16 @@
+{
+  "name": "health-buddy-treehouse",
+  "version": "1.0.0",
+  "description": "Health Companion Treehouse — Desktop Pet + Health Dashboard",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "pet-only": "electron . --pet-only"
+  },
+  "author": "Health Buddy Team",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^33.0.0"
+  }
+}
