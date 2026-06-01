@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom'
 import TreehouseEntry from './pages/TreehouseEntry'
-import PetSelection from './pages/PetSelection'
+import TreehousePetSelection from './pages/TreehousePetSelection'
 import PetOverlay from './pages/PetOverlay'
 import TreehouseReport from './pages/TreehouseReport'
 import { usePetStore } from './store/petStore'
@@ -35,7 +35,7 @@ const AppRoutes: React.FC = () => {
   if (isChangePetWindow) {
     return (
       <Routes>
-        <Route path="/select-pet" element={<PetSelection mode="change" />} />
+        <Route path="/select-pet" element={<TreehousePetSelection mode="change" />} />
         <Route path="*" element={<Navigate to="/select-pet" replace />} />
       </Routes>
     )
@@ -44,7 +44,7 @@ const AppRoutes: React.FC = () => {
   return (
     <Routes>
       <Route path="/" element={<TreehouseEntry />} />
-      <Route path="/select-pet" element={<PetSelection mode="onboard" />} />
+      <Route path="/select-pet" element={<TreehousePetSelection mode="onboard" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
