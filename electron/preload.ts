@@ -21,6 +21,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeTreehouse: () =>
     ipcRenderer.send(IPC.CLOSE_TREEHOUSE),
 
+  // Open or focus treehouse window (entry splash or health report)
+  openTreehouse: (route: 'entry' | 'report' = 'report') =>
+    ipcRenderer.invoke(IPC.OPEN_TREEHOUSE, route),
+
   // Toggle click-through for transparent pet window
   setIgnoreMouseEvents: (ignore: boolean) =>
     ipcRenderer.send(IPC.SET_IGNORE_MOUSE, ignore),

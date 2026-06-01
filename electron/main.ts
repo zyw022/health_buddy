@@ -10,7 +10,7 @@ import {
 } from 'electron'
 import path from 'node:path'
 import fs from 'node:fs/promises'
-import { IPC } from './ipc/types'
+import { IPC, type TreehouseRoute } from './ipc/types'
 
 // Keep references to prevent GC
 let treehouseWindow: BrowserWindow | null = null
@@ -26,8 +26,22 @@ const DATA_DIR = isDev
 
 // ── TreehouseWindow (startup + pet selection) ─────────────────────────────
 
-function createTreehouseWindow(): void {
+function loadTreehouseWindow(win: BrowserWindow, route: TreehouseRoute = 'entry'): void {
+  const query = route === 'report' ? { route: 'report' } : undefined
+
+  if (isDev) {
+    const base = process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:5173'
+    const url = query ? `${base}?route=report` : base
+    void win.loadURL(url)
+  } else {
+    void win.loadFile(path.join(__dirname, '../renderer/index.html'), { query })
+  }
+}
+
+function createTreehouseWindow(route: TreehouseRoute = 'entry'): void {
   if (treehouseWindow && !treehouseWindow.isDestroyed()) {
+    loadTreehouseWindow(treehouseWindow, route)
+    treehouseWindow.show()
     treehouseWindow.focus()
     return
   }
@@ -46,11 +60,10 @@ function createTreehouseWindow(): void {
     },
   })
 
+  loadTreehouseWindow(treehouseWindow, route)
+
   if (isDev) {
-    void treehouseWindow.loadURL(process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:5173')
     treehouseWindow.webContents.openDevTools({ mode: 'detach' })
-  } else {
-    void treehouseWindow.loadFile(path.join(__dirname, '../renderer/index.html'))
   }
 
   treehouseWindow.on('closed', () => {
@@ -164,6 +177,13 @@ function createTray(): void {
       },
       { type: 'separator' },
       {
+        label: '查看健康报告（树屋）',
+        click: () => {
+          createTreehouseWindow('report')
+        },
+      },
+      { type: 'separator' },
+      {
         label: '退出',
         click: () => {
           ;(app as unknown as Record<string, boolean>)['isQuitting'] = true
@@ -237,6 +257,12 @@ function registerIpcHandlers(): void {
     if (treehouseWindow && !treehouseWindow.isDestroyed()) {
       treehouseWindow.close()
     }
+  })
+
+  // Open treehouse window in entry or report mode (double-click pet / tray menu)
+  ipcMain.handle(IPC.OPEN_TREEHOUSE, (_event, route: TreehouseRoute = 'report') => {
+    createTreehouseWindow(route)
+    return true
   })
 }
 

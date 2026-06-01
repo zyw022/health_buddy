@@ -3,11 +3,13 @@ import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom'
 import TreehouseEntry from './pages/TreehouseEntry'
 import PetSelection from './pages/PetSelection'
 import PetOverlay from './pages/PetOverlay'
+import TreehouseReport from './pages/TreehouseReport'
 import { usePetStore } from './store/petStore'
 
-// Detect if this window was opened as the pet overlay
-// The main process passes ?mode=overlay when creating PetWindow
-const isPetOverlayWindow = new URLSearchParams(window.location.search).get('mode') === 'overlay'
+// Detect window mode from query params (set by main process)
+const searchParams = new URLSearchParams(window.location.search)
+const isPetOverlayWindow = searchParams.get('mode') === 'overlay'
+const isReportWindow = searchParams.get('route') === 'report'
 
 const AppRoutes: React.FC = () => {
   const { initFromFile } = usePetStore()
@@ -19,6 +21,14 @@ const AppRoutes: React.FC = () => {
   // If this window is the pet overlay, skip routing and render directly
   if (isPetOverlayWindow) {
     return <PetOverlay />
+  }
+
+  if (isReportWindow) {
+    return (
+      <Routes>
+        <Route path="*" element={<TreehouseReport />} />
+      </Routes>
+    )
   }
 
   return (

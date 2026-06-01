@@ -68,6 +68,12 @@ const PetOverlay: React.FC = () => {
     setBubble(getInteractionMessage(config.personality))
   }, [config, setBubble])
 
+  const onPetDoubleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    getElectronAPI()?.openTreehouse('report')
+  }, [])
+
   useEffect(() => {
     const api = getElectronAPI()
     if (!api) return
@@ -115,6 +121,8 @@ const PetOverlay: React.FC = () => {
           style={{ marginBottom: 8 }}
           onMouseDown={onMouseDown}
           onClick={onPetClick}
+          onDoubleClick={onPetDoubleClick}
+          title="单击互动 · 双击打开树屋"
         >
           <PetSprite action={action} size={160} />
         </div>

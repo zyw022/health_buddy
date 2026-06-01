@@ -60,6 +60,7 @@ export interface ElectronAPI {
   windowMove(delta: { deltaX: number; deltaY: number }): void
   createPetWindow(): Promise<boolean>
   closeTreehouse(): void
+  openTreehouse(route?: 'entry' | 'report'): Promise<boolean>
   setIgnoreMouseEvents(ignore: boolean): void
   onPetAction(cb: (action: string) => void): void
   onSpeechBubble(cb: (payload: { text: string; duration?: number }) => void): void

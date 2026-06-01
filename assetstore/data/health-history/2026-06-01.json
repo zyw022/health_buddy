@@ -1,12 +1,12 @@
 {
   "state": {
     "energy": 88,
-    "stress": 45,
+    "stress": 47,
     "burnout": 8,
     "sedentary": 100,
     "hydrationDue": false,
     "sleepDue": true,
-    "timestamp": 1780338055197
+    "timestamp": 1780338551574
   },
   "date": "2026-06-01"
 }
