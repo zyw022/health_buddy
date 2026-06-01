@@ -15,6 +15,7 @@ import { usePetStore, type PetAction } from '../../store/petStore';
 import { getMockHealthSnapshot } from '../../mock/healthData';
 import {
   getPetMessage,
+  getInteractionMessage,
   mapHealthToAction,
 } from '../../mock/petBehaviorMapping';
 
@@ -140,13 +141,7 @@ const Dashboard: React.FC = () => {
             onClick={() => {
               setAction('happy');
               setBubbleVisible(true);
-              setCurrentMessage(
-                config.personality === 'tsundere'
-                  ? '哼，你干嘛戳我……不是不开心啦！'
-                  : config.personality === 'cheerful'
-                  ? '哇你点我了！！我好开心啊！'
-                  : '嗯……我在这里呢。',
-              );
+              setCurrentMessage(getInteractionMessage(config.personality));
               setTimeout(() => setAction('idle'), 3000);
             }}
             title="点击互动"

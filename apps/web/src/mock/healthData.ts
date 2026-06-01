@@ -7,14 +7,64 @@
 
 import type { HealthSnapshot, DailyHealthReport } from '@health-buddy/shared-types';
 
+/**
+ * 根据当前时间生成合理的模拟健康快照。
+ *
+ * 时段逻辑：
+ *   06–08  清晨起床：疲劳低、状态好（→ happy）
+ *   09–11  上午工作：久坐中、压力低（→ idle / stretch）
+ *   11–14  午前压力高峰：压力大（→ worried）
+ *   14–17  下午连续工作：久坐严重（→ stretch）
+ *   18–20  傍晚收尾：疲劳累积（→ yawn）
+ *   20–23  夜间：高疲劳、需要休息（→ yawn）
+ *   23–06  深夜/凌晨（→ sleep）
+ */
 export function getMockHealthSnapshot(): HealthSnapshot {
   const hour = new Date().getHours();
 
-  // 动态 mock：根据当前时间给出合理的模拟状态
-  const sedentaryMinutes = hour >= 9 && hour < 18 ? 55 : 20;
-  const fatigueScore = hour >= 20 ? 72 : hour >= 14 ? 48 : 30;
-  const stressScore = hour >= 11 && hour < 15 ? 55 : 30;
-  const hydrationReminderDue = hour % 2 === 0;
+  // 默认值
+  let sedentaryMinutes = 20;
+  let fatigueScore = 25;
+  let stressScore = 20;
+  let hydrationReminderDue = false;
+
+  if (hour >= 6 && hour < 9) {
+    // 清晨：状态最好
+    sedentaryMinutes = 10;
+    fatigueScore = 15 + Math.round(Math.random() * 10);
+    stressScore = 10 + Math.round(Math.random() * 10);
+    hydrationReminderDue = false;
+  } else if (hour >= 9 && hour < 11) {
+    // 上午工作：适度久坐
+    sedentaryMinutes = 45 + Math.round(Math.random() * 20);
+    fatigueScore = 25 + Math.round(Math.random() * 15);
+    stressScore = 25 + Math.round(Math.random() * 15);
+    hydrationReminderDue = hour % 2 === 0;
+  } else if (hour >= 11 && hour < 14) {
+    // 午前压力高峰
+    sedentaryMinutes = 50 + Math.round(Math.random() * 20);
+    fatigueScore = 35 + Math.round(Math.random() * 20);
+    stressScore = 60 + Math.round(Math.random() * 15);
+    hydrationReminderDue = true;
+  } else if (hour >= 14 && hour < 18) {
+    // 下午连续久坐
+    sedentaryMinutes = 65 + Math.round(Math.random() * 25);
+    fatigueScore = 45 + Math.round(Math.random() * 20);
+    stressScore = 40 + Math.round(Math.random() * 20);
+    hydrationReminderDue = hour % 2 === 0;
+  } else if (hour >= 18 && hour < 20) {
+    // 傍晚收尾
+    sedentaryMinutes = 30 + Math.round(Math.random() * 20);
+    fatigueScore = 55 + Math.round(Math.random() * 20);
+    stressScore = 30 + Math.round(Math.random() * 15);
+    hydrationReminderDue = false;
+  } else if (hour >= 20 && hour < 23) {
+    // 夜间疲劳
+    sedentaryMinutes = 20 + Math.round(Math.random() * 15);
+    fatigueScore = 70 + Math.round(Math.random() * 20);
+    stressScore = 25 + Math.round(Math.random() * 15);
+    hydrationReminderDue = false;
+  }
 
   return {
     ts: Date.now(),
@@ -23,7 +73,8 @@ export function getMockHealthSnapshot(): HealthSnapshot {
     fatigueScore,
     stressScore,
     hydrationReminderDue,
-    sleepQuality: hour < 8 ? 75 : undefined,
+    // 用条件展开避免 exactOptionalPropertyTypes 报错
+    ...(hour < 9 ? { sleepQuality: 68 + Math.round(Math.random() * 20) } : {}),
     notes: '来自模拟数据，Phase 2 接入真实采集后会更准确。',
   };
 }
@@ -35,7 +86,6 @@ export function getMockDailyReport(): DailyHealthReport {
     totalActiveMinutes: 180,
     totalSedentaryMinutes: 300,
     totalSteps: 4200,
-    avgHeartRateBpm: undefined,
     avgFatigueScore: 52,
     sleepDurationMinutes: 420,
     sleepQuality: 68,
