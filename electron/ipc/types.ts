@@ -13,9 +13,12 @@ export const IPC = {
   CLOSE_TREEHOUSE:    'close-treehouse',
   SET_IGNORE_MOUSE:   'set-ignore-mouse-events',
   OPEN_TREEHOUSE:     'open-treehouse',
+  PET_CONFIG_UPDATED: 'pet-config-updated',
+  NOTIFY_PET_CONFIG:  'notify-pet-config',
+  SHOW_PET_MENU:      'show-pet-menu',
 } as const
 
-export type TreehouseRoute = 'entry' | 'report'
+export type TreehouseRoute = 'entry' | 'report' | 'change-pet'
 
 export type IpcChannel = typeof IPC[keyof typeof IPC]
 

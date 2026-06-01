@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { PetSprite } from '../../components/PetSprite'
 import { usePetStore, getElectronAPI } from '../../store/petStore'
@@ -31,10 +31,13 @@ const PERSONALITY_OPTIONS: { id: Personality; label: string; desc: string }[] = 
 
 const STEPS = ['选种类', '选毛色', '选性格', '取名字'] as const
 
-// ── Main component ────────────────────────────────────────────────────────
+interface PetSelectionProps {
+  mode?: 'onboard' | 'change'
+}
 
-const PetSelection: React.FC = () => {
-  const { setConfig, completeOnboarding, saveToFile } = usePetStore()
+const PetSelection: React.FC<PetSelectionProps> = ({ mode = 'onboard' }) => {
+  const isChangeMode = mode === 'change'
+  const { config, setConfig, completeOnboarding, saveToFile } = usePetStore()
 
   const [step,         setStep]         = useState(0)
   const [species,      setSpecies]      = useState<PetSpecies>('sparrow')
@@ -43,6 +46,15 @@ const PetSelection: React.FC = () => {
   const [personality,  setPersonality]  = useState<Personality>('friend')
   const [name,         setName]         = useState('')
   const [completing,   setCompleting]   = useState(false)
+
+  useEffect(() => {
+    if (!isChangeMode || !config) return
+    setSpecies(config.species)
+    setFeatherColor(config.featherColor)
+    setGender(config.gender)
+    setPersonality(config.personality)
+    setName(config.name)
+  }, [isChangeMode, config])
 
   const canNext = step < 3 || name.trim().length > 0
 
@@ -68,10 +80,19 @@ const PetSelection: React.FC = () => {
     }
 
     setConfig(config)
-    completeOnboarding()
     await saveToFile(config)
 
     const api = getElectronAPI()
+    if (isChangeMode) {
+      if (api) {
+        await api.notifyPetConfigUpdated()
+        api.closeTreehouse()
+      }
+      setCompleting(false)
+      return
+    }
+
+    completeOnboarding()
     if (api) {
       await api.createPetWindow()
       setTimeout(() => api.closeTreehouse(), 600)
@@ -103,7 +124,9 @@ const PetSelection: React.FC = () => {
         {/* Progress */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white text-lg font-light">认识你的小鸟</h2>
+            <h2 className="text-white text-lg font-light">
+              {isChangeMode ? '更换宠物' : '认识你的小鸟'}
+            </h2>
             <span className="text-white/40 text-sm">{step + 1} / {STEPS.length}</span>
           </div>
           <div className="flex gap-1.5">
@@ -285,16 +308,19 @@ const PetSelection: React.FC = () => {
 
         {/* Navigation buttons */}
         <div className="flex gap-3 pt-6">
-          {step > 0 && (
+          {(step > 0 || isChangeMode) && (
             <button
-              onClick={() => setStep((s) => s - 1)}
+              onClick={() => {
+                if (step > 0) setStep((s) => s - 1)
+                else getElectronAPI()?.closeTreehouse()
+              }}
               className="
                 flex-none px-5 py-3 rounded-2xl
                 border border-white/20 text-white/70
                 hover:border-white/40 transition-colors text-sm
               "
             >
-              上一步
+              {step > 0 ? '上一步' : '取消'}
             </button>
           )}
           <motion.button
@@ -309,7 +335,11 @@ const PetSelection: React.FC = () => {
                 : 'bg-white/10 text-white/30 cursor-not-allowed'}
             `}
           >
-            {completing ? '正在准备…' : step === 3 ? '开始养鸟 🐦' : '下一步'}
+            {completing
+              ? '正在保存…'
+              : step === 3
+                ? (isChangeMode ? '确认更换 🐦' : '开始养鸟 🐦')
+                : '下一步'}
           </motion.button>
         </div>
       </div>

@@ -139,14 +139,24 @@ const TreehouseReport: React.FC = () => {
             将鼠标移到物品上，查看对应健康记录
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => getElectronAPI()?.closeTreehouse()}
-          className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-sm transition-colors"
-          title="关闭"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
+            className="px-3 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-xs transition-colors"
+            title="更换宠物"
+          >
+            更换宠物
+          </button>
+          <button
+            type="button"
+            onClick={() => getElectronAPI()?.closeTreehouse()}
+            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-sm transition-colors"
+            title="关闭"
+          >
+            ✕
+          </button>
+        </div>
       </div>
 
       {/* Interactive hotspots */}

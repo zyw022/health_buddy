@@ -10,6 +10,7 @@ import { usePetStore } from './store/petStore'
 const searchParams = new URLSearchParams(window.location.search)
 const isPetOverlayWindow = searchParams.get('mode') === 'overlay'
 const isReportWindow = searchParams.get('route') === 'report'
+const isChangePetWindow = searchParams.get('route') === 'change-pet'
 
 const AppRoutes: React.FC = () => {
   const { initFromFile } = usePetStore()
@@ -31,18 +32,29 @@ const AppRoutes: React.FC = () => {
     )
   }
 
+  if (isChangePetWindow) {
+    return (
+      <Routes>
+        <Route path="/select-pet" element={<PetSelection mode="change" />} />
+        <Route path="*" element={<Navigate to="/select-pet" replace />} />
+      </Routes>
+    )
+  }
+
   return (
     <Routes>
       <Route path="/" element={<TreehouseEntry />} />
-      <Route path="/select-pet" element={<PetSelection />} />
+      <Route path="/select-pet" element={<PetSelection mode="onboard" />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }
 
 const App: React.FC = () => {
+  const initialEntry = isChangePetWindow ? '/select-pet' : '/'
+
   return (
-    <MemoryRouter initialEntries={['/']}>
+    <MemoryRouter initialEntries={[initialEntry]}>
       <AppRoutes />
     </MemoryRouter>
   )

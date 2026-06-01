@@ -12,6 +12,8 @@ const PetOverlay: React.FC = () => {
   const action    = usePetStore((s) => s.currentAction)
   const bubble    = usePetStore((s) => s.bubbleText)
   const setBubble = usePetStore((s) => s.setBubble)
+  const setAction = usePetStore((s) => s.setAction)
+  const initFromFile = usePetStore((s) => s.initFromFile)
 
   useHealthSnapshot()
   usePetBrain()
@@ -74,6 +76,11 @@ const PetOverlay: React.FC = () => {
     getElectronAPI()?.openTreehouse('report')
   }, [])
 
+  const onPetContextMenu = useCallback((e: React.MouseEvent) => {
+    e.preventDefault()
+    getElectronAPI()?.showPetContextMenu()
+  }, [])
+
   useEffect(() => {
     const api = getElectronAPI()
     if (!api) return
@@ -85,13 +92,21 @@ const PetOverlay: React.FC = () => {
     api.onStepsRecord((steps) => {
       setBubble(`👟 步数 ${steps.toLocaleString()} 已记录！`)
     })
+    api.onPetConfigUpdated(() => {
+      void initFromFile().then(() => {
+        setAction('happy')
+        setBubble('换好啦，我是新伙伴～')
+        setTimeout(() => setAction('idle'), 3000)
+      })
+    })
 
     return () => {
       api.removeAllListeners('show-speech-bubble')
       api.removeAllListeners('add-water-record')
       api.removeAllListeners('add-steps')
+      api.removeAllListeners('pet-config-updated')
     }
-  }, [setBubble])
+  }, [setBubble, initFromFile, setAction])
 
   const dismissBubble = useCallback(() => setBubble(null), [setBubble])
 
@@ -122,7 +137,8 @@ const PetOverlay: React.FC = () => {
           onMouseDown={onMouseDown}
           onClick={onPetClick}
           onDoubleClick={onPetDoubleClick}
-          title="单击互动 · 双击打开树屋"
+          onContextMenu={onPetContextMenu}
+          title="单击互动 · 双击打开树屋 · 右键菜单"
         >
           <PetSprite action={action} size={160} />
         </div>

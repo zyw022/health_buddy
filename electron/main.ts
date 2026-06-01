@@ -27,11 +27,14 @@ const DATA_DIR = isDev
 // ── TreehouseWindow (startup + pet selection) ─────────────────────────────
 
 function loadTreehouseWindow(win: BrowserWindow, route: TreehouseRoute = 'entry'): void {
-  const query = route === 'report' ? { route: 'report' } : undefined
+  const query =
+    route === 'report' ? { route: 'report' }
+    : route === 'change-pet' ? { route: 'change-pet' }
+    : undefined
 
   if (isDev) {
     const base = process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:5173'
-    const url = query ? `${base}?route=report` : base
+    const url = query ? `${base}?route=${query.route}` : base
     void win.loadURL(url)
   } else {
     void win.loadFile(path.join(__dirname, '../renderer/index.html'), { query })
@@ -61,10 +64,6 @@ function createTreehouseWindow(route: TreehouseRoute = 'entry'): void {
   })
 
   loadTreehouseWindow(treehouseWindow, route)
-
-  if (isDev) {
-    treehouseWindow.webContents.openDevTools({ mode: 'detach' })
-  }
 
   treehouseWindow.on('closed', () => {
     treehouseWindow = null
@@ -182,6 +181,12 @@ function createTray(): void {
           createTreehouseWindow('report')
         },
       },
+      {
+        label: '更换宠物',
+        click: () => {
+          createTreehouseWindow('change-pet')
+        },
+      },
       { type: 'separator' },
       {
         label: '退出',
@@ -263,6 +268,40 @@ function registerIpcHandlers(): void {
   ipcMain.handle(IPC.OPEN_TREEHOUSE, (_event, route: TreehouseRoute = 'report') => {
     createTreehouseWindow(route)
     return true
+  })
+
+  // Pet config saved in change-pet flow — notify overlay to reload
+  ipcMain.handle(IPC.NOTIFY_PET_CONFIG, () => {
+    if (petWindow && !petWindow.isDestroyed()) {
+      petWindow.webContents.send(IPC.PET_CONFIG_UPDATED)
+      if (!petWindow.isVisible()) {
+        petWindow.show()
+      }
+    } else {
+      createPetWindow()
+    }
+    return true
+  })
+
+  // Right-click context menu on the floating pet
+  ipcMain.on(IPC.SHOW_PET_MENU, () => {
+    if (!petWindow || petWindow.isDestroyed()) return
+
+    Menu.buildFromTemplate([
+      {
+        label: '查看健康报告',
+        click: () => createTreehouseWindow('report'),
+      },
+      {
+        label: '更换宠物',
+        click: () => createTreehouseWindow('change-pet'),
+      },
+      { type: 'separator' },
+      {
+        label: '隐藏宠物',
+        click: () => petWindow?.hide(),
+      },
+    ]).popup({ window: petWindow })
   })
 }
 

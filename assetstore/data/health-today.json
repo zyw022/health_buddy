@@ -6,19 +6,19 @@
     "heartRate": 72,
     "waterCups": 2,
     "mood": null,
-    "sedentaryMinutes": 102,
-    "keystrokesPerMin": 30,
+    "sedentaryMinutes": 106,
+    "keystrokesPerMin": 28,
     "screenTimeMinutes": 263,
     "activeMinutes": 263
   },
   "state": {
     "energy": 88,
-    "stress": 47,
+    "stress": 46,
     "burnout": 8,
     "sedentary": 100,
     "hydrationDue": false,
     "sleepDue": true,
-    "timestamp": 1780338551574
+    "timestamp": 1780338921165
   },
-  "date": "2026-06-01T18:29:11.574Z"
+  "date": "2026-06-01T18:35:21.165Z"
 }

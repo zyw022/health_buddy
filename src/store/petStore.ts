@@ -60,12 +60,15 @@ export interface ElectronAPI {
   windowMove(delta: { deltaX: number; deltaY: number }): void
   createPetWindow(): Promise<boolean>
   closeTreehouse(): void
-  openTreehouse(route?: 'entry' | 'report'): Promise<boolean>
+  openTreehouse(route?: 'entry' | 'report' | 'change-pet'): Promise<boolean>
+  notifyPetConfigUpdated(): Promise<boolean>
+  showPetContextMenu(): void
   setIgnoreMouseEvents(ignore: boolean): void
   onPetAction(cb: (action: string) => void): void
   onSpeechBubble(cb: (payload: { text: string; duration?: number }) => void): void
   onWaterRecord(cb: (cups: number) => void): void
   onStepsRecord(cb: (steps: number) => void): void
+  onPetConfigUpdated(cb: () => void): void
   removeAllListeners(channel: string): void
 }
 

@@ -21,9 +21,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeTreehouse: () =>
     ipcRenderer.send(IPC.CLOSE_TREEHOUSE),
 
-  // Open or focus treehouse window (entry splash or health report)
-  openTreehouse: (route: 'entry' | 'report' = 'report') =>
+  // Open or focus treehouse window (entry splash, health report, or change pet)
+  openTreehouse: (route: 'entry' | 'report' | 'change-pet' = 'report') =>
     ipcRenderer.invoke(IPC.OPEN_TREEHOUSE, route),
+
+  // After change-pet save — tell main to push update to pet overlay
+  notifyPetConfigUpdated: () =>
+    ipcRenderer.invoke(IPC.NOTIFY_PET_CONFIG),
+
+  showPetContextMenu: () =>
+    ipcRenderer.send(IPC.SHOW_PET_MENU),
 
   // Toggle click-through for transparent pet window
   setIgnoreMouseEvents: (ignore: boolean) =>
@@ -44,6 +51,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   onStepsRecord: (cb: (steps: number) => void) => {
     ipcRenderer.on(IPC.ADD_STEPS, (_event, steps) => cb(steps))
+  },
+
+  onPetConfigUpdated: (cb: () => void) => {
+    ipcRenderer.on(IPC.PET_CONFIG_UPDATED, () => cb())
   },
 
   removeAllListeners: (channel: string) => {
