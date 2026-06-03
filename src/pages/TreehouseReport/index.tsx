@@ -21,28 +21,28 @@ function ensureFurnitureStyles() {
   style.textContent = `
     @keyframes furniturePulseScale {
       0%   { transform: scale(1); }
-      25%  { transform: scale(1.09); }
-      50%  { transform: scale(0.95); }
-      75%  { transform: scale(1.06); }
+      25%  { transform: scale(1.18); }
+      55%  { transform: scale(0.94); }
+      80%  { transform: scale(1.10); }
       100% { transform: scale(1); }
     }
     @keyframes furnitureGlowNormal {
-      0%,100% { opacity: 0;    box-shadow: 0 0 0px 0px rgba(140,210,255,0); }
-      40%     { opacity: 0.85; box-shadow: 0 0 16px 6px rgba(140,210,255,0.55); }
-      70%     { opacity: 0.3;  box-shadow: 0 0 6px  2px rgba(140,210,255,0.2); }
+      0%,100% { filter: drop-shadow(0 0 0px  rgba(140,210,255,0)); }
+      40%     { filter: drop-shadow(0 0 10px rgba(140,210,255,0.9)) drop-shadow(0 0 22px rgba(140,210,255,0.5)); }
+      70%     { filter: drop-shadow(0 0 4px  rgba(140,210,255,0.35)); }
     }
     @keyframes furnitureGlowGoldHover {
-      0%,100% { opacity: 0.4;  box-shadow: 0 0 8px  3px rgba(255,200,30,0.4); }
-      50%     { opacity: 1;    box-shadow: 0 0 22px 8px rgba(255,200,30,0.75); }
+      0%,100% { filter: drop-shadow(0 0 4px  rgba(255,200,30,0.55)) drop-shadow(0 0 8px rgba(255,180,0,0.35)); }
+      50%     { filter: drop-shadow(0 0 14px rgba(255,215,50,1.0))  drop-shadow(0 0 28px rgba(255,200,0,0.7)); }
     }
     @keyframes furnitureGlowGoldIdle {
-      0%,100% { opacity: 0.2;  box-shadow: 0 0 6px  2px rgba(255,190,20,0.25); }
-      50%     { opacity: 0.6;  box-shadow: 0 0 14px 5px rgba(255,200,30,0.5); }
+      0%,100% { filter: drop-shadow(0 0 3px  rgba(255,190,20,0.3)); }
+      50%     { filter: drop-shadow(0 0 9px  rgba(255,205,30,0.65)) drop-shadow(0 0 18px rgba(255,190,0,0.4)); }
     }
-    .furn-pulse { animation: furniturePulseScale 1.3s ease-in-out infinite; }
-    .furn-glow-normal { animation: furnitureGlowNormal 1.3s ease-in-out infinite; }
-    .furn-glow-gold-hover { animation: furnitureGlowGoldHover 1.0s ease-in-out infinite; }
-    .furn-glow-gold-idle  { animation: furnitureGlowGoldIdle  2.6s ease-in-out infinite; }
+    .furn-pulse           { animation: furniturePulseScale    2.5s ease-in-out infinite; }
+    .furn-glow-normal     { animation: furnitureGlowNormal    2.5s ease-in-out infinite; }
+    .furn-glow-gold-hover { animation: furnitureGlowGoldHover 1.6s ease-in-out infinite; }
+    .furn-glow-gold-idle  { animation: furnitureGlowGoldIdle  3.2s ease-in-out infinite; }
   `
   document.head.appendChild(style)
 }
@@ -224,9 +224,10 @@ const FurnitureItem: React.FC<{
   return (
     // Full-size overlay — same coordinate space as treehouse.png (object-contain)
     <div className="absolute inset-0 pointer-events-none">
-      {/* Scale wrapper — animates only scale, origin at hitbox centre */}
+      {/* Scale + glow wrapper — both animations on the same element so
+          drop-shadow follows the actual pixel outline of the furniture image */}
       <motion.div
-        className={`absolute inset-0 ${scaleClass}`}
+        className={`absolute inset-0 ${scaleClass} ${glowClass}`}
         style={{ transformOrigin: `${ox} ${oy}` }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -240,20 +241,6 @@ const FurnitureItem: React.FC<{
           style={{ imageRendering: 'pixelated' }}
         />
       </motion.div>
-
-      {/* Glow box — covers hitbox area, CSS animation for flicker */}
-      <div
-        className={glowClass}
-        style={{
-          position:     'absolute',
-          left:         `${x}%`,
-          top:          `${y}%`,
-          width:        `${w}%`,
-          height:       `${h}%`,
-          borderRadius: '6px',
-          pointerEvents: 'none',
-        }}
-      />
 
       {/* Invisible hit-target sized to actual furniture silhouette */}
       <button
