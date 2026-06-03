@@ -535,11 +535,11 @@ const TreehouseReport: React.FC = () => {
             background:  'transparent',
             border:      'none',
             cursor:      'pointer',
-            color:       'rgba(255,255,255,0.9)',
+            color:       'rgba(20,20,30,0.85)',
             fontFamily:  '"Press Start 2P", monospace',
             fontSize:    7,
             letterSpacing: '0.04em',
-            textShadow:  '0 1px 4px rgba(0,0,0,0.8)',
+            textShadow:  '0 1px 2px rgba(255,255,255,0.4)',
             padding:     0,
             lineHeight:  1,
           }}

@@ -66,63 +66,69 @@ const floatVariants = (delay: number) => ({
   },
 })
 
-// ── Pixel-art speech bubble border (SVG, 9-slice style) ────────────────────────
-// Renders a pixel-art bubble frame around children with a bottom-center tail.
-const PixelBubble: React.FC<{
-  children: React.ReactNode
-  accentColor?: string
-  style?: React.CSSProperties
+// ── Oval speech bubble — semi-transparent white fill, black border, highlight ──
+const OvalBubble: React.FC<{
+  children:  React.ReactNode
+  style?:    React.CSSProperties
   className?: string
-}> = ({ children, accentColor = 'rgba(255,255,255,0.9)', style, className }) => {
-  const borderColor = accentColor
-  const bgColor     = 'rgba(10,14,30,0.88)'
-  return (
-    <div
-      className={className}
-      style={{
-        display:        'inline-flex',
-        alignItems:     'center',
-        justifyContent: 'center',
-        position:       'relative',
-        padding:        '5px 10px',
-        background:     bgColor,
-        outline:        `2px solid ${borderColor}`,
-        outlineOffset:  '0px',
-        boxShadow:      `0 0 0 4px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.07)`,
-        imageRendering: 'pixelated',
-        ...style,
-      }}
+}> = ({ children, style, className }) => (
+  <div
+    className={className}
+    style={{
+      display:        'inline-flex',
+      alignItems:     'center',
+      justifyContent: 'center',
+      position:       'relative',
+      padding:        '6px 16px',
+      borderRadius:   '999px',
+      background:     'rgba(255,255,255,0.18)',
+      border:         '1.5px solid rgba(0,0,0,0.75)',
+      boxShadow:      [
+        /* drop shadow */
+        '0 2px 8px rgba(0,0,0,0.35)',
+        /* bottom-right inner highlight */
+        'inset -3px -3px 6px rgba(255,255,255,0.28)',
+        /* top-left inner shadow for depth */
+        'inset 2px 2px 4px rgba(0,0,0,0.18)',
+      ].join(', '),
+      backdropFilter:       'blur(6px)',
+      WebkitBackdropFilter: 'blur(6px)',
+      ...style,
+    }}
+  >
+    {children}
+    {/* Tail pointing downward — small oval teardrop */}
+    <svg
+      width={10} height={9}
+      viewBox="0 0 10 9"
+      style={{ position:'absolute', bottom:-9, left:'50%', transform:'translateX(-50%)', display:'block', overflow:'visible' }}
     >
-      {children}
-      {/* Pixel tail pointing downward */}
-      <svg
-        width={10} height={8}
-        viewBox="0 0 10 8"
-        style={{
-          position:       'absolute',
-          bottom:         -8,
-          left:           '50%',
-          transform:      'translateX(-50%)',
-          display:        'block',
-          imageRendering: 'pixelated',
-          overflow:       'visible',
-        }}
-      >
-        {/* Shadow outline tail */}
-        <polygon points="0,0 10,0 5,8" fill="rgba(0,0,0,0.85)" />
-        {/* Bright fill tail matching bubble */}
-        <polygon points="2,0 8,0 5,6" fill={bgColor} />
-        {/* Left border pixel */}
-        <rect x={0} y={0} width={2} height={2} fill={borderColor} />
-        {/* Right border pixel */}
-        <rect x={8} y={0} width={2} height={2} fill={borderColor} />
-      </svg>
-    </div>
-  )
-}
+      {/* outer border path */}
+      <path d="M1 0 Q5 9 9 0" fill="rgba(255,255,255,0.18)" stroke="rgba(0,0,0,0.75)" strokeWidth="1.5" strokeLinejoin="round" />
+    </svg>
+    {/* Bottom-right highlight arc */}
+    <svg
+      viewBox="0 0 100 30"
+      style={{ position:'absolute', bottom:3, right:6, width:40, height:12, pointerEvents:'none' }}
+    >
+      <ellipse cx={60} cy={15} rx={38} ry={11}
+        fill="none"
+        stroke="rgba(255,255,255,0.45)"
+        strokeWidth={3}
+        strokeDasharray="0"
+        clipPath="url(#br-clip)"
+      />
+      <defs>
+        <clipPath id="br-clip">
+          <rect x={30} y={8} width={70} height={22} />
+        </clipPath>
+      </defs>
+    </svg>
+  </div>
+)
 
-// Pixel close button (X in a pixel frame)
-const PixelCloseButton: React.FC<{
+// ── Oval close button — same bubble style, shows × inside ──────────────────
+const OvalCloseButton: React.FC<{
   onClick: () => void
   title?:  string
 }> = ({ onClick, title }) => {
@@ -138,30 +144,26 @@ const PixelCloseButton: React.FC<{
         display:        'flex',
         alignItems:     'center',
         justifyContent: 'center',
-        width:          28,
-        height:         28,
-        background:     hov ? 'rgba(200,40,40,0.85)' : 'rgba(10,14,30,0.88)',
-        outline:        `2px solid ${hov ? 'rgba(255,120,120,0.95)' : 'rgba(255,255,255,0.85)'}`,
-        outlineOffset:  '0px',
-        boxShadow:      '0 0 0 4px rgba(0,0,0,0.85)',
-        imageRendering: 'pixelated',
-        border:         'none',
+        width:          32,
+        height:         32,
+        borderRadius:   '50%',
+        background:     hov ? 'rgba(220,60,60,0.45)' : 'rgba(255,255,255,0.18)',
+        border:         `1.5px solid ${hov ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.75)'}`,
+        boxShadow:      [
+          '0 2px 8px rgba(0,0,0,0.35)',
+          'inset -3px -3px 6px rgba(255,255,255,0.28)',
+          'inset 2px 2px 4px rgba(0,0,0,0.18)',
+        ].join(', '),
+        backdropFilter:       'blur(6px)',
+        WebkitBackdropFilter: 'blur(6px)',
         cursor:         'pointer',
-        transition:     'background 0.1s, outline-color 0.1s',
+        transition:     'background 0.15s',
         WebkitAppRegion:'no-drag' as React.CSSProperties['WebkitAppRegion'],
       }}
     >
-      {/* Pixel × drawn with SVG rects */}
-      <svg width={10} height={10} viewBox="0 0 10 10" style={{ imageRendering: 'pixelated', display:'block' }}>
-        <rect x={0} y={0} width={2} height={2} fill="white" />
-        <rect x={2} y={2} width={2} height={2} fill="white" />
-        <rect x={4} y={4} width={2} height={2} fill="white" />
-        <rect x={6} y={2} width={2} height={2} fill="white" />
-        <rect x={8} y={0} width={2} height={2} fill="white" />
-        <rect x={6} y={6} width={2} height={2} fill="white" />
-        <rect x={2} y={6} width={2} height={2} fill="white" />
-        <rect x={0} y={8} width={2} height={2} fill="white" />
-        <rect x={8} y={8} width={2} height={2} fill="white" />
+      <svg width={10} height={10} viewBox="0 0 10 10" style={{ display:'block' }}>
+        <line x1="2" y1="2" x2="8" y2="8" stroke="rgba(0,0,0,0.75)" strokeWidth="1.8" strokeLinecap="round" />
+        <line x1="8" y1="2" x2="2" y2="8" stroke="rgba(0,0,0,0.75)" strokeWidth="1.8" strokeLinecap="round" />
       </svg>
     </button>
   )
@@ -302,9 +304,9 @@ export const TreehouseShell: React.FC<Props> = ({
                 style={{ position: 'absolute', left: '20%', top: '12%', pointerEvents: 'auto', zIndex: 10 }}
               >
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <PixelBubble>
+                  <OvalBubble>
                     {actions}
-                  </PixelBubble>
+                  </OvalBubble>
                 </div>
               </motion.div>
             )}
@@ -316,7 +318,7 @@ export const TreehouseShell: React.FC<Props> = ({
               style={{ position: 'absolute', left: '65%', top: '7%', pointerEvents: 'auto', zIndex: 10 }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                <PixelCloseButton onClick={handleClose} title="关闭树屋" />
+                <OvalCloseButton onClick={handleClose} title="关闭树屋" />
               </div>
             </motion.div>
           </div>
