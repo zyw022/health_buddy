@@ -25,6 +25,9 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
   // For idle action: pause on frame 0 between blink cycles (simulate occasional blinking)
   const idlePauseRef = useRef<{ pauseUntil: number }>({ pauseUntil: 0 })
 
+  // Whether the sprite is currently flipped horizontally (idle only)
+  const flipRef = useRef<boolean>(false)
+
   useEffect(() => {
     const cfg = getSpriteConfig(species, action)
     const src = cfg.file
@@ -32,6 +35,7 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
     if (stateRef.current.currentSrc === src && stateRef.current.img?.complete) {
       stateRef.current.frameIdx = 0
       idlePauseRef.current.pauseUntil = 0
+      if (action !== 'idle') flipRef.current = false
       return
     }
 
@@ -75,17 +79,21 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-      const scale = Math.min(canvas.width / frameW, canvas.height / frameH)
-      const dw    = frameW * scale
-      const dh    = frameH * scale
+      const drawScale = Math.min(canvas.width / frameW, canvas.height / frameH)
+      const dw    = frameW * drawScale
+      const dh    = frameH * drawScale
       const dx    = (canvas.width  - dw) / 2
       const dy    = (canvas.height - dh) / 2
 
-      ctx.drawImage(
-        img,
-        srcX, srcY, frameW, frameH,
-        dx, dy, dw, dh,
-      )
+      if (flipRef.current) {
+        ctx.save()
+        ctx.translate(canvas.width, 0)
+        ctx.scale(-1, 1)
+        ctx.drawImage(img, srcX, srcY, frameW, frameH, canvas.width - dx - dw, dy, dw, dh)
+        ctx.restore()
+      } else {
+        ctx.drawImage(img, srcX, srcY, frameW, frameH, dx, dy, dw, dh)
+      }
     }
 
     function loop(ts: number) {
@@ -105,6 +113,10 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
               s.frameIdx = 0
               const pauseMs = 2000 + Math.random() * 2000  // 2–4 s
               idlePauseRef.current.pauseUntil = ts + pauseMs
+              // ~30% chance to flip direction when settling after a blink
+              if (Math.random() < 0.3) {
+                flipRef.current = !flipRef.current
+              }
             } else {
               s.frameIdx = next
             }
