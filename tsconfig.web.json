@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
+    "resolveJsonModule": true,
     "target": "ESNext",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "baseUrl": ".",

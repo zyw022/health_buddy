@@ -353,74 +353,69 @@ const TreehouseReport: React.FC = () => {
         />
       )}
 
-      {/* Furniture layer */}
+      {/* Furniture overlays — same 1200×1042 canvas as treehouse, object-contain aligned */}
       <div
         ref={containerRef}
         className="absolute inset-0 pointer-events-none z-20"
       >
         {FURNITURE.map((item, i) => {
-          const isGold   = item.glowType === 'gold'
-          const isActive = displayItem?.id === item.id
+          const isGold    = item.glowType === 'gold'
+          const isActive  = displayItem?.id === item.id
+          const showLayer = isGold || isActive
+          const { x, y, w, h } = item.hitbox
 
           return (
-            <motion.button
-              key={item.id}
-              type="button"
-              initial={{ opacity: 0, y: 18, scale: 0.85 }}
-              animate={entered ? { opacity: 1, y: 0, scale: 1 } : { opacity: 0, y: 18, scale: 0.85 }}
-              transition={{ delay: 0.2 + i * 0.08, duration: 0.5, ease: 'easeOut' }}
-              whileHover={{ scale: 1.2, y: -7 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                position:      'absolute',
-                left:          `${item.x}%`,
-                top:           `${item.y}%`,
-                transform:     'translate(-50%, -50%)',
-                pointerEvents: 'auto',
-              }}
-              className={`rounded-xl focus:outline-none ${isGold ? 'furniture-gold' : 'furniture-normal'}`}
-              onMouseEnter={(e) => onEnter(item, e)}
-              onMouseLeave={onLeave}
-              onClick={(e) => onClick(item, e)}
-              title={item.hint}
-            >
-              <img
+            <div key={item.id} className="absolute inset-0">
+              {/* Full-size overlay (aligned with treehouse); highlight on hover / gold always */}
+              <motion.img
                 src={item.src}
-                alt={item.label}
+                alt=""
                 draggable={false}
-                style={{
-                  width:  item.size,
-                  height: item.size,
-                  objectFit:       'contain',
-                  imageRendering:  'pixelated',
-                  transition:      'filter 0.2s',
-                }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: entered && showLayer ? 1 : 0 }}
+                transition={{ delay: 0.15 + i * 0.05, duration: 0.35 }}
+                className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
+                  isGold ? 'furniture-gold' : isActive ? 'furniture-normal' : ''
+                }`}
+                style={{ imageRendering: 'pixelated' }}
               />
 
-              {/* Active ring */}
-              {isActive && (
-                <motion.div
-                  layoutId="active-ring"
-                  className="absolute inset-0 rounded-xl pointer-events-none"
-                  style={{
-                    border:     isGold
-                      ? '1.5px solid rgba(253,230,138,0.8)'
-                      : '1.5px solid rgba(125,211,252,0.75)',
-                    boxShadow:  isGold
-                      ? '0 0 16px rgba(253,230,138,0.45)'
-                      : '0 0 12px rgba(125,211,252,0.35)',
-                  }}
-                />
-              )}
-
-              {/* Pinned indicator dot */}
-              {pinned?.id === item.id && (
-                <span
-                  className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full border border-black/40"
-                  style={{ background: isGold ? '#fde68a' : '#7dd3fc' }}
-                />
-              )}
-            </motion.button>
+              {/* Invisible hit target on the furniture silhouette only */}
+              <motion.button
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: entered ? 1 : 0 }}
+                transition={{ delay: 0.2 + i * 0.06, duration: 0.4 }}
+                style={{
+                  position:      'absolute',
+                  left:          `${x}%`,
+                  top:           `${y}%`,
+                  width:         `${w}%`,
+                  height:        `${h}%`,
+                  pointerEvents: 'auto',
+                  background:    'transparent',
+                  border:        'none',
+                  cursor:        'pointer',
+                }}
+                className="focus:outline-none rounded-sm"
+                onMouseEnter={(e) => onEnter(item, e)}
+                onMouseLeave={onLeave}
+                onClick={(e) => onClick(item, e)}
+                title={item.hint}
+                aria-label={item.label}
+              >
+                {isActive && (
+                  <span
+                    className="absolute inset-0 rounded-sm pointer-events-none"
+                    style={{
+                      boxShadow: isGold
+                        ? 'inset 0 0 0 1.5px rgba(253,230,138,0.85), 0 0 12px rgba(253,230,138,0.4)'
+                        : 'inset 0 0 0 1.5px rgba(125,211,252,0.75), 0 0 10px rgba(125,211,252,0.35)',
+                    }}
+                  />
+                )}
+              </motion.button>
+            </div>
           )
         })}
       </div>

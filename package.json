@@ -13,7 +13,8 @@
     "dist": "npm run build && electron-builder",
     "seed:health": "node scripts/seed-health-data.mjs && node scripts/generate-chart-data.mjs",
     "charts:generate": "node scripts/generate-chart-data.mjs",
-    "rebuild:sprites": "tsx scripts/rebuild-sprites.ts"
+    "rebuild:sprites": "tsx scripts/rebuild-sprites.ts",
+    "resize:materials": "tsx scripts/resize-treehouse-materials.ts"
   },
   "dependencies": {
     "framer-motion": "^11.0.0",
