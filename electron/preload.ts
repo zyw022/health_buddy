@@ -29,8 +29,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   notifyPetConfigUpdated: () =>
     ipcRenderer.invoke(IPC.NOTIFY_PET_CONFIG),
 
-  showPetContextMenu: () =>
-    ipcRenderer.send(IPC.SHOW_PET_MENU),
+  showPetContextMenu: (petName?: string) =>
+    ipcRenderer.send(IPC.SHOW_PET_MENU, petName),
 
   showTreehouseContextMenu: () =>
     ipcRenderer.send(IPC.SHOW_TREEHOUSE_MENU),
@@ -60,15 +60,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on(IPC.PET_CONFIG_UPDATED, () => cb())
   },
 
-  onShowPetMenu: (cb: () => void) => {
-    ipcRenderer.on(IPC.SHOW_PET_MENU, () => cb())
-  },
-
-  onOpenChat: (cb: () => void) => {
-    ipcRenderer.on(IPC.OPEN_CHAT, () => cb())
-  },
-
   openChat: () => ipcRenderer.send(IPC.OPEN_CHAT),
+
+  closeChat: () => ipcRenderer.send(IPC.CLOSE_CHAT),
+
+  sendChatReplyToPet: (text: string) =>
+    ipcRenderer.send(IPC.CHAT_PET_REPLY, text),
 
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel)

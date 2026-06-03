@@ -20,6 +20,8 @@ export const IPC = {
   GLOBAL_MOUSE_MOVE:   'global-mouse-move',
   TRIGGER_PET_ACTION:  'trigger-pet-action',
   OPEN_CHAT:           'open-chat',
+  CLOSE_CHAT:          'close-chat',
+  CHAT_PET_REPLY:      'chat-pet-reply',
 } as const
 
 export type TreehouseRoute = 'entry' | 'report' | 'change-pet'

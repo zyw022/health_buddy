@@ -3,11 +3,13 @@ import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom'
 import TreehouseEntry from './pages/TreehouseEntry'
 import TreehousePetSelection from './pages/TreehousePetSelection'
 import PetOverlay from './pages/PetOverlay'
+import PetChat from './pages/PetChat'
 import TreehouseReport from './pages/TreehouseReport'
 import { usePetStore } from './store/petStore'
 
 const searchParams = new URLSearchParams(window.location.search)
 const isPetOverlayWindow = searchParams.get('mode') === 'overlay'
+const isChatWindow = searchParams.get('mode') === 'chat'
 const isTreehouseWindow = searchParams.get('mode') === 'treehouse'
 const treehouseRoute = searchParams.get('route') ?? 'entry'
 
@@ -26,6 +28,10 @@ const AppRoutes: React.FC = () => {
 
   if (isPetOverlayWindow) {
     return <PetOverlay />
+  }
+
+  if (isChatWindow) {
+    return <PetChat />
   }
 
   if (isTreehouseWindow) {

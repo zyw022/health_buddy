@@ -15,6 +15,7 @@ import { IPC, type TreehouseRoute } from './ipc/types'
 // Keep references to prevent GC
 let treehouseWindow: BrowserWindow | null = null
 let petWindow: BrowserWindow | null = null
+let chatWindow: BrowserWindow | null = null
 let tray: Tray | null = null
 
 const isDev = process.env['NODE_ENV'] === 'development'
@@ -142,6 +143,60 @@ function createPetWindow(): void {
 
   petWindow.on('closed', () => {
     petWindow = null
+  })
+}
+
+// ── ChatWindow (dedicated pixel chat box near the pet) ───────────────────
+const CHAT_W = 280
+const CHAT_H = 400
+
+function createChatWindow(): void {
+  if (chatWindow && !chatWindow.isDestroyed()) {
+    chatWindow.show()
+    chatWindow.focus()
+    return
+  }
+
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
+
+  // Anchor the chat window near the pet (defaults to bottom-right corner)
+  let x = sw - CHAT_W - 30
+  let y = sh - CHAT_H - 80
+  if (petWindow && !petWindow.isDestroyed()) {
+    const [px, py] = petWindow.getPosition()
+    // Place chat just left of the pet, vertically aligned to its bottom area
+    x = Math.max(10, px - CHAT_W + 40)
+    y = Math.max(10, py - CHAT_H + 200)
+  }
+
+  chatWindow = new BrowserWindow({
+    width: CHAT_W,
+    height: CHAT_H,
+    x,
+    y,
+    frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    resizable: false,
+    hasShadow: false,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/index.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  })
+
+  const query: Record<string, string> = { mode: 'chat' }
+  if (isDev) {
+    const base = process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:5173'
+    void chatWindow.loadURL(`${base}?${new URLSearchParams(query).toString()}`)
+  } else {
+    void chatWindow.loadFile(path.join(__dirname, '../renderer/index.html'), { query })
+  }
+
+  chatWindow.on('closed', () => {
+    chatWindow = null
   })
 }
 
@@ -368,17 +423,47 @@ function registerIpcHandlers(): void {
     ]).popup({ window: treehouseWindow })
   })
 
-  // Right-click context menu on the floating pet — handled in renderer via OPEN_CHAT signal
-  ipcMain.on(IPC.SHOW_PET_MENU, () => {
+  // Right-click context menu on the floating pet — native OS menu (not clipped by window)
+  ipcMain.on(IPC.SHOW_PET_MENU, (_event, petName?: string) => {
     if (!petWindow || petWindow.isDestroyed()) return
-    // Tell renderer to show its own pixel-art context menu
-    petWindow.webContents.send(IPC.SHOW_PET_MENU)
+    const name = (petName && petName.trim()) || '宠物'
+
+    Menu.buildFromTemplate([
+      {
+        label: `💬 和${name}聊天`,
+        click: () => createChatWindow(),
+      },
+      {
+        label: '📊 查看健康报告',
+        click: () => createTreehouseWindow('report'),
+      },
+      {
+        label: '🔄 更换宠物',
+        click: () => createTreehouseWindow('change-pet'),
+      },
+      { type: 'separator' },
+      {
+        label: '隐藏宠物',
+        click: () => petWindow?.hide(),
+      },
+    ]).popup({ window: petWindow })
   })
 
-  // Chat open request from renderer context menu
+  // Chat open request (from anywhere)
   ipcMain.on(IPC.OPEN_CHAT, () => {
-    if (!petWindow || petWindow.isDestroyed()) return
-    petWindow.webContents.send(IPC.OPEN_CHAT)
+    createChatWindow()
+  })
+
+  // Close the dedicated chat window
+  ipcMain.on(IPC.CLOSE_CHAT, () => {
+    if (chatWindow && !chatWindow.isDestroyed()) chatWindow.close()
+  })
+
+  // Chat window → forward pet reply to the pet overlay so it shows in the head bubble
+  ipcMain.on(IPC.CHAT_PET_REPLY, (_event, text: string) => {
+    if (petWindow && !petWindow.isDestroyed()) {
+      petWindow.webContents.send(IPC.SHOW_SPEECH_BUBBLE, { text })
+    }
   })
 }
 

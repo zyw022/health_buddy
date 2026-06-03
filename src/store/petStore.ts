@@ -73,7 +73,7 @@ export interface ElectronAPI {
   closeTreehouse(): void
   openTreehouse(route?: 'entry' | 'report' | 'change-pet'): Promise<boolean>
   notifyPetConfigUpdated(): Promise<boolean>
-  showPetContextMenu(): void
+  showPetContextMenu(petName?: string): void
   showTreehouseContextMenu(): void
   setIgnoreMouseEvents(ignore: boolean): void
   onPetAction(cb: (action: string) => void): void
@@ -84,6 +84,9 @@ export interface ElectronAPI {
   removeAllListeners(channel: string): void
   onGlobalMouseMove(cb: (pos: { x: number; y: number }) => void): void
   triggerPetAction(action: string): Promise<boolean>
+  openChat(): void
+  closeChat(): void
+  sendChatReplyToPet(text: string): void
 }
 
 // Convenience accessor for the electron API (only available in Electron renderer)
