@@ -25,13 +25,9 @@ export const SpeechBubble: React.FC<Props> = ({
   const [visible, setVisible] = useState(false)
   useEffect(() => {
     if (!text) { setVisible(false); return }
-    // Phase 1: mount with visibility:hidden so layout settles
     setVisible(false)
-    const t = requestAnimationFrame(() => {
-      // Phase 2: after one paint cycle, make it visible and start animation
-      setVisible(true)
-    })
-    return () => cancelAnimationFrame(t)
+    const t = setTimeout(() => setVisible(true), 100)
+    return () => clearTimeout(t)
   }, [text])
 
   useEffect(() => {
