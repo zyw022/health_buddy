@@ -205,47 +205,49 @@ const FurnitureItem: React.FC<{
   onLeave: () => void
   onClick: (item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => void
 }> = ({ item, index, pinned, onEnter, onLeave, onClick }) => {
-  const [hovered, setHovered] = useState(false)
+  const [hovered,  setHovered]  = useState(false)
+  const [visible,  setVisible]  = useState(false)   // pure CSS opacity fade-in
   const isGold   = item.glowType === 'gold'
   const isPinned = pinned?.id === item.id
   const isActive = hovered || isPinned
   const { x, y, w, h } = item.hitbox
 
+  // Staggered fade-in via CSS transition — no framer-motion on this element
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), (0.12 + index * 0.04) * 1000)
+    return () => clearTimeout(t)
+  }, [index])
+
   // Scale origin at the centre of the hitbox (in % of container)
   const ox = `${x + w / 2}%`
   const oy = `${y + h / 2}%`
 
-  // CSS animation classes
+  // CSS animation classes — only CSS, framer never touches transform
   const scaleClass = isActive ? 'furn-pulse' : ''
   const glowClass  = isActive
     ? (isGold ? 'furn-glow-gold-hover' : 'furn-glow-normal')
     : (isGold ? 'furn-glow-gold-idle' : '')
 
   return (
-    // Full-size overlay — same coordinate space as treehouse.png (object-contain)
     <div className="absolute inset-0 pointer-events-none">
-      {/* Outer: framer-motion handles opacity fade-in only — no transform */}
-      <motion.div
-        className="absolute inset-0"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.12 + index * 0.04, duration: 0.4 }}
-        style={{ willChange: 'opacity' }}
+      {/* Pure CSS: opacity fade-in + scale/glow animations — framer-motion NOT used here
+          so it cannot overwrite the CSS transform produced by furn-pulse keyframes */}
+      <div
+        className={`absolute inset-0 ${scaleClass} ${glowClass}`}
+        style={{
+          transformOrigin: `${ox} ${oy}`,
+          opacity:    visible ? 1 : 0,
+          transition: 'opacity 0.4s ease',
+        }}
       >
-        {/* Inner: pure CSS handles scale + drop-shadow glow — framer never touches transform here */}
-        <div
-          className={`absolute inset-0 ${scaleClass} ${glowClass}`}
-          style={{ transformOrigin: `${ox} ${oy}` }}
-        >
-          <img
-            src={item.src}
-            alt={item.label}
-            draggable={false}
-            className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
-            style={{ imageRendering: 'pixelated' }}
-          />
-        </div>
-      </motion.div>
+        <img
+          src={item.src}
+          alt={item.label}
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+          style={{ imageRendering: 'pixelated' }}
+        />
+      </div>
 
       {/* Invisible hit-target sized to actual furniture silhouette */}
       <button
