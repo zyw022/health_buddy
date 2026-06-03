@@ -23,6 +23,9 @@ export type FadePhase = 'in' | 'visible' | 'out'
 
 interface Props {
   children?:          React.ReactNode
+  /** Content placed inside the same ParallaxLayer as the treehouse image (depth 2.0).
+   *  Use for furniture overlays that must track the same parallax as the treehouse. */
+  sceneLayer?:        React.ReactNode
   title?:             string
   subtitle?:          string
   footer?:            React.ReactNode
@@ -65,6 +68,7 @@ const floatVariants = (delay: number) => ({
 
 export const TreehouseShell: React.FC<Props> = ({
   children,
+  sceneLayer,
   title,
   subtitle,
   footer,
@@ -168,7 +172,7 @@ export const TreehouseShell: React.FC<Props> = ({
         </ParallaxLayer>
       ))}
 
-      {/* ── Treehouse image — sits on top of bg, same depth as front layer ── */}
+      {/* ── Treehouse image + furniture scene layer — same parallax depth ── */}
       <ParallaxLayer springX={springX} springY={springY} depth={2.0} bleed={MAX_SHIFT_PX * 2.0 * 1.5}>
         <img
           src="materials/treehouse/treehouse.png"
@@ -177,6 +181,7 @@ export const TreehouseShell: React.FC<Props> = ({
           className="w-full h-full object-contain pointer-events-none select-none"
           style={{ opacity: imageOpacity }}
         />
+        {sceneLayer}
       </ParallaxLayer>
 
       {/* ── Floating bubble controls ────────────────────────────────── */}

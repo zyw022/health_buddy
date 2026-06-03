@@ -12,28 +12,35 @@ import {
   type HotspotId,
 } from './hotspots'
 
-// ── Gold shimmer keyframes (injected once) ───────────────────────────────────
-const GOLD_STYLE_ID = 'treehouse-gold-shimmer'
-function ensureGoldStyles() {
-  if (document.getElementById(GOLD_STYLE_ID)) return
-  const style = document.createElement('style')
-  style.id = GOLD_STYLE_ID
-  style.textContent = `
-    @keyframes goldPulse {
-      0%,100% { filter: drop-shadow(0 0 6px rgba(255,210,60,0.55)) drop-shadow(0 0 2px rgba(255,180,0,0.4)); }
-      50%      { filter: drop-shadow(0 0 14px rgba(255,230,80,0.9)) drop-shadow(0 0 6px rgba(255,200,0,0.7)); }
-    }
-    @keyframes whitePulse {
-      0%,100% { filter: drop-shadow(0 0 0px rgba(255,255,255,0)); }
-      50%      { filter: drop-shadow(0 0 8px rgba(255,255,255,0.35)); }
-    }
-    .furniture-gold   { animation: goldPulse  2.2s ease-in-out infinite; }
-    .furniture-normal { animation: whitePulse 3.5s ease-in-out infinite; }
-  `
-  document.head.appendChild(style)
+// ── Hover animation variants ─────────────────────────────────────────────────
+// Pulse: scale cycles 1→1.08→0.96→1, opacity cycles for the glow overlay
+const PULSE_SCALE = {
+  animate: {
+    scale: [1, 1.08, 0.96, 1.04, 1],
+    transition: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' },
+  },
+  idle: { scale: 1, transition: { duration: 0.25 } },
 }
 
-// ── Panel component map ───────────────────────────────────────────────────────
+const PULSE_GLOW_NORMAL = {
+  animate: {
+    opacity: [0.0, 0.6, 0.1, 0.7, 0.0],
+    transition: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' },
+  },
+  idle: { opacity: 0, transition: { duration: 0.3 } },
+}
+const PULSE_GLOW_GOLD = {
+  animate: {
+    opacity: [0.3, 1.0, 0.4, 1.0, 0.3],
+    transition: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
+  },
+  idle: {
+    opacity: [0.15, 0.5, 0.15],
+    transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
+  },
+}
+
+// ── Panel sub-components ──────────────────────────────────────────────────────
 
 interface PanelProps {
   item:    FurnitureDef
@@ -42,16 +49,14 @@ interface PanelProps {
 }
 
 const LINE_COLORS: Partial<Record<HotspotId, string>> = {
-  note:  '#c4b5fd', clock: '#7dd3fc',
+  note: '#c4b5fd', clock: '#7dd3fc',
 }
 const BAR_COLORS: Partial<Record<HotspotId, string>> = {
-  bowl:   '#67e8f9', flower: '#86efac',
-  lamp:   '#fde68a', potion: '#fca5a5',
+  bowl: '#67e8f9', flower: '#86efac', lamp: '#fde68a', potion: '#fca5a5',
 }
 
 const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
   if (!series) return <p className="text-white/40 text-xs px-1 py-2">数据加载中…</p>
-
   if (item.panelType === 'chart-dimensions') {
     const d = series.dimensions
     return (
@@ -67,16 +72,13 @@ const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
       />
     )
   }
-
   const key = item.seriesKey as keyof Omit<ChartSeriesBundle, 'dimensions'> | undefined
   if (!key) return null
   const s = series[key]
   if (!s || !('points' in s)) return null
-
-  if (item.panelType === 'chart-line') {
+  if (item.panelType === 'chart-line')
     return <LineChart title={s.title} unit={s.unit} points={s.points}
       color={LINE_COLORS[item.id] ?? '#7dd3fc'} width={260} height={130} />
-  }
   return <BarChart title={s.title} unit={s.unit} points={s.points}
     color={BAR_COLORS[item.id] ?? '#86efac'} width={260} height={130} />
 }
@@ -84,53 +86,32 @@ const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
 const PreferencesPanel: React.FC<PanelProps> = ({ onClose }) => {
   const { items, add, remove } = usePreferencesStore()
   const [draft, setDraft] = useState('')
-
-  const submit = async () => {
-    if (!draft.trim()) return
-    await add(draft)
-    setDraft('')
-  }
-
+  const submit = async () => { if (draft.trim()) { await add(draft); setDraft('') } }
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[#fde68a] text-[11px] font-semibold tracking-wide">✦ 偏好存档</span>
         <button onClick={onClose} className="text-white/30 hover:text-white/70 text-[10px]">关闭</button>
       </div>
-
       <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 mb-2">
-        {items.length === 0 && (
-          <p className="text-white/30 text-[10px] italic">还没有偏好，添加一条吧</p>
-        )}
+        {items.length === 0 && <p className="text-white/30 text-[10px] italic">还没有偏好，添加一条吧</p>}
         {items.map(p => (
           <div key={p.id} className="flex items-start gap-2 group">
             <span className="text-[#fde68a]/80 text-[9px] mt-0.5 shrink-0">✦</span>
             <p className="flex-1 text-white/75 text-[10px] leading-snug">{p.text}</p>
-            <button
-              onClick={() => void remove(p.id)}
-              className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 text-[9px] shrink-0 transition-opacity"
-            >✕</button>
+            <button onClick={() => void remove(p.id)}
+              className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 text-[9px] shrink-0 transition-opacity">✕</button>
           </div>
         ))}
       </div>
-
       <div className="flex gap-1.5">
-        <input
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
+        <input value={draft} onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') void submit() }}
-          placeholder="新增偏好…"
-          maxLength={50}
-          className="flex-1 bg-white/8 border border-white/15 rounded-lg px-2 py-1 text-white text-[10px] outline-none focus:border-[#fde68a]/50 placeholder-white/25"
-        />
-        <button
-          onClick={() => void submit()}
-          disabled={!draft.trim()}
+          placeholder="新增偏好…" maxLength={50}
+          className="flex-1 bg-white/8 border border-white/15 rounded-lg px-2 py-1 text-white text-[10px] outline-none focus:border-[#fde68a]/50 placeholder-white/25" />
+        <button onClick={() => void submit()} disabled={!draft.trim()}
           className="px-2 py-1 rounded-lg text-[10px] text-[#1a1205] font-bold transition-opacity disabled:opacity-30"
-          style={{ background: '#fde68a' }}
-        >
-          +
-        </button>
+          style={{ background: '#fde68a' }}>+</button>
       </div>
     </div>
   )
@@ -138,28 +119,21 @@ const PreferencesPanel: React.FC<PanelProps> = ({ onClose }) => {
 
 const HistoryPanel: React.FC<PanelProps> = ({ onClose }) => {
   const { records, clear } = useAdviceHistoryStore()
-
   const fmt = (iso: string) => {
     const d = new Date(iso)
     return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
   }
-
   return (
     <div className="w-full">
       <div className="flex items-center justify-between mb-2">
         <span className="text-[#fde68a] text-[11px] font-semibold tracking-wide">✦ 历史建议</span>
         <div className="flex gap-2">
-          {records.length > 0 && (
-            <button onClick={() => void clear()} className="text-white/25 hover:text-red-400 text-[10px]">清空</button>
-          )}
+          {records.length > 0 && <button onClick={() => void clear()} className="text-white/25 hover:text-red-400 text-[10px]">清空</button>}
           <button onClick={onClose} className="text-white/30 hover:text-white/70 text-[10px]">关闭</button>
         </div>
       </div>
-
       <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-        {records.length === 0 && (
-          <p className="text-white/30 text-[10px] italic">还没有记录，跟宠物多互动吧</p>
-        )}
+        {records.length === 0 && <p className="text-white/30 text-[10px] italic">还没有记录，跟宠物多互动吧</p>}
         {records.map(r => (
           <div key={r.id} className="flex gap-2 items-start">
             <span className="text-[#fde68a]/60 text-[9px] mt-0.5 shrink-0 font-mono">{fmt(r.createdAt)}</span>
@@ -171,20 +145,13 @@ const HistoryPanel: React.FC<PanelProps> = ({ onClose }) => {
   )
 }
 
-// ── Hover panel container ────────────────────────────────────────────────────
-
-interface HoverPanelProps {
-  item:    FurnitureDef
-  pos:     { x: number; y: number }
-  series:  ChartSeriesBundle | null
+const HoverPanel: React.FC<{
+  item: FurnitureDef
+  pos:  { x: number; y: number }
+  series: ChartSeriesBundle | null
   onClose: () => void
-}
-
-const HoverPanel: React.FC<HoverPanelProps> = ({ item, pos, series, onClose }) => {
+}> = ({ item, pos, series, onClose }) => {
   const isGold = item.glowType === 'gold'
-  const borderColor = isGold ? 'rgba(253,230,138,0.35)' : 'rgba(255,255,255,0.12)'
-  const titleColor  = isGold ? '#fde68a' : 'rgba(255,255,255,0.9)'
-
   return (
     <motion.div
       key={item.id}
@@ -199,56 +166,144 @@ const HoverPanel: React.FC<HoverPanelProps> = ({ item, pos, series, onClose }) =
         minWidth:   item.panelType === 'preferences' || item.panelType === 'history' ? 260 : 280,
         maxWidth:   300,
         background: 'rgba(10,12,25,0.95)',
-        border:     `1px solid ${borderColor}`,
+        border:     `1px solid ${isGold ? 'rgba(253,230,138,0.35)' : 'rgba(255,255,255,0.12)'}`,
         boxShadow:  isGold
           ? '0 8px 32px rgba(253,230,138,0.15), 0 2px 8px rgba(0,0,0,0.5)'
           : '0 8px 28px rgba(0,0,0,0.5)',
       }}
     >
-      {/* Header — only for chart items */}
       {item.panelType !== 'preferences' && item.panelType !== 'history' && (
         <>
-          <p className="text-[11px] font-semibold px-1 mb-0.5" style={{ color: titleColor }}>
+          <p className="text-[11px] font-semibold px-1 mb-0.5"
+            style={{ color: isGold ? '#fde68a' : 'rgba(255,255,255,0.9)' }}>
             {item.label}
           </p>
           <p className="text-white/40 text-[10px] px-1 mb-2">{item.hint}</p>
         </>
       )}
-
-      {(item.panelType === 'chart-line' || item.panelType === 'chart-bar' || item.panelType === 'chart-dimensions') && (
-        <ChartPanel item={item} series={series} onClose={onClose} />
-      )}
-      {item.panelType === 'preferences' && (
-        <PreferencesPanel item={item} series={series} onClose={onClose} />
-      )}
-      {item.panelType === 'history' && (
-        <HistoryPanel item={item} series={series} onClose={onClose} />
-      )}
+      {(item.panelType === 'chart-line' || item.panelType === 'chart-bar' || item.panelType === 'chart-dimensions') &&
+        <ChartPanel item={item} series={series} onClose={onClose} />}
+      {item.panelType === 'preferences' && <PreferencesPanel item={item} series={series} onClose={onClose} />}
+      {item.panelType === 'history'     && <HistoryPanel     item={item} series={series} onClose={onClose} />}
     </motion.div>
+  )
+}
+
+// ── FurnitureItem — single piece with hover animation and click handler ────────
+const FurnitureItem: React.FC<{
+  item:    FurnitureDef
+  index:   number
+  pinned:  FurnitureDef | null
+  onEnter: (item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => void
+  onLeave: () => void
+  onClick: (item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => void
+}> = ({ item, index, pinned, onEnter, onLeave, onClick }) => {
+  const [hovered, setHovered] = useState(false)
+  const isGold   = item.glowType === 'gold'
+  const isPinned = pinned?.id === item.id
+  const isActive = hovered || isPinned
+  const { x, y, w, h } = item.hitbox
+
+  // Glow colour
+  const glowColor = isGold
+    ? 'rgba(255,210,60,0.85)'
+    : 'rgba(180,230,255,0.8)'
+  const glowShadow = isGold
+    ? '0 0 18px 6px rgba(255,200,30,0.5)'
+    : '0 0 14px 4px rgba(140,210,255,0.45)'
+
+  return (
+    // Full-size overlay — same coordinate space as treehouse.png (object-contain)
+    <div className="absolute inset-0 pointer-events-none">
+      {/* Furniture image — always visible, scale-pulse on hover */}
+      <motion.div
+        className="absolute inset-0"
+        style={{ originX: `${x + w / 2}%`, originY: `${y + h / 2}%` }}
+        variants={PULSE_SCALE}
+        animate={isActive ? 'animate' : 'idle'}
+        initial={{ opacity: 0 }}
+        transition={{ opacity: { delay: 0.12 + index * 0.04, duration: 0.4 } }}
+      >
+        <motion.img
+          src={item.src}
+          alt={item.label}
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-contain select-none"
+          style={{ imageRendering: 'pixelated' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.12 + index * 0.04, duration: 0.4 }}
+        />
+
+        {/* Glow overlay — flickering on hover; gold always glows */}
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          variants={isGold ? PULSE_GLOW_GOLD : PULSE_GLOW_NORMAL}
+          animate={isActive || isGold ? 'animate' : 'idle'}
+          style={{
+            background: 'transparent',
+            // Use a radial glow centred on the hitbox
+            boxShadow:  `inset 0 0 0 0 transparent`,
+          }}
+        >
+          {/* Actual glow — absolute div covering hitbox area */}
+          <div
+            style={{
+              position: 'absolute',
+              left:   `${x}%`,
+              top:    `${y}%`,
+              width:  `${w}%`,
+              height: `${h}%`,
+              borderRadius: '4px',
+              boxShadow: isActive || isGold ? glowShadow : 'none',
+              border: isActive || isGold
+                ? `1px solid ${glowColor}`
+                : 'none',
+              transition: 'box-shadow 0.2s, border 0.2s',
+              pointerEvents: 'none',
+            }}
+          />
+        </motion.div>
+      </motion.div>
+
+      {/* Invisible hit-target sized to actual furniture silhouette */}
+      <button
+        type="button"
+        style={{
+          position:      'absolute',
+          left:          `${x}%`,
+          top:           `${y}%`,
+          width:         `${w}%`,
+          height:        `${h}%`,
+          background:    'transparent',
+          border:        'none',
+          cursor:        'pointer',
+          pointerEvents: 'auto',
+        }}
+        className="focus:outline-none"
+        onMouseEnter={(e) => { setHovered(true);  onEnter(item, e) }}
+        onMouseLeave={() =>   { setHovered(false); onLeave() }}
+        onClick={(e) => onClick(item, e)}
+        aria-label={item.label}
+        title={item.hint}
+      />
+    </div>
   )
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 const TreehouseReport: React.FC = () => {
-  const config  = usePetStore((s) => s.config)
-  const { load: loadPrefs } = usePreferencesStore()
+  const config      = usePetStore((s) => s.config)
+  const { load: loadPrefs }   = usePreferencesStore()
   const { load: loadHistory } = useAdviceHistoryStore()
 
   const [series,   setSeries]   = useState<ChartSeriesBundle | null>(null)
-  const [active,   setActive]   = useState<FurnitureDef | null>(null)
-  const [pinned,   setPinned]   = useState<FurnitureDef | null>(null)   // clicked = stays open
+  const [pinned,   setPinned]   = useState<FurnitureDef | null>(null)
   const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
-  const [entered,  setEntered]  = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    ensureGoldStyles()
-    const t = setTimeout(() => setEntered(true), 80)
-    return () => clearTimeout(t)
-  }, [])
-
-  useEffect(() => { void loadPrefs() }, [loadPrefs])
+  useEffect(() => { void loadPrefs()   }, [loadPrefs])
   useEffect(() => { void loadHistory() }, [loadHistory])
 
   useEffect(() => {
@@ -266,22 +321,22 @@ const TreehouseReport: React.FC = () => {
         state?: { energy?: number; stress?: number; burnout?: number; sedentary?: number }
       } | null
       if (today?.raw && today?.state) {
-        const d   = new Date().toISOString().split('T')[0]
-        const pt  = (v: number) => [{ date: d, label: d, value: v }]
+        const d  = new Date().toISOString().split('T')[0]
+        const pt = (v: number) => [{ date: d, label: d, value: v }]
         const slh = Math.round((today.raw.sleepMinutes ?? 0) / 60 * 10) / 10
         setSeries({
-          book: { title: '睡眠时长', unit: '小时', points: pt(slh) },
-          note: { title: '睡眠时长', unit: '小时', points: pt(slh) },
-          clock: { title: '久坐分钟', unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
-          cup: { title: '饮水杯数', unit: '杯', points: pt(today.raw.waterCups ?? 0) },
-          bowl: { title: '饮水杯数', unit: '杯', points: pt(today.raw.waterCups ?? 0) },
-          shoes: { title: '步数', unit: '步', points: pt(today.raw.steps ?? 0) },
-          flower: { title: '步数', unit: '步', points: pt(today.raw.steps ?? 0) },
-          lamp: { title: '活跃时长', unit: '分钟', points: pt(today.raw.activeMinutes ?? 0) },
-          painting: { title: '睡眠质量', unit: '分', points: pt((today.raw.sleepQuality ?? 3) * 20) },
-          potion: { title: '心率', unit: 'bpm', points: pt(today.raw.heartRate ?? 0) },
+          book:     { title: '睡眠时长', unit: '小时', points: pt(slh) },
+          note:     { title: '睡眠时长', unit: '小时', points: pt(slh) },
+          clock:    { title: '久坐分钟', unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
+          cup:      { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          bowl:     { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          shoes:    { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
+          flower:   { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
+          lamp:     { title: '活跃时长', unit: '分钟', points: pt(today.raw.activeMinutes ?? 0) },
+          painting: { title: '睡眠质量', unit: '分',   points: pt((today.raw.sleepQuality ?? 3) * 20) },
+          potion:   { title: '心率',     unit: 'bpm',  points: pt(today.raw.heartRate ?? 0) },
           dimensions: {
-            title: '今日四维度',
+            title:     '今日四维度',
             energy:    today.state.energy    ?? 0,
             stress:    today.state.stress    ?? 0,
             burnout:   today.state.burnout   ?? 0,
@@ -293,7 +348,6 @@ const TreehouseReport: React.FC = () => {
     void load()
   }, [])
 
-  // Compute panel position so it stays on screen
   const calcPos = useCallback((el: HTMLElement) => {
     const rect   = el.getBoundingClientRect()
     const winW   = window.innerWidth
@@ -305,34 +359,44 @@ const TreehouseReport: React.FC = () => {
     return { x, y }
   }, [])
 
-  const onEnter = useCallback((item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => {
-    if (pinned) return   // don't override a pinned panel on hover
-    setPanelPos(calcPos(e.currentTarget))
-    setActive(item)
-  }, [pinned, calcPos])
+  const onEnter = useCallback((_item: FurnitureDef, _e: React.MouseEvent<HTMLButtonElement>) => {
+    // hover state is managed inside FurnitureItem; nothing to do here
+  }, [])
 
-  const onLeave = useCallback(() => {
-    if (!pinned) setActive(null)
-  }, [pinned])
+  const onLeave = useCallback(() => {}, [])
 
-  const onClick = useCallback((item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => {
+  const onClickItem = useCallback((item: FurnitureDef, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
     if (pinned?.id === item.id) {
       setPinned(null)
-      setActive(null)
     } else {
       setPanelPos(calcPos(e.currentTarget))
       setPinned(item)
-      setActive(item)
     }
   }, [pinned, calcPos])
 
-  const displayItem = pinned ?? active
+  // Furniture scene — rendered inside the treehouse ParallaxLayer (same depth)
+  const furnitureScene = (
+    <div ref={containerRef} className="absolute inset-0 pointer-events-none">
+      {FURNITURE.map((item, i) => (
+        <FurnitureItem
+          key={item.id}
+          item={item}
+          index={i}
+          pinned={pinned}
+          onEnter={onEnter}
+          onLeave={onLeave}
+          onClick={onClickItem}
+        />
+      ))}
+    </div>
+  )
 
   return (
     <TreehouseShell
       title={config?.name ? `${config.name} 的树屋` : '健康树屋'}
       subtitle="悬停家具查看健康数据"
+      sceneLayer={furnitureScene}
       actions={
         <button
           type="button"
@@ -349,86 +413,19 @@ const TreehouseReport: React.FC = () => {
         <div
           className="absolute inset-0 z-30"
           style={{ pointerEvents: 'auto' }}
-          onClick={() => { setPinned(null); setActive(null) }}
+          onClick={() => setPinned(null)}
         />
       )}
 
-      {/* Furniture overlays — same 1200×1042 canvas as treehouse, object-contain aligned */}
-      <div
-        ref={containerRef}
-        className="absolute inset-0 pointer-events-none z-20"
-      >
-        {FURNITURE.map((item, i) => {
-          const isGold    = item.glowType === 'gold'
-          const isActive  = displayItem?.id === item.id
-          const showLayer = isGold || isActive
-          const { x, y, w, h } = item.hitbox
-
-          return (
-            <div key={item.id} className="absolute inset-0">
-              {/* Full-size overlay (aligned with treehouse); highlight on hover / gold always */}
-              <motion.img
-                src={item.src}
-                alt=""
-                draggable={false}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: entered && showLayer ? 1 : 0 }}
-                transition={{ delay: 0.15 + i * 0.05, duration: 0.35 }}
-                className={`absolute inset-0 w-full h-full object-contain pointer-events-none select-none ${
-                  isGold ? 'furniture-gold' : isActive ? 'furniture-normal' : ''
-                }`}
-                style={{ imageRendering: 'pixelated' }}
-              />
-
-              {/* Invisible hit target on the furniture silhouette only */}
-              <motion.button
-                type="button"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: entered ? 1 : 0 }}
-                transition={{ delay: 0.2 + i * 0.06, duration: 0.4 }}
-                style={{
-                  position:      'absolute',
-                  left:          `${x}%`,
-                  top:           `${y}%`,
-                  width:         `${w}%`,
-                  height:        `${h}%`,
-                  pointerEvents: 'auto',
-                  background:    'transparent',
-                  border:        'none',
-                  cursor:        'pointer',
-                }}
-                className="focus:outline-none rounded-sm"
-                onMouseEnter={(e) => onEnter(item, e)}
-                onMouseLeave={onLeave}
-                onClick={(e) => onClick(item, e)}
-                title={item.hint}
-                aria-label={item.label}
-              >
-                {isActive && (
-                  <span
-                    className="absolute inset-0 rounded-sm pointer-events-none"
-                    style={{
-                      boxShadow: isGold
-                        ? 'inset 0 0 0 1.5px rgba(253,230,138,0.85), 0 0 12px rgba(253,230,138,0.4)'
-                        : 'inset 0 0 0 1.5px rgba(125,211,252,0.75), 0 0 10px rgba(125,211,252,0.35)',
-                    }}
-                  />
-                )}
-              </motion.button>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Hover / pinned panel */}
+      {/* Data panel */}
       <AnimatePresence>
-        {displayItem && (
+        {pinned && (
           <HoverPanel
-            key={displayItem.id}
-            item={displayItem}
+            key={pinned.id}
+            item={pinned}
             pos={panelPos}
             series={series}
-            onClose={() => { setPinned(null); setActive(null) }}
+            onClose={() => setPinned(null)}
           />
         )}
       </AnimatePresence>
