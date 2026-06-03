@@ -30,6 +30,9 @@ interface Props {
   subtitle?:          string
   footer?:            React.ReactNode
   actions?:           React.ReactNode
+  /** When true, suppresses the built-in actions bubble and close button
+   *  so the caller can place all controls inside sceneLayer instead. */
+  hideControls?:      boolean
   imageOpacity?:      number
   pureImage?:         boolean
   fadePhase?:         FadePhase
@@ -178,6 +181,7 @@ export const TreehouseShell: React.FC<Props> = ({
   subtitle,
   footer,
   actions,
+  hideControls = false,
   imageOpacity = 1,
   pureImage    = false,
   fadePhase    = 'visible',
@@ -293,7 +297,7 @@ export const TreehouseShell: React.FC<Props> = ({
         {sceneLayer}
 
         {/* Buttons live inside the depth-2.0 layer so they track with the treehouse */}
-        {!pureImage && (
+        {!pureImage && !hideControls && (
           <div
             className="absolute inset-0"
             style={{ pointerEvents: 'none', WebkitAppRegion: 'no-drag' }}

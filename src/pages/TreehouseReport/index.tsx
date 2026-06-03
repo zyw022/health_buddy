@@ -876,9 +876,29 @@ function calcBubblePos(btn: HTMLButtonElement, panelW: number): { x: number; y: 
 
 type PanelKey = 'action' | 'charts' | 'advice' | 'shop' | null
 
-// ── Canopy bubbles — 5 entries scattered in the tree canopy ──────────────────
-// Positions are relative to the sceneLayer container (same as furniture %).
-// Canopy lives roughly at left 5–90%, top 3–26%.
+// ── 6 canopy bubble positions matching the 6 red-circle leaf spots ────────────
+// Coords are % of the sceneLayer container. Treehouse image is object-contain
+// centred; the canopy spans roughly left 5–90%, top 3–45% in container space.
+//
+// Red-circle mapping (left→right, bottom→top scan of the image):
+//  1. bottom-left  branch  ≈ left 10%, top 40%
+//  2. mid-left     canopy  ≈ left 27%, top 26%
+//  3. centre-left  canopy  ≈ left 41%, top 20%
+//  4. centre-right canopy  ≈ left 59%, top 25%
+//  5. right-mid    canopy  ≈ left 73%, top 29%
+//  6. right-lower  branch  ≈ left 84%, top 37%
+const CANOPY_ENTRIES = [
+  { key:'changePet' as const, icon:'🔄', label:'换宠物', accent:'rgba(255,255,255,0.9)', left:'10%', top:'40%', delay:0 },
+  { key:'action'   as const, icon:'🐦', label:'动作',   accent:'#7dd3fc',               left:'27%', top:'26%', delay:1 },
+  { key:'charts'   as const, icon:'📊', label:'图表',   accent:'#86efac',               left:'41%', top:'20%', delay:2 },
+  { key:'advice'   as const, icon:'💡', label:'建议',   accent:'#fde68a',               left:'59%', top:'25%', delay:3 },
+  { key:'shop'     as const, icon:'🌾', label:'商店',   accent:'#fbbf24',               left:'73%', top:'29%', delay:4 },
+  { key:'close'    as const, icon:'✕',  label:'关闭',   accent:'rgba(255,120,120,0.9)', left:'84%', top:'37%', delay:5 },
+] as const
+
+type EntryKey = typeof CANOPY_ENTRIES[number]['key']
+
+// ── Canopy bubbles — 6 entries on the tree leaves ─────────────────────────────
 const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSpecies }> = ({ series, species }) => {
   const { load: loadShop } = useShopStore()
   useEffect(() => { void loadShop() }, [loadShop])
@@ -886,35 +906,33 @@ const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSp
   const [open, setOpen] = useState<PanelKey>(null)
   const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
 
-  const toggle = useCallback((key: Exclude<PanelKey, null>, btn: HTMLButtonElement, panelW: number) => {
+  const handleClick = useCallback((key: EntryKey, btn: HTMLButtonElement) => {
+    if (key === 'close') {
+      getElectronAPI()?.closeTreehouse()
+      return
+    }
+    if (key === 'changePet') {
+      void getElectronAPI()?.openTreehouse('change-pet')
+      return
+    }
+    const panelW = key === 'shop' ? 296 : 280
     if (open === key) { setOpen(null); return }
     setPanelPos(calcBubblePos(btn, panelW))
     setOpen(key)
   }, [open])
 
-  // 5 distinct positions for the 4 unique entries (action appears once)
-  const entries: Array<{ key: Exclude<PanelKey,null>; icon:string; label:string; accent:string; left:string; top:string }> = [
-    { key:'action', icon:'🐦', label:'动作', accent:'#7dd3fc', left:'12%', top:'8%'  },
-    { key:'charts', icon:'📊', label:'图表', accent:'#86efac', left:'30%', top:'4%'  },
-    { key:'advice', icon:'💡', label:'建议', accent:'#fde68a', left:'55%', top:'10%' },
-    { key:'shop',   icon:'🌾', label:'商店', accent:'#fbbf24', left:'73%', top:'5%'  },
-    { key:'action', icon:'🐦', label:'动作', accent:'#7dd3fc', left:'88%', top:'14%' },
-  ]
-  // deduplicate so action only appears once at first position
-  const unique = entries.filter((e,i) => entries.findIndex(x=>x.key===e.key) === i)
-
   return (
     <>
-      {unique.map((e, i) => (
+      {CANOPY_ENTRIES.map((e) => (
         <CanopyBubble
           key={e.key}
           icon={e.icon}
           label={e.label}
-          delay={i}
+          delay={e.delay}
           pos={{ left: e.left, top: e.top }}
           active={open === e.key}
           accent={e.accent}
-          onClick={(btn) => toggle(e.key, btn, e.key === 'shop' ? 296 : 280)}
+          onClick={(btn) => handleClick(e.key, btn)}
         />
       ))}
 
@@ -1050,27 +1068,7 @@ const TreehouseReport: React.FC = () => {
       title={config?.name ? `${config.name} 的树屋` : '健康树屋'}
       subtitle="悬停家具查看健康数据"
       sceneLayer={furnitureScene}
-      actions={
-        <button
-          type="button"
-          onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
-          style={{
-            background:  'transparent',
-            border:      'none',
-            cursor:      'pointer',
-            color:       'rgba(255,255,255,1)',
-            fontFamily:  '"Press Start 2P", monospace',
-            fontSize:    7,
-            fontWeight:  'bold',
-            letterSpacing: '0.04em',
-            textShadow:  '0 1px 3px rgba(0,0,0,0.7)',
-            padding:     0,
-            lineHeight:  1,
-          }}
-        >
-          更换宠物
-        </button>
-      }
+      hideControls
     >
       {/* Click-away to close pinned panel */}
       {pinned && (
