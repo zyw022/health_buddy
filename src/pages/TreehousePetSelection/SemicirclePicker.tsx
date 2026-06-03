@@ -4,7 +4,7 @@ import { COLOR_OPTIONS, GENDER_OPTIONS } from './config'
 import type { FeatherColor, PetGender } from '../../store/types'
 
 interface Props {
-  anchorX:      number   // percent
+  anchorX:      number   // unused — panel is always bottom-centered
   anchorY:      number
   gender:       PetGender | null
   featherColor: FeatherColor | null
@@ -13,27 +13,19 @@ interface Props {
   onConfirm:    () => void
 }
 
-function arcPosition(
-  index: number,
-  total: number,
-  radiusPx: number,
-  centerX: number,
-  centerY: number,
-  startDeg: number,
-  endDeg: number,
-) {
-  const t = total <= 1 ? 0.5 : index / (total - 1)
-  const deg = startDeg + t * (endDeg - startDeg)
-  const rad = (deg * Math.PI) / 180
-  return {
-    left: centerX + radiusPx * Math.cos(rad),
-    top:  centerY + radiusPx * Math.sin(rad),
-  }
-}
+// Pixel border style shared by both selectors
+const pixelBorder = (selected: boolean, accentColor?: string): React.CSSProperties => ({
+  border: `2px solid ${selected ? (accentColor ?? 'rgba(140,200,255,0.90)') : 'rgba(255,255,255,0.28)'}`,
+  boxShadow: selected
+    ? `2px 2px 0 rgba(0,0,0,0.70), 0 0 12px ${accentColor ?? 'rgba(140,200,255,0.40)'}55`
+    : '2px 2px 0 rgba(0,0,0,0.60)',
+  background: selected ? (accentColor ? `${accentColor}22` : 'rgba(100,160,255,0.18)') : 'rgba(14,17,38,0.88)',
+  imageRendering: 'pixelated',
+  cursor: 'pointer',
+  transition: 'border-color 0.1s, box-shadow 0.1s, background 0.1s',
+})
 
 export const SemicirclePicker: React.FC<Props> = ({
-  anchorX,
-  anchorY,
   gender,
   featherColor,
   onGender,
@@ -43,83 +35,107 @@ export const SemicirclePicker: React.FC<Props> = ({
   const ready = gender !== null && featherColor !== null
 
   return (
-    <div className="absolute inset-0 z-20 pointer-events-none [&_button]:pointer-events-auto">
-      <div
-        className="absolute pointer-events-auto"
+    // Positioned in the lower portion of the screen, below the pet sprite
+    <div className="absolute inset-0 z-20 flex flex-col items-center justify-end pointer-events-none pb-16">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+        className="pointer-events-auto mx-4 w-full max-w-[280px]"
         style={{
-          left: `${anchorX}%`,
-          top: `${anchorY}%`,
-          transform: 'translate(-50%, -50%)',
+          background: 'rgba(10, 13, 30, 0.90)',
+          border: '3px solid rgba(0,0,0,0.85)',
+          outline: '1.5px solid rgba(255,255,255,0.15)',
+          outlineOffset: '-4px',
+          boxShadow: '4px 4px 0 rgba(0,0,0,0.70)',
+          imageRendering: 'pixelated',
         }}
       >
-        {/* Gender — inner semicircle (top arc) */}
-        {GENDER_OPTIONS.map((g, i) => {
-          const pos = arcPosition(i, GENDER_OPTIONS.length, 72, 0, -20, 200, 340)
-          return (
-            <motion.button
-              key={g.id}
-              type="button"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: i * 0.06, type: 'spring', stiffness: 420, damping: 22 }}
-              onClick={() => onGender(g.id)}
-              className="absolute flex flex-col items-center justify-center w-11 h-11 rounded-full border-2 transition-all"
-              style={{
-                left: pos.left,
-                top: pos.top,
-                transform: 'translate(-50%, -50%)',
-                borderColor: gender === g.id ? '#7dd3fc' : 'rgba(255,255,255,0.35)',
-                background: gender === g.id ? 'rgba(125,211,252,0.25)' : 'rgba(15,18,35,0.85)',
-                boxShadow: gender === g.id ? '0 0 16px rgba(125,211,252,0.5)' : '0 4px 12px rgba(0,0,0,0.3)',
-              }}
-              title={g.label}
-            >
-              <span className="text-white text-lg leading-none">{g.symbol}</span>
-            </motion.button>
-          )
-        })}
+        {/* ── Panel header ──────────────────────────────── */}
+        <div
+          className="px-4 py-2"
+          style={{
+            borderBottom: '2px solid rgba(255,255,255,0.10)',
+            background: 'rgba(255,255,255,0.04)',
+          }}
+        >
+          <p className="px-label text-white/60 text-center" style={{ fontSize: 8 }}>
+            选择性别与毛色
+          </p>
+        </div>
 
-        {/* Colors — outer semicircle */}
-        {COLOR_OPTIONS.map((c, i) => {
-          const pos = arcPosition(i, COLOR_OPTIONS.length, 118, 0, -24, 195, 345)
-          return (
-            <motion.button
-              key={c.id}
-              type="button"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.12 + i * 0.04, type: 'spring', stiffness: 420, damping: 22 }}
-              onClick={() => onColor(c.id)}
-              className="absolute w-9 h-9 rounded-full border-2 transition-all"
-              style={{
-                left: pos.left,
-                top: pos.top,
-                transform: 'translate(-50%, -50%)',
-                background: c.hex,
-                borderColor: featherColor === c.id ? '#fff' : 'rgba(255,255,255,0.4)',
-                boxShadow: featherColor === c.id ? '0 0 14px rgba(255,255,255,0.7)' : '0 2px 8px rgba(0,0,0,0.35)',
-              }}
-              title={c.label}
-            />
-          )
-        })}
+        <div className="px-4 py-3 space-y-3">
+          {/* ── Gender row ───────────────────────────────── */}
+          <div>
+            <p className="px-label text-white/40 mb-2" style={{ fontSize: 7 }}>性别</p>
+            <div className="flex gap-2">
+              {GENDER_OPTIONS.map((g, i) => (
+                <motion.button
+                  key={g.id}
+                  type="button"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: i * 0.06, type: 'spring', stiffness: 400, damping: 22 }}
+                  whileTap={{ scale: 0.93, x: 1, y: 1 }}
+                  onClick={() => onGender(g.id)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2"
+                  style={pixelBorder(gender === g.id, '#7dd3fc')}
+                >
+                  <span className="text-white/90" style={{ fontSize: 16, lineHeight: 1 }}>{g.symbol}</span>
+                  <span className="px-label text-white/80" style={{ fontSize: 8 }}>{g.label}</span>
+                </motion.button>
+              ))}
+            </div>
+          </div>
 
-        {ready && (
+          {/* ── Color row ────────────────────────────────── */}
+          <div>
+            <p className="px-label text-white/40 mb-2" style={{ fontSize: 7 }}>毛色</p>
+            <div className="grid grid-cols-6 gap-1.5">
+              {COLOR_OPTIONS.map((c, i) => (
+                <motion.button
+                  key={c.id}
+                  type="button"
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.08 + i * 0.04, type: 'spring', stiffness: 400, damping: 22 }}
+                  whileTap={{ scale: 0.90, x: 1, y: 1 }}
+                  onClick={() => onColor(c.id)}
+                  title={c.label}
+                  className="aspect-square"
+                  style={{
+                    background: c.hex,
+                    border: `2px solid ${featherColor === c.id ? '#fff' : 'rgba(0,0,0,0.60)'}`,
+                    boxShadow: featherColor === c.id
+                      ? `0 0 0 1.5px ${c.hex}, 2px 2px 0 rgba(0,0,0,0.70)`
+                      : '2px 2px 0 rgba(0,0,0,0.60)',
+                    imageRendering: 'pixelated',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.1s, box-shadow 0.1s',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* ── Confirm button ───────────────────────────── */}
           <motion.button
             type="button"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
+            animate={{ opacity: ready ? 1 : 0.35 }}
+            whileTap={ready ? { scale: 0.96, x: 2, y: 2 } : {}}
+            disabled={!ready}
             onClick={onConfirm}
-            className="absolute left-1/2 -translate-x-1/2 top-16 px-4 py-1.5 rounded-full text-xs text-white font-medium pointer-events-auto"
+            className="w-full py-2 px-btn px-btn-accent px-label"
             style={{
-              background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-              boxShadow: '0 4px 16px rgba(59,130,246,0.45)',
+              fontSize: 9,
+              opacity: ready ? 1 : 0.35,
+              cursor: ready ? 'pointer' : 'default',
             }}
           >
-            选好了 →
+            {ready ? '选好了 →' : '请选择性别和毛色'}
           </motion.button>
-        )}
-      </div>
+        </div>
+      </motion.div>
     </div>
   )
 }

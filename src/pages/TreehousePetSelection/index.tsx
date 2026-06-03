@@ -17,19 +17,38 @@ interface Props {
   mode?: 'onboard' | 'change'
 }
 
+// Pixel-style section header rendered at the bottom of the shell
+const PixelHeader: React.FC<{ title: string; subtitle?: string }> = ({ title, subtitle }) => (
+  <div className="flex flex-col items-center gap-1 pointer-events-none select-none">
+    <p
+      className="px-label text-white/90 text-center"
+      style={{ fontSize: 10 }}
+    >
+      {title}
+    </p>
+    {subtitle && (
+      <p
+        className="px-label text-white/45 text-center"
+        style={{ fontSize: 8 }}
+      >
+        {subtitle}
+      </p>
+    )}
+  </div>
+)
+
 const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
   const isChangeMode = mode === 'change'
   const { config, setConfig, completeOnboarding, saveToFile } = usePetStore()
 
-  const [phase,        setPhase]       = useState<SelectionPhase>('species')
-  const [species,      setSpecies]     = useState<PetSpecies | null>(null)
-  const [gender,       setGender]      = useState<PetGender | null>(null)
+  const [phase,        setPhase]        = useState<SelectionPhase>('species')
+  const [species,      setSpecies]      = useState<PetSpecies | null>(null)
+  const [gender,       setGender]       = useState<PetGender | null>(null)
   const [featherColor, setFeatherColor] = useState<FeatherColor | null>(null)
-  const [personality,  setPersonality] = useState<Personality | null>(null)
-  const [saving,       setSaving]      = useState(false)
-  const [fadePhase,    setFadePhase]   = useState<FadePhase>('visible')
+  const [personality,  setPersonality]  = useState<Personality | null>(null)
+  const [saving,       setSaving]       = useState(false)
+  const [fadePhase,    setFadePhase]    = useState<FadePhase>('visible')
 
-  // Pre-fill fields when changing pet
   useEffect(() => {
     if (!isChangeMode || !config) return
     setSpecies(config.species)
@@ -91,7 +110,6 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
         api.closeTreehouse()
       }
     } else {
-      // Start fade-out; pet window created after animation completes
       completeOnboarding()
       setFadePhase('out')
     }
@@ -107,8 +125,14 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
 
   const dimOthers = phase !== 'species' && species !== null
   const showBack  = phase !== 'species' && phase !== 'naming'
+  const petLabel  = activeCard?.label ?? '小伙伴'
 
-  const petLabel = activeCard?.label ?? '小伙伴'
+  const titleNode = (
+    <PixelHeader
+      title={isChangeMode ? '更换宠物' : PHASE_HINTS[phase]}
+      subtitle={phase === 'species' ? '选择一个伙伴开始你们的故事' : undefined}
+    />
+  )
 
   return (
     <TreehouseShell
@@ -122,15 +146,15 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
           <button
             type="button"
             onClick={goBack}
-            className="text-white/85 hover:text-white text-[11px] font-medium tracking-wide transition-opacity"
-            style={{ background: 'transparent', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+            className="px-btn px-label"
+            style={{ padding: '4px 10px', fontSize: 9 }}
           >
             ← 返回
           </button>
         ) : undefined
       }
     >
-      {/* ── Species selection: 2×2 card grid ───────────────────── */}
+      {/* ── Species selection: 2×2 pixel card grid ──────────────────── */}
       <AnimatePresence>
         {phase === 'species' && (
           <motion.div
@@ -138,48 +162,48 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.25 }}
             className="absolute inset-0 flex items-center justify-center pointer-events-auto z-30"
-            style={{ background: 'rgba(8,10,22,0.55)' }}
+            style={{ background: 'rgba(6,8,20,0.60)' }}
           >
-            <div className="grid grid-cols-2 gap-3 px-6 w-full max-w-xs">
+            <div className="grid grid-cols-2 gap-3 px-5 w-full max-w-[280px]">
               {SPECIES_CARDS.map((card, i) => (
                 <motion.button
                   key={card.id}
                   type="button"
-                  initial={{ opacity: 0, y: 16, scale: 0.92 }}
+                  initial={{ opacity: 0, y: 20, scale: 0.88 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
-                  transition={{ delay: i * 0.07, type: 'spring', stiffness: 380, damping: 26 }}
-                  whileHover={{ scale: 1.05, y: -3 }}
-                  whileTap={{ scale: 0.97 }}
+                  transition={{ delay: i * 0.07, type: 'spring', stiffness: 340, damping: 24 }}
+                  whileTap={{ scale: 0.95, x: 2, y: 2 }}
                   onClick={() => selectSpecies(card.id)}
-                  className="relative flex flex-col items-center gap-1.5 rounded-2xl py-4 px-2 transition-all outline-none"
-                  style={{
-                    background: 'rgba(15,18,35,0.88)',
-                    border: `1.5px solid rgba(255,255,255,0.12)`,
-                  }}
+                  className="px-card px-card-hover relative flex flex-col items-center gap-1.5 py-4 px-2 outline-none"
+                  style={{ border: `3px solid ${card.accent}88` }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = card.accent
-                    e.currentTarget.style.boxShadow   = `0 0 20px ${card.accent}44`
+                    (e.currentTarget as HTMLElement).style.borderColor = card.accent
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = `3px 3px 0 rgba(0,0,0,0.70), 0 0 18px ${card.accent}55`
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'
-                    e.currentTarget.style.boxShadow   = 'none'
+                    (e.currentTarget as HTMLElement).style.borderColor = `${card.accent}88`
+                    ;(e.currentTarget as HTMLElement).style.boxShadow = '3px 3px 0 rgba(0,0,0,0.70)'
                   }}
                 >
-                  {/* Emoji badge */}
+                  {/* Pixel emoji badge */}
                   <div
-                    className="absolute -top-2 -right-2 w-7 h-7 rounded-full flex items-center justify-center text-base"
-                    style={{ background: `${card.accent}33`, border: `1.5px solid ${card.accent}88` }}
+                    className="absolute -top-3 -right-3 w-7 h-7 flex items-center justify-center text-sm"
+                    style={{
+                      background: `${card.accent}22`,
+                      border: `2px solid ${card.accent}`,
+                      boxShadow: `2px 2px 0 rgba(0,0,0,0.70)`,
+                      imageRendering: 'pixelated',
+                    }}
                   >
                     {card.emoji}
                   </div>
 
-                  {/* Sprite preview */}
-                  <PetSprite action="idle" species={card.id} size={64} />
+                  <PetSprite action="idle" species={card.id} size={60} />
 
-                  <p className="text-white/90 text-xs font-semibold leading-none">{card.label}</p>
-                  <p className="text-white/40 text-[10px] leading-tight text-center">{card.desc}</p>
+                  <p className="px-label text-white/90 leading-none mt-1" style={{ fontSize: 9 }}>{card.label}</p>
+                  <p className="px-label text-white/45 text-center leading-tight" style={{ fontSize: 7 }}>{card.desc}</p>
                 </motion.button>
               ))}
             </div>
@@ -187,36 +211,36 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
         )}
       </AnimatePresence>
 
-      {/* ── Dim overlay for post-species phases ─────────────────── */}
+      {/* ── Dim overlay ─────────────────────────────────────────────── */}
       {dimOthers && (
         <div
           className="absolute inset-0 z-10 pointer-events-none"
-          style={{ background: 'radial-gradient(ellipse at 50% 50%, transparent 10%, rgba(8,10,22,0.60) 100%)' }}
+          style={{ background: 'radial-gradient(ellipse at 50% 55%, transparent 15%, rgba(6,8,20,0.65) 100%)' }}
         />
       )}
 
-      {/* Anchor the selected pet sprite at center when in appearance/personality */}
+      {/* ── Selected pet at center during appearance/personality ─────── */}
       {species && phase !== 'species' && phase !== 'naming' && (
         <motion.div
           key="selected-pet"
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="absolute z-20"
-          style={{ left: '50%', top: '50%', transform: 'translate(-50%, -60%)' }}
+          style={{ left: '50%', top: '54%', transform: 'translate(-50%, -50%)' }}
         >
           <PetSprite
             action={phase === 'appearance' ? 'idle' : 'happy'}
             species={species}
-            size={80}
+            size={72}
           />
         </motion.div>
       )}
 
-      {/* ── Appearance: gender + color semicircle ───────────────── */}
+      {/* ── Appearance: gender + color picker ───────────────────────── */}
       {phase === 'appearance' && (
         <SemicirclePicker
           anchorX={50}
-          anchorY={50}
+          anchorY={54}
           gender={gender}
           featherColor={featherColor}
           onGender={setGender}
@@ -225,15 +249,16 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
         />
       )}
 
-      {/* ── Personality bubbles ──────────────────────────────────── */}
+      {/* ── Personality bubbles ──────────────────────────────────────── */}
       {phase === 'personality' && (
         <PersonalityBubbles selected={personality} onSelect={selectPersonality} />
       )}
 
-      {/* ── Naming chat ─────────────────────────────────────────── */}
+      {/* ── Naming chat ─────────────────────────────────────────────── */}
       {phase === 'naming' && (
         <NamingChat
           petLabel={petLabel}
+          petSpecies={species ?? 'sparrow'}
           initialName={isChangeMode ? config?.name ?? '' : ''}
           saving={saving}
           onSubmit={handleSave}

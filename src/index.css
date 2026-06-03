@@ -19,7 +19,77 @@ body,
   user-select: none;
 }
 
-/* Custom scrollbar for selection pages */
+/* ── Pixel font (locally bundled, no network request) ─────────────── */
+@font-face {
+  font-family: 'Zpix';
+  src: url('/fonts/zpix.woff2') format('woff2'),
+       url('/fonts/zpix.woff')  format('woff');
+  font-display: swap;
+}
+
+/* Fallback pixel stack when Zpix is unavailable */
+:root {
+  --font-pixel: 'Zpix', 'DotGothic16', 'Press Start 2P', 'Courier New', monospace;
+}
+
+/* ── Pixel UI shared classes ───────────────────────────────────────── */
+
+/* Pixel card: dark fill, 2-layer border (black outer, translucent inner) */
+.px-card {
+  background: rgba(14, 17, 38, 0.92);
+  border: 3px solid rgba(0, 0, 0, 0.85);
+  outline: 1.5px solid rgba(255, 255, 255, 0.18);
+  outline-offset: -4px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.08);
+  image-rendering: pixelated;
+}
+
+/* Pixel card hover / selected accent glow */
+.px-card-hover {
+  transition: border-color 0.1s, box-shadow 0.1s;
+}
+
+/* Pixel button: chunky border with shadow offset (gives depth illusion) */
+.px-btn {
+  font-family: var(--font-pixel);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  background: rgba(30, 40, 80, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.70);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.70);
+  color: #fff;
+  image-rendering: pixelated;
+  cursor: pointer;
+  transition: transform 0.07s, box-shadow 0.07s;
+}
+.px-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.70);
+}
+.px-btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.70);
+}
+
+/* Pixel accent button */
+.px-btn-accent {
+  background: rgba(59, 100, 220, 0.95);
+  border-color: rgba(140, 180, 255, 0.80);
+}
+.px-btn-accent:hover:not(:disabled) {
+  background: rgba(80, 120, 240, 0.95);
+}
+
+/* Pixel label text */
+.px-label {
+  font-family: var(--font-pixel);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.9), 0 0 8px rgba(0,0,0,0.6);
+  image-rendering: pixelated;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
 }
@@ -28,5 +98,5 @@ body,
 }
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
+  border-radius: 0;
 }
