@@ -18,6 +18,7 @@ export const IPC = {
   SHOW_PET_MENU:       'show-pet-menu',
   SHOW_TREEHOUSE_MENU: 'show-treehouse-menu',
   GLOBAL_MOUSE_MOVE:   'global-mouse-move',
+  TRIGGER_PET_ACTION:  'trigger-pet-action',
 } as const
 
 export type TreehouseRoute = 'entry' | 'report' | 'change-pet'

@@ -83,6 +83,7 @@ export interface ElectronAPI {
   onPetConfigUpdated(cb: () => void): void
   removeAllListeners(channel: string): void
   onGlobalMouseMove(cb: (pos: { x: number; y: number }) => void): void
+  triggerPetAction(action: string): Promise<boolean>
 }
 
 // Convenience accessor for the electron API (only available in Electron renderer)

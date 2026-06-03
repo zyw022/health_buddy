@@ -68,4 +68,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onGlobalMouseMove: (cb: (pos: { x: number; y: number }) => void) => {
     ipcRenderer.on(IPC.GLOBAL_MOUSE_MOVE, (_event, pos: { x: number; y: number }) => cb(pos))
   },
+
+  // Trigger a pet action from the treehouse window (forwarded to pet overlay)
+  triggerPetAction: (action: string) =>
+    ipcRenderer.invoke(IPC.TRIGGER_PET_ACTION, action),
 })

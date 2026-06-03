@@ -3,9 +3,11 @@ import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BarChart, DimensionChart, LineChart } from '../../components/HealthChart'
 import { TreehouseShell } from '../../components/TreehouseShell'
+import { PetSprite } from '../../components/PetSprite'
 import { getElectronAPI, usePetStore } from '../../store/petStore'
 import { usePreferencesStore } from '../../store/preferencesStore'
 import { useAdviceHistoryStore } from '../../store/adviceHistoryStore'
+import type { PetAction, PetSpecies } from '../../store/types'
 import {
   FURNITURE,
   type ChartSeriesBundle,
@@ -429,6 +431,144 @@ const FurnitureItem: React.FC<{
   )
 }
 
+// ── Action labels (Chinese) ───────────────────────────────────────────────────
+const ACTION_LABELS: Record<PetAction, string> = {
+  idle:     '发呆',
+  happy:    '开心',
+  talk:     '说话',
+  yawn:     '打哈欠',
+  sleep:    '睡觉',
+  worried:  '担忧',
+  stretch:  '伸懒腰',
+  takeoff:  '起飞',
+  flyhappy: '欢快飞',
+  drowsy:   '犯困',
+}
+
+// Positions (left%, top%) for 10 bubbles scattered across the canopy area.
+// The treehouse canopy occupies roughly left 5–95%, top 2–35% of the container.
+const ACTION_POSITIONS: [number, number][] = [
+  [8,   8 ],  // idle      — far left canopy
+  [22,  4 ],  // happy     — upper left
+  [36,  14],  // talk      — mid-left canopy
+  [50,  6 ],  // yawn      — top center
+  [62,  15],  // sleep     — mid-right
+  [74,  5 ],  // worried   — upper right
+  [85,  13],  // stretch   — far right canopy
+  [15,  20],  // takeoff   — lower left branch
+  [45,  22],  // drowsy    — lower center
+  [70,  21],  // flyhappy  — lower right branch
+]
+
+const ACTIONS_ORDER: PetAction[] = [
+  'idle','happy','talk','yawn','sleep','worried','stretch','takeoff','drowsy','flyhappy',
+]
+
+// ── Single action bubble ──────────────────────────────────────────────────────
+const ActionBubble: React.FC<{
+  action:   PetAction
+  species:  PetSpecies
+  pos:      [number, number]
+  delay:    number
+}> = ({ action, species, pos, delay }) => {
+  const [hov, setHov] = useState(false)
+  const [fired, setFired] = useState(false)
+
+  const handleClick = useCallback(() => {
+    void getElectronAPI()?.triggerPetAction(action)
+    setFired(true)
+    setTimeout(() => setFired(false), 900)
+  }, [action])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.6 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ delay: delay * 0.07 + 0.2, duration: 0.35, ease: [0, 0, 0.2, 1] }}
+      style={{
+        position:   'absolute',
+        left:       `${pos[0]}%`,
+        top:        `${pos[1]}%`,
+        pointerEvents: 'auto',
+        zIndex:     5,
+      }}
+    >
+      <motion.div
+        animate={{ y: [0, -6, 0] }}
+        transition={{ duration: 2.6 + delay * 0.3, repeat: Infinity, ease: 'easeInOut', delay: delay * 0.4 }}
+      >
+        <button
+          type="button"
+          onClick={handleClick}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          title={ACTION_LABELS[action]}
+          style={{
+            display:        'flex',
+            flexDirection:  'column',
+            alignItems:     'center',
+            justifyContent: 'center',
+            width:          62,
+            height:         62,
+            borderRadius:   '50%',
+            background:     hov
+              ? 'rgba(255,255,255,0.38)'
+              : fired
+                ? 'rgba(253,230,138,0.42)'
+                : 'rgba(255,255,255,0.22)',
+            outline:        fired
+              ? '2px solid rgba(253,200,50,0.95)'
+              : '2px solid rgba(255,255,255,0.85)',
+            outlineOffset:  '2px',
+            border:         `2px solid ${hov ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.75)'}`,
+            boxShadow:      [
+              '0 3px 12px rgba(0,0,0,0.45)',
+              'inset -4px -4px 0px rgba(255,255,255,0.28)',
+            ].join(', '),
+            backdropFilter:       'blur(5px)',
+            WebkitBackdropFilter: 'blur(5px)',
+            cursor:         'pointer',
+            transition:     'background 0.12s, outline-color 0.12s',
+            padding:        0,
+            imageRendering: 'pixelated',
+          }}
+        >
+          {/* Mini sprite preview */}
+          <PetSprite action={action} species={species} size={36} />
+          {/* Label */}
+          <span style={{
+            display:     'block',
+            fontFamily:  '"Press Start 2P", monospace',
+            fontSize:    5,
+            fontWeight:  'bold',
+            color:       'rgba(255,255,255,0.95)',
+            textShadow:  '0 1px 3px rgba(0,0,0,0.8)',
+            lineHeight:  1,
+            marginTop:   2,
+          }}>
+            {ACTION_LABELS[action]}
+          </span>
+        </button>
+      </motion.div>
+    </motion.div>
+  )
+}
+
+// ── All action bubbles layer ──────────────────────────────────────────────────
+const ActionBubbles: React.FC<{ species: PetSpecies }> = ({ species }) => (
+  <>
+    {ACTIONS_ORDER.map((action, i) => (
+      <ActionBubble
+        key={action}
+        action={action}
+        species={species}
+        pos={ACTION_POSITIONS[i]}
+        delay={i}
+      />
+    ))}
+  </>
+)
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 const TreehouseReport: React.FC = () => {
@@ -533,6 +673,8 @@ const TreehouseReport: React.FC = () => {
           onClick={onClickItem}
         />
       ))}
+      {/* Action bubbles floating in the tree canopy */}
+      <ActionBubbles species={(config?.species ?? 'sparrow') as PetSpecies} />
     </div>
   )
 

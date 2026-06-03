@@ -319,6 +319,14 @@ function registerIpcHandlers(): void {
     return true
   })
 
+  // Treehouse triggers a pet action on the overlay window
+  ipcMain.handle(IPC.TRIGGER_PET_ACTION, (_event, action: string) => {
+    if (petWindow && !petWindow.isDestroyed()) {
+      petWindow.webContents.send(IPC.PET_ACTION_TRIGGER, action)
+    }
+    return true
+  })
+
   // Right-click context menu on the floating treehouse
   ipcMain.on(IPC.SHOW_TREEHOUSE_MENU, () => {
     if (!treehouseWindow || treehouseWindow.isDestroyed()) return
