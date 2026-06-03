@@ -148,14 +148,17 @@ const PetChat: React.FC = () => {
       <span style={{ position:'fixed', bottom:2, left:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
       <span style={{ position:'fixed', bottom:2, right:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
 
-      {/* Header */}
+      {/* Header — draggable title bar */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:'9px 12px 8px', borderBottom:'2px solid rgba(125,211,252,0.2)', flexShrink:0 }}>
-        <span style={{ fontFamily:PXF, fontSize:9, color:'#7dd3fc', textShadow:'0 0 6px #7dd3fc66' }}>
+        padding:'9px 12px 8px', borderBottom:'2px solid rgba(125,211,252,0.2)', flexShrink:0,
+        WebkitAppRegion: 'drag', cursor: 'move' }}>
+        <span style={{ fontFamily:PXF, fontSize:9, color:'#7dd3fc', textShadow:'0 0 6px #7dd3fc66',
+          pointerEvents:'none', userSelect:'none' }}>
           💬 和{petName}聊天
         </span>
         <button onClick={close} style={{ fontFamily:PXF, fontSize:9, color:'rgba(125,211,252,0.85)',
-          background:'transparent', border:'none', cursor:'pointer', lineHeight:1, padding:'0 2px' }}>✕</button>
+          background:'transparent', border:'none', cursor:'pointer', lineHeight:1, padding:'0 2px',
+          WebkitAppRegion: 'no-drag' }}>✕</button>
       </div>
 
       {/* Messages */}
