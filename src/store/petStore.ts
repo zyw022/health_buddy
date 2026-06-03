@@ -82,6 +82,7 @@ export interface ElectronAPI {
   onStepsRecord(cb: (steps: number) => void): void
   onPetConfigUpdated(cb: () => void): void
   removeAllListeners(channel: string): void
+  onGlobalMouseMove(cb: (pos: { x: number; y: number }) => void): void
 }
 
 // Convenience accessor for the electron API (only available in Electron renderer)

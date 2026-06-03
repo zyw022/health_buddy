@@ -15,8 +15,9 @@ export const IPC = {
   OPEN_TREEHOUSE:     'open-treehouse',
   PET_CONFIG_UPDATED: 'pet-config-updated',
   NOTIFY_PET_CONFIG:  'notify-pet-config',
-  SHOW_PET_MENU:      'show-pet-menu',
+  SHOW_PET_MENU:       'show-pet-menu',
   SHOW_TREEHOUSE_MENU: 'show-treehouse-menu',
+  GLOBAL_MOUSE_MOVE:   'global-mouse-move',
 } as const
 
 export type TreehouseRoute = 'entry' | 'report' | 'change-pet'

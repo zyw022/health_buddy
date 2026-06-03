@@ -2,6 +2,23 @@ import React, { useEffect, useRef } from 'react'
 import { motion, useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { getElectronAPI } from '../store/petStore'
 
+// Global mouse position in screen coordinates, updated via IPC from main process.
+// Shared across all TreehouseShell instances so the poller fires only once.
+let _screenX = -9999
+let _screenY = -9999
+let _globalMouseBound = false
+
+function bindGlobalMouse() {
+  if (_globalMouseBound) return
+  _globalMouseBound = true
+  const api = getElectronAPI()
+  if (!api) return
+  api.onGlobalMouseMove((pos) => {
+    _screenX = pos.x
+    _screenY = pos.y
+  })
+}
+
 export type FadePhase = 'in' | 'visible' | 'out'
 
 interface Props {
@@ -72,22 +89,47 @@ export const TreehouseShell: React.FC<Props> = ({
 
   const containerRef = useRef<HTMLDivElement>(null)
 
-  // Listen on window so parallax keeps working even when mouse is outside the Electron window.
-  // We normalise against the treehouse window's own size so depth feels consistent.
+  // Bind the IPC global mouse listener once (works outside window bounds).
+  // Falls back to DOM mousemove when running outside Electron (e.g. browser dev).
   useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      const el = containerRef.current
-      if (!el) return
-      const { left, top, width, height } = el.getBoundingClientRect()
-      // Use screen coordinates relative to window center; clamp to ±1.5 so
-      // moving far away from the window still produces a meaningful parallax.
-      const nx = Math.max(-1.5, Math.min(1.5, ((e.clientX - left) / width  - 0.5) * 2))
-      const ny = Math.max(-1.5, Math.min(1.5, ((e.clientY - top)  / height - 0.5) * 2))
-      rawX.set(nx)
-      rawY.set(ny)
+    const api = getElectronAPI()
+    if (api) {
+      // Electron path: receive screen-space coords pushed by main at ~30 fps
+      bindGlobalMouse()
+      const raf = { id: 0 }
+      const tick = () => {
+        const el = containerRef.current
+        if (el && _screenX !== -9999) {
+          const rect = el.getBoundingClientRect()
+          // Convert screen → client: on Windows clientRect is already in screen px
+          // when window has no scaling. getBoundingClientRect gives us page coords;
+          // we need screen coords for _screenX/_screenY.
+          // Approximate: screen origin of window = screenLeft/screenTop
+          const winLeft = window.screenLeft ?? window.screenX ?? 0
+          const winTop  = window.screenTop  ?? window.screenY ?? 0
+          const clientX = _screenX - winLeft
+          const clientY = _screenY - winTop
+          const nx = Math.max(-2, Math.min(2, ((clientX - rect.left) / rect.width  - 0.5) * 2))
+          const ny = Math.max(-2, Math.min(2, ((clientY - rect.top)  / rect.height - 0.5) * 2))
+          rawX.set(nx)
+          rawY.set(ny)
+        }
+        raf.id = requestAnimationFrame(tick)
+      }
+      raf.id = requestAnimationFrame(tick)
+      return () => cancelAnimationFrame(raf.id)
+    } else {
+      // Browser fallback
+      const onMove = (e: MouseEvent) => {
+        const el = containerRef.current
+        if (!el) return
+        const { left, top, width, height } = el.getBoundingClientRect()
+        rawX.set(Math.max(-2, Math.min(2, ((e.clientX - left) / width  - 0.5) * 2)))
+        rawY.set(Math.max(-2, Math.min(2, ((e.clientY - top)  / height - 0.5) * 2)))
+      }
+      window.addEventListener('mousemove', onMove)
+      return () => window.removeEventListener('mousemove', onMove)
     }
-    window.addEventListener('mousemove', onMove)
-    return () => window.removeEventListener('mousemove', onMove)
   }, [rawX, rawY])
 
 

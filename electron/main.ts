@@ -362,18 +362,43 @@ function registerIpcHandlers(): void {
   })
 }
 
+// ── Global mouse tracker ──────────────────────────────────────────────────
+// Polls screen.getCursorScreenPoint() at ~30 fps and pushes the absolute
+// cursor position to the treehouse renderer so parallax works even when the
+// mouse is outside the window bounds.
+
+let mousePoller: ReturnType<typeof setInterval> | null = null
+
+function startMousePoller(): void {
+  if (mousePoller) return
+  mousePoller = setInterval(() => {
+    if (!treehouseWindow || treehouseWindow.isDestroyed() || !treehouseWindow.isVisible()) return
+    const pos = screen.getCursorScreenPoint()
+    treehouseWindow.webContents.send(IPC.GLOBAL_MOUSE_MOVE, pos)
+  }, 33) // ~30 fps
+}
+
+function stopMousePoller(): void {
+  if (mousePoller) {
+    clearInterval(mousePoller)
+    mousePoller = null
+  }
+}
+
 // ── App lifecycle ─────────────────────────────────────────────────────────
 
 ;(app as unknown as Record<string, boolean>)['isQuitting'] = false
 
 app.on('before-quit', () => {
   ;(app as unknown as Record<string, boolean>)['isQuitting'] = true
+  stopMousePoller()
 })
 
 app.whenReady().then(() => {
   registerIpcHandlers()
   createTreehouseWindow()
   createTray()
+  startMousePoller()
 })
 
 app.on('window-all-closed', () => {

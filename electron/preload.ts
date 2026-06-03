@@ -63,4 +63,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel)
   },
+
+  // Global cursor position pushed from main at ~30 fps (works outside window bounds)
+  onGlobalMouseMove: (cb: (pos: { x: number; y: number }) => void) => {
+    ipcRenderer.on(IPC.GLOBAL_MOUSE_MOVE, (_event, pos: { x: number; y: number }) => cb(pos))
+  },
 })
