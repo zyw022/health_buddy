@@ -165,198 +165,161 @@ const HistoryPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
   )
 }
 
-// ── Ornate pixel frame SVG — draws a thick decorative border around content ──
-// The frame is rendered as a full-size absolute SVG overlay; content sits on top.
-// Frame thickness = FRAME variable (px on each side).
-const FRAME = 18
+// ── Thin pixel frame (F=8px) with corner ornaments ───────────────────────────
+const FRAME = 8
 
 const OrnateFrame: React.FC<{ w: number; h: number; isGold: boolean }> = ({ w, h, isGold }) => {
-  const gold1 = isGold ? '#fde68a' : '#7dd3fc'
-  const gold2 = isGold ? '#c8960a' : '#0e7490'
-  const gold3 = isGold ? '#8b6914' : '#164e63'
-  const dark  = isGold ? '#1a1000' : '#020b18'
-  const F = FRAME
+  const c1   = isGold ? '#fde68a' : '#7dd3fc'   // bright
+  const c2   = isGold ? '#a3720a' : '#0e7490'   // mid
+  const c3   = isGold ? '#5a3d06' : '#0c3547'   // dark frame fill
+  const dark = isGold ? '#120900' : '#020b18'
 
-  // Helper: horizontal strip across full width at given y, height th
-  const HStrip = (y: number, th: number, fill: string, op = 1) =>
-    <rect key={`h${y}`} x={0} y={y} width={w} height={th} fill={fill} opacity={op} />
-  const VStrip = (x: number, tw: number, fill: string, op = 1) =>
-    <rect key={`v${x}`} x={x} y={0} width={tw} height={h} fill={fill} opacity={op} />
+  // Frame strips (top/bottom/left/right bands, thickness = FRAME)
+  const strips = (
+    <>
+      {/* Frame fill */}
+      <rect x={0}      y={0}      width={w}     height={FRAME} fill={c3} />
+      <rect x={0}      y={h-FRAME} width={w}    height={FRAME} fill={c3} />
+      <rect x={0}      y={FRAME}  width={FRAME} height={h-FRAME*2} fill={c3} />
+      <rect x={w-FRAME} y={FRAME} width={FRAME} height={h-FRAME*2} fill={c3} />
+      {/* Outer bright edge */}
+      <rect x={0} y={0} width={w} height={1} fill={c1} opacity={0.9} />
+      <rect x={0} y={h-1} width={w} height={1} fill={c1} opacity={0.9} />
+      <rect x={0} y={0} width={1} height={h} fill={c1} opacity={0.9} />
+      <rect x={w-1} y={0} width={1} height={h} fill={c1} opacity={0.9} />
+      {/* Mid ridge */}
+      <rect x={1} y={3} width={w-2} height={1} fill={c2} opacity={0.7} />
+      <rect x={1} y={h-4} width={w-2} height={1} fill={c2} opacity={0.7} />
+      <rect x={3} y={1} width={1} height={h-2} fill={c2} opacity={0.7} />
+      <rect x={w-4} y={1} width={1} height={h-2} fill={c2} opacity={0.7} />
+      {/* Inner groove (shadow at content edge) */}
+      <rect x={0} y={FRAME-1} width={w} height={1} fill={dark} opacity={0.8} />
+      <rect x={0} y={h-FRAME} width={w} height={1} fill={dark} opacity={0.8} />
+      <rect x={FRAME-1} y={0} width={1} height={h} fill={dark} opacity={0.8} />
+      <rect x={w-FRAME} y={0} width={1} height={h} fill={dark} opacity={0.8} />
+    </>
+  )
 
-  // Corner square ornament (layered pixel squares)
-  const CornerOrnament = (cx: number, cy: number) => {
-    const s = F
-    return (
-      <g key={`c${cx}${cy}`}>
-        <rect x={cx} y={cy} width={s} height={s} fill={gold2} />
-        <rect x={cx+2} y={cy+2} width={s-4} height={s-4} fill={gold1} />
-        <rect x={cx+4} y={cy+4} width={s-8} height={s-8} fill={gold3} />
-        <rect x={cx+6} y={cy+6} width={s-12} height={s-12} fill={gold1} opacity={0.6} />
-        {/* 4 pixel dots around centre */}
-        <rect x={cx+1}   y={cy+s/2-1} width={2} height={2} fill={gold1} />
-        <rect x={cx+s-3} y={cy+s/2-1} width={2} height={2} fill={gold1} />
-        <rect x={cx+s/2-1} y={cy+1}   width={2} height={2} fill={gold1} />
-        <rect x={cx+s/2-1} y={cy+s-3} width={2} height={2} fill={gold1} />
-      </g>
-    )
+  // Bead row (3px beads every 5px on the frame face centre line)
+  const hBeadY = FRAME / 2 - 1
+  const hBeads = (yy: number) => {
+    const out = []
+    for (let x = FRAME + 3; x < w - FRAME - 3; x += 5)
+      out.push(<rect key={x} x={x} y={yy} width={3} height={2} fill={c1} opacity={0.45} />)
+    return out
+  }
+  const vBeadX = FRAME / 2 - 1
+  const vBeads = (xx: number) => {
+    const out = []
+    for (let y = FRAME + 3; y < h - FRAME - 3; y += 5)
+      out.push(<rect key={y} x={xx} y={y} width={2} height={3} fill={c1} opacity={0.45} />)
+    return out
   }
 
-  // Side bead pattern (repeating 2×4 px beads along edges)
-  const HBeads = (y: number, bh: number) => {
-    const beads = []
-    for (let x = F; x < w - F; x += 6) {
-      beads.push(<rect key={x} x={x} y={y+1} width={4} height={bh-2} fill={gold1} opacity={0.5} rx={1} />)
-    }
-    return <g key={`hb${y}`}>{beads}</g>
-  }
-  const VBeads = (x: number, bw: number) => {
-    const beads = []
-    for (let y = F; y < h - F; y += 6) {
-      beads.push(<rect key={y} x={x+1} y={y} width={bw-2} height={4} fill={gold1} opacity={0.5} rx={1} />)
-    }
-    return <g key={`vb${x}`}>{beads}</g>
-  }
+  // Corner: 8×8 block — outer square, then inner hollow, then dot
+  const Corn = (cx: number, cy: number) => (
+    <g key={`${cx}${cy}`}>
+      <rect x={cx}   y={cy}   width={8} height={8} fill={c2} />
+      <rect x={cx+1} y={cy+1} width={6} height={6} fill={c1} />
+      <rect x={cx+2} y={cy+2} width={4} height={4} fill={c3} />
+      <rect x={cx+3} y={cy+3} width={2} height={2} fill={c1} opacity={0.7} />
+    </g>
+  )
 
   return (
-    <svg
-      width={w} height={h}
-      style={{ position: 'absolute', inset: 0, pointerEvents: 'none', imageRendering: 'pixelated', zIndex: 1 }}
-    >
-      {/* Outer fill — frame background */}
-      {HStrip(0, F, gold3)}
-      {HStrip(h-F, F, gold3)}
-      {VStrip(0, F, gold3)}
-      {VStrip(w-F, F, gold3)}
-
-      {/* Outer edge highlight */}
-      {HStrip(0, 2, gold1, 0.8)}
-      {HStrip(h-2, 2, gold1, 0.8)}
-      {VStrip(0, 2, gold1, 0.8)}
-      {VStrip(w-2, 2, gold1, 0.8)}
-
-      {/* Inner shadow groove */}
-      {HStrip(F-3, 3, dark, 0.7)}
-      {HStrip(h-F, 3, dark, 0.7)}
-      {VStrip(F-3, 3, dark, 0.7)}
-      {VStrip(w-F, 3, dark, 0.7)}
-
-      {/* Inner highlight (content area edge) */}
-      {HStrip(F-1, 1, gold1, 0.55)}
-      {HStrip(h-F, 1, gold1, 0.55)}
-      {VStrip(F-1, 1, gold1, 0.55)}
-      {VStrip(w-F, 1, gold1, 0.55)}
-
-      {/* Bead decorations on frame face */}
-      {HBeads(3, F-6)}
-      {HBeads(h-F+3, F-6)}
-      {VBeads(3, F-6)}
-      {VBeads(w-F+3, F-6)}
-
-      {/* Mid-frame ridge lines */}
-      {HStrip(Math.floor(F/2)-1, 2, gold2, 0.9)}
-      {HStrip(h - Math.floor(F/2)-1, 2, gold2, 0.9)}
-      {VStrip(Math.floor(F/2)-1, 2, gold2, 0.9)}
-      {VStrip(w - Math.floor(F/2)-1, 2, gold2, 0.9)}
-
-      {/* Corner ornaments (always on top) */}
-      {CornerOrnament(0, 0)}
-      {CornerOrnament(w-F, 0)}
-      {CornerOrnament(0, h-F)}
-      {CornerOrnament(w-F, h-F)}
-
-      {/* Top-centre diamond badge */}
-      <g transform={`translate(${w/2},${F/2})`}>
-        <rect x={-5} y={-5} width={10} height={10} fill={gold2} transform="rotate(45)" />
-        <rect x={-3} y={-3} width={6}  height={6}  fill={gold1} transform="rotate(45)" />
-        <rect x={-1} y={-1} width={2}  height={2}  fill={dark}  transform="rotate(45)" />
+    <svg width={w} height={h}
+      style={{ position:'absolute', inset:0, pointerEvents:'none', imageRendering:'pixelated', zIndex:1 }}>
+      {strips}
+      {hBeads(hBeadY)}
+      {hBeads(h - hBeadY - 2)}
+      {vBeads(vBeadX)}
+      {vBeads(w - vBeadX - 2)}
+      {Corn(0, 0)}
+      {Corn(w-8, 0)}
+      {Corn(0, h-8)}
+      {Corn(w-8, h-8)}
+      {/* Diamond centre-top */}
+      <g transform={`translate(${w/2},${FRAME/2})`}>
+        <rect x={-4} y={-4} width={8} height={8} fill={c2} transform="rotate(45)" />
+        <rect x={-2} y={-2} width={4} height={4} fill={c1} transform="rotate(45)" />
       </g>
     </svg>
   )
 }
 
-// ── HoverPanel — ornate frame wrapping compact content ───────────────────────
+// ── HoverPanel ────────────────────────────────────────────────────────────────
 const HoverPanel: React.FC<{
   item:    FurnitureDef
   pos:     { x: number; y: number }
   series:  ChartSeriesBundle | null
   onClose: () => void
 }> = ({ item, pos, series, onClose }) => {
-  const isGold  = item.glowType === 'gold'
-  const accent  = isGold ? '#fde68a' : '#7dd3fc'
-  const bg      = isGold ? 'rgba(14,10,2,0.98)' : 'rgba(3,7,18,0.98)'
-  const glow    = isGold
-    ? '0 0 32px rgba(253,230,138,0.3), 0 6px 24px rgba(0,0,0,0.9)'
-    : '0 0 22px rgba(125,211,252,0.2), 0 6px 24px rgba(0,0,0,0.9)'
-  const PXF     = '"Press Start 2P", monospace'
-  const panelW  = (item.panelType === 'preferences' || item.panelType === 'history') ? 260 : 280
+  const isGold = item.glowType === 'gold'
+  const accent = isGold ? '#fde68a' : '#7dd3fc'
+  const bg     = isGold ? 'rgba(14,10,2,0.97)' : 'rgba(3,7,18,0.97)'
+  const glow   = isGold
+    ? '0 0 24px rgba(253,230,138,0.28), 0 4px 18px rgba(0,0,0,0.9)'
+    : '0 0 18px rgba(125,211,252,0.18), 0 4px 18px rgba(0,0,0,0.9)'
+  const PXF    = '"Press Start 2P", monospace'
+  const panelW = (item.panelType === 'preferences' || item.panelType === 'history') ? 240 : 256
 
-  // Measure actual rendered height to size the SVG frame correctly
   const wrapRef = useRef<HTMLDivElement>(null)
   const [frameH, setFrameH] = useState(0)
   useEffect(() => {
     if (!wrapRef.current) return
-    const ro = new ResizeObserver(entries => {
-      setFrameH(entries[0].contentRect.height + entries[0].contentRect.top * 0)
+    const ro = new ResizeObserver(() => {
+      if (wrapRef.current) setFrameH(wrapRef.current.offsetHeight)
     })
     ro.observe(wrapRef.current)
     setFrameH(wrapRef.current.offsetHeight)
     return () => ro.disconnect()
   }, [])
 
+  const P = FRAME + 4   // inner content padding
+
   return (
     <motion.div
       key={item.id}
       ref={wrapRef}
-      initial={{ opacity: 0, scale: 0.9, y: 6 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: 6 }}
-      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
-      style={{
-        position:    'absolute',
-        left: pos.x, top: pos.y,
-        width:       panelW,
-        background:  bg,
-        boxShadow:   glow,
-        zIndex:      50,
-        pointerEvents: 'auto',
-      }}
+      initial={{ opacity: 0, scale: 0.92, y: 5 }}
+      animate={{ opacity: 1, scale: 1,    y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 5 }}
+      transition={{ duration: 0.12, ease: [0, 0, 0.2, 1] }}
+      style={{ position:'absolute', left:pos.x, top:pos.y, width:panelW,
+               background:bg, boxShadow:glow, zIndex:50, pointerEvents:'auto' }}
     >
-      {/* Ornate SVG frame — sized to actual panel dimensions */}
       {frameH > 0 && <OrnateFrame w={panelW} h={frameH} isGold={isGold} />}
 
-      {/* Content inside the frame — padded by FRAME px */}
-      <div style={{
-        position: 'relative', zIndex: 2,
-        padding: `${FRAME + 2}px ${FRAME}px ${FRAME + 2}px ${FRAME}px`,
-      }}>
-        {/* Title row */}
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 5 }}>
-          <span style={{
-            fontFamily: PXF, fontSize: 6, color: accent,
-            letterSpacing: '0.06em', lineHeight: 1,
-            textShadow: `0 0 6px ${accent}88`,
-          }}>
-            {item.label}
-          </span>
-          <span style={{ fontFamily: PXF, fontSize: 4, color: 'rgba(255,255,255,0.28)', lineHeight: 1 }}>
-            {item.hint}
-          </span>
+      <div style={{ position:'relative', zIndex:2, padding:`${P}px ${P}px ${P}px ${P}px` }}>
+        {/* Title + close on one line */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
+          <div style={{ display:'flex', alignItems:'baseline', gap:5 }}>
+            <span style={{ fontFamily:PXF, fontSize:8, color:accent, lineHeight:1,
+              textShadow:`0 0 6px ${accent}66` }}>
+              {item.label}
+            </span>
+            <span style={{ fontFamily:PXF, fontSize:5, color:'rgba(255,255,255,0.3)', lineHeight:1 }}>
+              {item.hint}
+            </span>
+          </div>
+          <button onClick={onClose} style={{
+            fontFamily:PXF, fontSize:7, color:accent,
+            background:'transparent', border:'none', cursor:'pointer', lineHeight:1, padding:'0 0 0 6px',
+          }}>✕</button>
         </div>
 
-        {/* Close button */}
-        <button onClick={onClose} style={{
-          position: 'absolute', top: FRAME - 2, right: FRAME,
-          fontFamily: PXF, fontSize: 6,
-          color: accent, background: 'transparent', border: 'none',
-          cursor: 'pointer', lineHeight: 1, padding: 0,
-        }}>✕</button>
+        {/* 1px dashed divider */}
+        <div style={{
+          height:1, marginBottom:6,
+          background:`repeating-linear-gradient(to right,${accent}55 0,${accent}55 3px,transparent 3px,transparent 6px)`
+        }}/>
 
-        {/* Chart / preferences / history content */}
-        {(item.panelType === 'chart-line' || item.panelType === 'chart-bar' || item.panelType === 'chart-dimensions') &&
+        {/* Content */}
+        {(item.panelType==='chart-line'||item.panelType==='chart-bar'||item.panelType==='chart-dimensions') &&
           <ChartPanel item={item} series={series} onClose={onClose} />}
-        {item.panelType === 'preferences' &&
+        {item.panelType==='preferences' &&
           <PreferencesPanel item={item} series={series} onClose={onClose} />}
-        {item.panelType === 'history' &&
+        {item.panelType==='history' &&
           <HistoryPanel item={item} series={series} onClose={onClose} />}
       </div>
     </motion.div>

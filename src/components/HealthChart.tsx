@@ -34,7 +34,7 @@ interface DimensionChartProps {
 // Pixel font style applied via SVG fontFamily
 const PX_FONT = '"Press Start 2P", monospace'
 
-const PAD = { top: 32, right: 14, bottom: 30, left: 38 }
+const PAD = { top: 22, right: 10, bottom: 22, left: 32 }
 
 function formatShortDate(iso: string): string {
   const d = new Date(iso + 'T00:00:00')
@@ -72,7 +72,7 @@ const PixelCorners: React.FC<{ w: number; h: number; color: string }> = ({ w, h,
 export const LineChart: React.FC<LineChartProps> = ({
   title, unit, points,
   color = '#7dd3fc',
-  width = 224, height = 110,
+  width = 208, height = 96,
 }) => {
   if (points.length === 0) return <EmptyChart title={title} unit={unit} width={width} height={height} color={color} />
 
@@ -157,7 +157,7 @@ export const LineChart: React.FC<LineChartProps> = ({
 export const BarChart: React.FC<BarChartProps> = ({
   title, unit, points,
   color = '#86efac',
-  width = 224, height = 110,
+  width = 208, height = 96,
 }) => {
   if (points.length === 0) return <EmptyChart title={title} unit={unit} width={width} height={height} color={color} />
 
@@ -209,7 +209,7 @@ export const BarChart: React.FC<BarChartProps> = ({
 
 export const DimensionChart: React.FC<DimensionChartProps> = ({
   title, dims,
-  width = 224, height = 120,
+  width = 208, height = 108,
 }) => {
   const innerW = width  - PAD.left - PAD.right - 20
   const rowH   = (height - PAD.top - PAD.bottom) / dims.length
