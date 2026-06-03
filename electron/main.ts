@@ -362,25 +362,17 @@ function registerIpcHandlers(): void {
     ]).popup({ window: treehouseWindow })
   })
 
-  // Right-click context menu on the floating pet
+  // Right-click context menu on the floating pet — handled in renderer via OPEN_CHAT signal
   ipcMain.on(IPC.SHOW_PET_MENU, () => {
     if (!petWindow || petWindow.isDestroyed()) return
+    // Tell renderer to show its own pixel-art context menu
+    petWindow.webContents.send(IPC.SHOW_PET_MENU)
+  })
 
-    Menu.buildFromTemplate([
-      {
-        label: '查看健康报告',
-        click: () => createTreehouseWindow('report'),
-      },
-      {
-        label: '更换宠物',
-        click: () => createTreehouseWindow('change-pet'),
-      },
-      { type: 'separator' },
-      {
-        label: '隐藏宠物',
-        click: () => petWindow?.hide(),
-      },
-    ]).popup({ window: petWindow })
+  // Chat open request from renderer context menu
+  ipcMain.on(IPC.OPEN_CHAT, () => {
+    if (!petWindow || petWindow.isDestroyed()) return
+    petWindow.webContents.send(IPC.OPEN_CHAT)
   })
 }
 

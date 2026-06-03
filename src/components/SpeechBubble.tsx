@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 interface Props {
@@ -7,37 +7,62 @@ interface Props {
   onDismiss?: () => void
 }
 
+const PXF = '"Press Start 2P", monospace'
+
+/** Typewriter hook — reveals text character by character */
+function useTypewriter(text: string | null, speed = 40) {
+  const [displayed, setDisplayed] = useState('')
+  const [done, setDone] = useState(false)
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!text) { setDisplayed(''); setDone(false); return }
+    setDisplayed('')
+    setDone(false)
+    let i = 0
+    const tick = () => {
+      i++
+      setDisplayed(text.slice(0, i))
+      if (i < text.length) {
+        timerRef.current = setTimeout(tick, speed)
+      } else {
+        setDone(true)
+      }
+    }
+    timerRef.current = setTimeout(tick, speed)
+    return () => { if (timerRef.current) clearTimeout(timerRef.current) }
+  }, [text, speed])
+
+  return { displayed, done }
+}
+
 /**
  * Pixel-art speech bubble shown above the pet.
+ * Text is revealed with a typewriter effect.
  * The tail always points straight down toward the pet.
- * Scale origin is bottom-centre so the pop animation grows from the tail.
  */
 export const SpeechBubble: React.FC<Props> = ({
   text,
-  duration = 4000,
+  duration = 5000,
   onDismiss,
 }) => {
-  // Delay visibility by two rAF frames so framer-motion has a stable layout
-  // before the entrance animation begins — prevents the 1-frame jump.
-  // Two-phase render: first frame invisible (layout stabilises), second frame visible.
-  // This prevents the "jump from wrong position" that happens when transform:translateX(-50%)
-  // is calculated before the parent has its final width.
   const [visible, setVisible] = useState(false)
+  const { displayed, done } = useTypewriter(text, 38)
+
   useEffect(() => {
     if (!text) { setVisible(false); return }
     setVisible(false)
-    const t = setTimeout(() => setVisible(true), 100)
-    return () => clearTimeout(t)
+    const t = requestAnimationFrame(() => { setVisible(true) })
+    return () => cancelAnimationFrame(t)
   }, [text])
 
+  // Auto-dismiss only after typewriter finishes
   useEffect(() => {
-    if (!text) return
+    if (!text || !done) return
     const timer = setTimeout(() => onDismiss?.(), duration)
     return () => clearTimeout(timer)
-  }, [text, duration, onDismiss])
+  }, [text, done, duration, onDismiss])
 
-  const PXF = '"Press Start 2P", monospace'
-  // Tail height
   const TAIL_H = 10
 
   return (
@@ -55,10 +80,9 @@ export const SpeechBubble: React.FC<Props> = ({
           {/* ── Bubble body — pixel double-border ── */}
           <div style={{
             position:   'relative',
-            width:      200,     // fixed width so layout is stable before animation
+            width:      200,
             padding:    '8px 12px',
             background: '#fffde8',
-            // Outer border + inner highlight via box-shadow
             outline:    '2px solid #3d2b00',
             outlineOffset: 0,
             boxShadow:  'inset 0 0 0 2px #f5c842, 2px 2px 0 #3d2b00',
@@ -66,13 +90,9 @@ export const SpeechBubble: React.FC<Props> = ({
             userSelect: 'none',
           }}>
             {/* Corner pixel accents */}
-            {/* TL */}
             <span style={{ position:'absolute', top:0, left:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
-            {/* TR */}
             <span style={{ position:'absolute', top:0, right:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
-            {/* BL */}
             <span style={{ position:'absolute', bottom:0, left:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
-            {/* BR */}
             <span style={{ position:'absolute', bottom:0, right:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
 
             <p style={{
@@ -84,24 +104,26 @@ export const SpeechBubble: React.FC<Props> = ({
               textAlign:   'center',
               whiteSpace:  'pre-wrap',
               wordBreak:   'break-word',
+              minHeight:   '1.7em',
             }}>
-              {text}
+              {displayed}
+              {/* Blinking cursor while typing */}
+              {!done && (
+                <span style={{ display:'inline-block', width:2, height:'0.9em', background:'#2a1800',
+                  marginLeft:2, verticalAlign:'middle',
+                  animation:'blink-cursor 0.7s step-end infinite' }} />
+              )}
             </p>
           </div>
 
-          {/* ── Tail — pixel stepped triangle pointing DOWN toward the pet ── */}
-          {/* Layered 2-px-wide steps: outer (dark), mid (gold), inner (cream) */}
+          {/* ── Tail ── */}
           <div style={{ position:'absolute', left:'50%', top:'100%', transform:'translateX(-50%)', pointerEvents:'none' }}>
-            {/* Step 3 — widest, dark outline */}
             <div style={{ width:18, height:2, background:'#3d2b00', margin:'0 auto' }}/>
-            {/* Step 2 — mid, gold */}
             <div style={{ width:12, height:2, background:'#f5c842', margin:'0 auto' }}/>
-            {/* Step 1 — tip, dark */}
             <div style={{ width:6,  height:2, background:'#3d2b00', margin:'0 auto' }}/>
             <div style={{ width:2,  height:2, background:'#3d2b00', margin:'0 auto' }}/>
           </div>
 
-          {/* Invisible spacer so the parent div's height includes the tail */}
           <div style={{ height: TAIL_H }} />
         </motion.div>
       )}

@@ -60,6 +60,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on(IPC.PET_CONFIG_UPDATED, () => cb())
   },
 
+  onShowPetMenu: (cb: () => void) => {
+    ipcRenderer.on(IPC.SHOW_PET_MENU, () => cb())
+  },
+
+  onOpenChat: (cb: () => void) => {
+    ipcRenderer.on(IPC.OPEN_CHAT, () => cb())
+  },
+
+  openChat: () => ipcRenderer.send(IPC.OPEN_CHAT),
+
   removeAllListeners: (channel: string) => {
     ipcRenderer.removeAllListeners(channel)
   },
