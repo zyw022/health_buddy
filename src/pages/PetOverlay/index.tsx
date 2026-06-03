@@ -142,21 +142,29 @@ const PetOverlay: React.FC = () => {
       className="w-full h-full flex flex-col items-center justify-end"
       style={{ background: 'transparent' }}
     >
-      {/* Interactive zone: only pet + bubble capture mouse; rest is passthrough */}
+      {/* Interactive zone — pet is fixed at bottom, bubble floats above via absolute */}
       <div
-        className="flex flex-col items-center"
+        style={{ position: 'relative', display: 'inline-block' }}
         onMouseEnter={onInteractiveEnter}
         onMouseLeave={onInteractiveLeave}
       >
-        {bubble && (
-          <div style={{ display:'flex', justifyContent:'center', marginBottom: 4, width:'100%' }}>
-            <SpeechBubble
-              text={bubble}
-              onDismiss={dismissBubble}
-              duration={5000}
-            />
-          </div>
-        )}
+        {/* Bubble: absolute above the pet, centred, does NOT affect pet position */}
+        <div style={{
+          position:  'absolute',
+          bottom:    '100%',
+          left:      '50%',
+          transform: 'translateX(-50%)',
+          paddingBottom: 4,
+          width: 200,           // fixed width = bubble maxWidth, layout never shifts
+          display: 'flex',
+          justifyContent: 'center',
+        }}>
+          <SpeechBubble
+            text={bubble}
+            onDismiss={dismissBubble}
+            duration={5000}
+          />
+        </div>
 
         <div
           className="cursor-grab active:cursor-grabbing select-none"

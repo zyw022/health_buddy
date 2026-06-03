@@ -51,8 +51,7 @@ export const SpeechBubble: React.FC<Props> = ({
           {/* ── Bubble body — pixel double-border ── */}
           <div style={{
             position:   'relative',
-            maxWidth:   200,
-            minWidth:   90,
+            width:      200,     // fixed width so layout is stable before animation
             padding:    '8px 12px',
             background: '#fffde8',
             // Outer border + inner highlight via box-shadow
