@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { BarChart, DimensionChart, LineChart } from '../../components/HealthChart'
 import { TreehouseShell } from '../../components/TreehouseShell'
@@ -255,7 +256,7 @@ const OrnateFrame: React.FC<{ w: number; h: number; isGold: boolean }> = ({ w, h
   )
 }
 
-// ── HoverPanel ────────────────────────────────────────────────────────────────
+// ── HoverPanel — rendered via Portal to body so it's never clipped ───────────
 const HoverPanel: React.FC<{
   item:    FurnitureDef
   pos:     { x: number; y: number }
@@ -273,19 +274,33 @@ const HoverPanel: React.FC<{
 
   const wrapRef = useRef<HTMLDivElement>(null)
   const [frameH, setFrameH] = useState(0)
+  // Clamped position — adjusted after render so panel never overflows the screen
+  const [clampedPos, setClampedPos] = useState(pos)
+
   useEffect(() => {
-    if (!wrapRef.current) return
+    const el = wrapRef.current
+    if (!el) return
     const ro = new ResizeObserver(() => {
-      if (wrapRef.current) setFrameH(wrapRef.current.offsetHeight)
+      const h  = el.offsetHeight
+      const w  = el.offsetWidth
+      setFrameH(h)
+      // Re-clamp position now we know actual dimensions
+      const margin = 6
+      const maxX = window.innerWidth  - w  - margin
+      const maxY = window.innerHeight - h  - margin
+      setClampedPos({
+        x: Math.max(margin, Math.min(pos.x, maxX)),
+        y: Math.max(margin, Math.min(pos.y, maxY)),
+      })
     })
-    ro.observe(wrapRef.current)
-    setFrameH(wrapRef.current.offsetHeight)
+    ro.observe(el)
+    setFrameH(el.offsetHeight)
     return () => ro.disconnect()
-  }, [])
+  }, [pos])
 
-  const P = FRAME + 4   // inner content padding
+  const P = FRAME + 4
 
-  return (
+  const panel = (
     <motion.div
       key={item.id}
       ref={wrapRef}
@@ -293,22 +308,18 @@ const HoverPanel: React.FC<{
       animate={{ opacity: 1, scale: 1,    y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 5 }}
       transition={{ duration: 0.12, ease: [0, 0, 0.2, 1] }}
-      style={{ position:'absolute', left:pos.x, top:pos.y, width:panelW,
-               background:bg, boxShadow:glow, zIndex:50, pointerEvents:'auto' }}
+      style={{ position:'fixed', left:clampedPos.x, top:clampedPos.y, width:panelW,
+               background:bg, boxShadow:glow, zIndex:9999, pointerEvents:'auto' }}
     >
       {frameH > 0 && <OrnateFrame w={panelW} h={frameH} isGold={isGold} />}
 
       <div style={{ position:'relative', zIndex:2, padding:`${P}px ${P}px ${P}px ${P}px` }}>
-        {/* Title + close on one line */}
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:6 }}>
           <div style={{ display:'flex', alignItems:'baseline', gap:5 }}>
             <span style={{ fontFamily:PXF, fontSize:8, color:accent, lineHeight:1,
-              textShadow:`0 0 6px ${accent}66` }}>
-              {item.label}
-            </span>
+              textShadow:`0 0 6px ${accent}66` }}>{item.label}</span>
             <span style={{ fontFamily:PXF, fontSize:5, color:'rgba(255,255,255,0.3)', lineHeight:1 }}>
-              {item.hint}
-            </span>
+              {item.hint}</span>
           </div>
           <button onClick={onClose} style={{
             fontFamily:PXF, fontSize:7, color:accent,
@@ -316,13 +327,11 @@ const HoverPanel: React.FC<{
           }}>✕</button>
         </div>
 
-        {/* 1px dashed divider */}
         <div style={{
           height:1, marginBottom:6,
           background:`repeating-linear-gradient(to right,${accent}55 0,${accent}55 3px,transparent 3px,transparent 6px)`
         }}/>
 
-        {/* Content */}
         {(item.panelType==='chart-line'||item.panelType==='chart-bar'||item.panelType==='chart-dimensions') &&
           <ChartPanel item={item} series={series} onClose={onClose} />}
         {item.panelType==='preferences' &&
@@ -332,6 +341,9 @@ const HoverPanel: React.FC<{
       </div>
     </motion.div>
   )
+
+  // Portal to body — escapes any parent overflow:hidden or transform stacking context
+  return createPortal(panel, document.body)
 }
 
 // ── FurnitureItem — single piece with hover animation and click handler ────────
@@ -479,13 +491,15 @@ const TreehouseReport: React.FC = () => {
   }, [])
 
   const calcPos = useCallback((el: HTMLElement) => {
-    const rect   = el.getBoundingClientRect()
-    const winW   = window.innerWidth
-    const winH   = window.innerHeight
-    const panelW = 300
-    const panelH = 260
-    const x = rect.right + 10 + panelW > winW ? rect.left - panelW - 10 : rect.right + 10
-    const y = Math.max(8, Math.min(rect.top - 20, winH - panelH - 8))
+    // Returns viewport coords (for position:fixed panel via Portal).
+    // Actual clamping is done inside HoverPanel after render.
+    const rect  = el.getBoundingClientRect()
+    const winW  = window.innerWidth
+    const estW  = 256
+    // Prefer right side; fall back to left if no room
+    const x = rect.right + 12 + estW > winW ? rect.left - estW - 12 : rect.right + 12
+    // Start near the hitbox top; HoverPanel will clamp to viewport after measuring
+    const y = rect.top - 10
     return { x, y }
   }, [])
 
