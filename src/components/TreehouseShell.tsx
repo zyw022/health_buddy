@@ -61,10 +61,111 @@ const MAX_SHIFT_PX = 18
 // Floating bob for buttons
 const floatVariants = (delay: number) => ({
   animate: {
-    y: [0, -6, 0],
+    y: [0, -5, 0],
     transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' as const, delay },
   },
 })
+
+// ── Pixel-art speech bubble border (SVG, 9-slice style) ────────────────────────
+// Renders a pixel-art bubble frame around children with a bottom-center tail.
+const PixelBubble: React.FC<{
+  children: React.ReactNode
+  accentColor?: string
+  style?: React.CSSProperties
+  className?: string
+}> = ({ children, accentColor = 'rgba(255,255,255,0.9)', style, className }) => {
+  const borderColor = accentColor
+  const bgColor     = 'rgba(10,14,30,0.88)'
+  return (
+    <div
+      className={className}
+      style={{
+        display:        'inline-flex',
+        alignItems:     'center',
+        justifyContent: 'center',
+        position:       'relative',
+        padding:        '5px 10px',
+        background:     bgColor,
+        outline:        `2px solid ${borderColor}`,
+        outlineOffset:  '0px',
+        boxShadow:      `0 0 0 4px rgba(0,0,0,0.85), inset 0 0 0 1px rgba(255,255,255,0.07)`,
+        imageRendering: 'pixelated',
+        ...style,
+      }}
+    >
+      {children}
+      {/* Pixel tail pointing downward */}
+      <svg
+        width={10} height={8}
+        viewBox="0 0 10 8"
+        style={{
+          position:       'absolute',
+          bottom:         -8,
+          left:           '50%',
+          transform:      'translateX(-50%)',
+          display:        'block',
+          imageRendering: 'pixelated',
+          overflow:       'visible',
+        }}
+      >
+        {/* Shadow outline tail */}
+        <polygon points="0,0 10,0 5,8" fill="rgba(0,0,0,0.85)" />
+        {/* Bright fill tail matching bubble */}
+        <polygon points="2,0 8,0 5,6" fill={bgColor} />
+        {/* Left border pixel */}
+        <rect x={0} y={0} width={2} height={2} fill={borderColor} />
+        {/* Right border pixel */}
+        <rect x={8} y={0} width={2} height={2} fill={borderColor} />
+      </svg>
+    </div>
+  )
+}
+
+// Pixel close button (X in a pixel frame)
+const PixelCloseButton: React.FC<{
+  onClick: () => void
+  title?:  string
+}> = ({ onClick, title }) => {
+  const [hov, setHov] = React.useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'center',
+        width:          28,
+        height:         28,
+        background:     hov ? 'rgba(200,40,40,0.85)' : 'rgba(10,14,30,0.88)',
+        outline:        `2px solid ${hov ? 'rgba(255,120,120,0.95)' : 'rgba(255,255,255,0.85)'}`,
+        outlineOffset:  '0px',
+        boxShadow:      '0 0 0 4px rgba(0,0,0,0.85)',
+        imageRendering: 'pixelated',
+        border:         'none',
+        cursor:         'pointer',
+        transition:     'background 0.1s, outline-color 0.1s',
+        WebkitAppRegion:'no-drag' as React.CSSProperties['WebkitAppRegion'],
+      }}
+    >
+      {/* Pixel × drawn with SVG rects */}
+      <svg width={10} height={10} viewBox="0 0 10 10" style={{ imageRendering: 'pixelated', display:'block' }}>
+        <rect x={0} y={0} width={2} height={2} fill="white" />
+        <rect x={2} y={2} width={2} height={2} fill="white" />
+        <rect x={4} y={4} width={2} height={2} fill="white" />
+        <rect x={6} y={2} width={2} height={2} fill="white" />
+        <rect x={8} y={0} width={2} height={2} fill="white" />
+        <rect x={6} y={6} width={2} height={2} fill="white" />
+        <rect x={2} y={6} width={2} height={2} fill="white" />
+        <rect x={0} y={8} width={2} height={2} fill="white" />
+        <rect x={8} y={8} width={2} height={2} fill="white" />
+      </svg>
+    </button>
+  )
+}
 
 export const TreehouseShell: React.FC<Props> = ({
   children,
@@ -176,7 +277,7 @@ export const TreehouseShell: React.FC<Props> = ({
         </ParallaxLayer>
       ))}
 
-      {/* ── Treehouse image + furniture scene layer — same parallax depth ── */}
+      {/* ── Treehouse image + furniture scene layer + parallax-tracked UI buttons ── */}
       <ParallaxLayer springX={springX} springY={springY} depth={2.0} bleed={MAX_SHIFT_PX * 2.0 * 1.5}>
         <img
           src="materials/treehouse/treehouse.png"
@@ -186,98 +287,79 @@ export const TreehouseShell: React.FC<Props> = ({
           style={{ opacity: imageOpacity }}
         />
         {sceneLayer}
-      </ParallaxLayer>
 
-      {/* ── Floating bubble controls ────────────────────────────────── */}
-      {!pureImage && (
-        <div
-          className="absolute inset-0 z-50"
-          style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }}
-        >
-          {/* Left bubble: actions slot */}
-          {actions && (
-            <motion.div
-              variants={floatVariants(0)}
-              animate="animate"
-              className="absolute"
-              style={{ left: '38%', top: '18%', pointerEvents: 'auto' }}
-            >
-              <div className="relative flex flex-col items-center">
-                <div
-                  className="flex items-center justify-center px-3 h-8 rounded-full"
-                  style={{
-                    background:    'rgba(255,255,255,0.12)',
-                    border:        '1.5px solid rgba(255,255,255,0.35)',
-                    backdropFilter:'blur(8px)',
-                    WebkitBackdropFilter: 'blur(8px)',
-                    boxShadow:     '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25)',
-                  }}
-                >
-                  {actions}
+        {/* Buttons live inside the depth-2.0 layer so they track with the treehouse */}
+        {!pureImage && (
+          <div
+            className="absolute inset-0"
+            style={{ pointerEvents: 'none', WebkitAppRegion: 'no-drag' }}
+          >
+            {/* Actions bubble — left side of canopy, ~20% from left, ~12% from top */}
+            {actions && (
+              <motion.div
+                variants={floatVariants(0)}
+                animate="animate"
+                style={{ position: 'absolute', left: '20%', top: '12%', pointerEvents: 'auto', zIndex: 10 }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <PixelBubble>
+                    {actions}
+                  </PixelBubble>
                 </div>
-                <BubbleTail />
+              </motion.div>
+            )}
+
+            {/* Close button — right side of canopy, ~65% from left, ~7% from top */}
+            <motion.div
+              variants={floatVariants(0.9)}
+              animate="animate"
+              style={{ position: 'absolute', left: '65%', top: '7%', pointerEvents: 'auto', zIndex: 10 }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <PixelCloseButton onClick={handleClose} title="关闭树屋" />
               </div>
             </motion.div>
-          )}
+          </div>
+        )}
+      </ParallaxLayer>
 
-          {/* Right bubble: close × */}
-          <motion.div
-            variants={floatVariants(0.9)}
-            animate="animate"
-            className="absolute"
-            style={{ left: '72%', top: '12%', pointerEvents: 'auto' }}
-          >
-            <div className="relative flex flex-col items-center">
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex items-center justify-center w-8 h-8 rounded-full transition-all group"
-                style={{
-                  background:    'rgba(255,255,255,0.12)',
-                  border:        '1.5px solid rgba(255,255,255,0.35)',
-                  backdropFilter:'blur(8px)',
-                  WebkitBackdropFilter: 'blur(8px)',
-                  boxShadow:     '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25)',
-                  WebkitAppRegion: 'no-drag',
-                }}
-                onMouseEnter={e => {
-                  const b = e.currentTarget as HTMLButtonElement
-                  b.style.background  = 'rgba(255,80,80,0.35)'
-                  b.style.borderColor = 'rgba(255,120,120,0.6)'
-                }}
-                onMouseLeave={e => {
-                  const b = e.currentTarget as HTMLButtonElement
-                  b.style.background  = 'rgba(255,255,255,0.12)'
-                  b.style.borderColor = 'rgba(255,255,255,0.35)'
-                }}
-                title="关闭树屋"
-              >
-                <svg width={12} height={12} viewBox="0 0 12 12">
-                  <line x1="2" y1="2" x2="10" y2="10" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
-                  <line x1="10" y1="2" x2="2" y2="10" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-              </button>
-              <BubbleTail />
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Title / subtitle */}
+      {/* Title / subtitle — centred at bottom */}
       {!pureImage && (title || subtitle) && (
         <div
           className="absolute z-40 pointer-events-none select-none"
-          style={{ top: '28%', right: '5%', WebkitAppRegion: 'no-drag' }}
+          style={{
+            bottom: '6%',
+            left: 0,
+            right: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            WebkitAppRegion: 'no-drag',
+          }}
         >
           {title && (
-            <p className="text-right text-white/70 text-[11px] font-semibold leading-tight"
-              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
+            <p
+              className="text-center text-white/80 text-[11px] font-semibold leading-tight"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 9,
+                textShadow: '0 1px 6px rgba(0,0,0,0.95), 0 0 12px rgba(0,0,0,0.7)',
+                letterSpacing: '0.05em',
+              }}
+            >
               {title}
             </p>
           )}
           {subtitle && (
-            <p className="text-right text-white/35 text-[9px] mt-0.5"
-              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>
+            <p
+              className="text-center text-white/40 mt-1"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                fontSize: 6,
+                textShadow: '0 1px 4px rgba(0,0,0,0.9)',
+                letterSpacing: '0.03em',
+              }}
+            >
               {subtitle}
             </p>
           )}
@@ -310,31 +392,20 @@ export const TreehouseShell: React.FC<Props> = ({
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Bubble tail SVG */
-const BubbleTail: React.FC = () => (
-  <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
-    <path d="M5 7 L0 0 L10 0 Z"
-      fill="rgba(255,255,255,0.12)"
-      stroke="rgba(255,255,255,0.30)"
-      strokeWidth="1"
-      strokeLinejoin="round"
-    />
-  </svg>
-)
-
 /** Wraps a child in a parallax-shifted absolute layer */
 const ParallaxLayer: React.FC<{
-  children: React.ReactNode
-  springX:  ReturnType<typeof useSpring>
-  springY:  ReturnType<typeof useSpring>
-  depth:    number
-  bleed:    number
-}> = ({ children, springX, springY, depth, bleed }) => {
+  children:      React.ReactNode
+  springX:       ReturnType<typeof useSpring>
+  springY:       ReturnType<typeof useSpring>
+  depth:         number
+  bleed:         number
+  allowPointer?: boolean
+}> = ({ children, springX, springY, depth, bleed, allowPointer = false }) => {
   const tx = useSpringLayerX(springX, depth)
   const ty = useSpringLayerY(springY, depth)
   return (
     <motion.div
-      className="absolute pointer-events-none select-none"
+      className={`absolute select-none ${allowPointer ? '' : 'pointer-events-none'}`}
       style={{ inset: `-${bleed}px`, x: tx, y: ty }}
     >
       {children}
