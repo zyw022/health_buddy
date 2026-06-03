@@ -66,10 +66,11 @@ const floatVariants = (delay: number) => ({
   },
 })
 
-// ── Oval speech bubble — semi-transparent white fill, black border, highlight ──
+// ── Pixel speech bubble — semi-transparent white fill, pixel border, highlight ──
+// Sharp corners, double-line pixel border, bottom-center pixel tail.
 const OvalBubble: React.FC<{
-  children:  React.ReactNode
-  style?:    React.CSSProperties
+  children:   React.ReactNode
+  style?:     React.CSSProperties
   className?: string
 }> = ({ children, style, className }) => (
   <div
@@ -79,55 +80,47 @@ const OvalBubble: React.FC<{
       alignItems:     'center',
       justifyContent: 'center',
       position:       'relative',
-      padding:        '6px 16px',
-      borderRadius:   '999px',
-      background:     'rgba(255,255,255,0.18)',
-      border:         '1.5px solid rgba(0,0,0,0.75)',
+      padding:        '7px 14px',
+      background:     'rgba(255,255,255,0.22)',
+      /* pixel double border: white outer, black mid, white inner */
+      outline:        '2px solid rgba(255,255,255,0.85)',
+      outlineOffset:  '2px',
+      border:         '2px solid rgba(0,0,0,0.80)',
       boxShadow:      [
-        /* drop shadow */
-        '0 2px 8px rgba(0,0,0,0.35)',
+        '0 3px 10px rgba(0,0,0,0.45)',
         /* bottom-right inner highlight */
-        'inset -3px -3px 6px rgba(255,255,255,0.28)',
-        /* top-left inner shadow for depth */
-        'inset 2px 2px 4px rgba(0,0,0,0.18)',
+        'inset -4px -4px 0px rgba(255,255,255,0.30)',
       ].join(', '),
-      backdropFilter:       'blur(6px)',
-      WebkitBackdropFilter: 'blur(6px)',
+      imageRendering: 'pixelated',
+      backdropFilter:       'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)',
       ...style,
     }}
   >
     {children}
-    {/* Tail pointing downward — small oval teardrop */}
+    {/* Pixel tail — 5 px wide stepped downward */}
     <svg
-      width={10} height={9}
-      viewBox="0 0 10 9"
-      style={{ position:'absolute', bottom:-9, left:'50%', transform:'translateX(-50%)', display:'block', overflow:'visible' }}
+      width={12} height={8}
+      viewBox="0 0 12 8"
+      style={{
+        position: 'absolute', bottom: -10, left: '50%',
+        transform: 'translateX(-50%)', display: 'block',
+        imageRendering: 'pixelated', overflow: 'visible',
+      }}
     >
-      {/* outer border path */}
-      <path d="M1 0 Q5 9 9 0" fill="rgba(255,255,255,0.18)" stroke="rgba(0,0,0,0.75)" strokeWidth="1.5" strokeLinejoin="round" />
-    </svg>
-    {/* Bottom-right highlight arc */}
-    <svg
-      viewBox="0 0 100 30"
-      style={{ position:'absolute', bottom:3, right:6, width:40, height:12, pointerEvents:'none' }}
-    >
-      <ellipse cx={60} cy={15} rx={38} ry={11}
-        fill="none"
-        stroke="rgba(255,255,255,0.45)"
-        strokeWidth={3}
-        strokeDasharray="0"
-        clipPath="url(#br-clip)"
-      />
-      <defs>
-        <clipPath id="br-clip">
-          <rect x={30} y={8} width={70} height={22} />
-        </clipPath>
-      </defs>
+      {/* black border pixels */}
+      <rect x={0}  y={0} width={4} height={2} fill="rgba(0,0,0,0.80)" />
+      <rect x={4}  y={2} width={4} height={2} fill="rgba(0,0,0,0.80)" />
+      <rect x={8}  y={0} width={4} height={2} fill="rgba(0,0,0,0.80)" />
+      {/* white fill pixels */}
+      <rect x={1}  y={0} width={3} height={2} fill="rgba(255,255,255,0.22)" />
+      <rect x={4}  y={2} width={4} height={1} fill="rgba(255,255,255,0.22)" />
+      <rect x={8}  y={0} width={3} height={2} fill="rgba(255,255,255,0.22)" />
     </svg>
   </div>
 )
 
-// ── Oval close button — same bubble style, shows × inside ──────────────────
+// ── Pixel close button — same bubble style with pixel × ────────────────────
 const OvalCloseButton: React.FC<{
   onClick: () => void
   title?:  string
@@ -144,26 +137,35 @@ const OvalCloseButton: React.FC<{
         display:        'flex',
         alignItems:     'center',
         justifyContent: 'center',
-        width:          32,
-        height:         32,
-        borderRadius:   '50%',
-        background:     hov ? 'rgba(220,60,60,0.45)' : 'rgba(255,255,255,0.18)',
-        border:         `1.5px solid ${hov ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.75)'}`,
+        width:          30,
+        height:         30,
+        background:     hov ? 'rgba(220,60,60,0.55)' : 'rgba(255,255,255,0.22)',
+        outline:        '2px solid rgba(255,255,255,0.85)',
+        outlineOffset:  '2px',
+        border:         `2px solid ${hov ? 'rgba(180,30,30,0.90)' : 'rgba(0,0,0,0.80)'}`,
         boxShadow:      [
-          '0 2px 8px rgba(0,0,0,0.35)',
-          'inset -3px -3px 6px rgba(255,255,255,0.28)',
-          'inset 2px 2px 4px rgba(0,0,0,0.18)',
+          '0 3px 10px rgba(0,0,0,0.45)',
+          'inset -3px -3px 0px rgba(255,255,255,0.30)',
         ].join(', '),
-        backdropFilter:       'blur(6px)',
-        WebkitBackdropFilter: 'blur(6px)',
+        imageRendering: 'pixelated',
+        backdropFilter:       'blur(4px)',
+        WebkitBackdropFilter: 'blur(4px)',
         cursor:         'pointer',
-        transition:     'background 0.15s',
+        transition:     'background 0.1s, border-color 0.1s',
         WebkitAppRegion:'no-drag' as React.CSSProperties['WebkitAppRegion'],
       }}
     >
-      <svg width={10} height={10} viewBox="0 0 10 10" style={{ display:'block' }}>
-        <line x1="2" y1="2" x2="8" y2="8" stroke="rgba(0,0,0,0.75)" strokeWidth="1.8" strokeLinecap="round" />
-        <line x1="8" y1="2" x2="2" y2="8" stroke="rgba(0,0,0,0.75)" strokeWidth="1.8" strokeLinecap="round" />
+      {/* Pixel × — 2px square dots */}
+      <svg width={12} height={12} viewBox="0 0 12 12" style={{ imageRendering:'pixelated', display:'block' }}>
+        <rect x={1}  y={1}  width={2} height={2} fill="white" />
+        <rect x={3}  y={3}  width={2} height={2} fill="white" />
+        <rect x={5}  y={5}  width={2} height={2} fill="white" />
+        <rect x={7}  y={3}  width={2} height={2} fill="white" />
+        <rect x={9}  y={1}  width={2} height={2} fill="white" />
+        <rect x={7}  y={7}  width={2} height={2} fill="white" />
+        <rect x={3}  y={7}  width={2} height={2} fill="white" />
+        <rect x={1}  y={9}  width={2} height={2} fill="white" />
+        <rect x={9}  y={9}  width={2} height={2} fill="white" />
       </svg>
     </button>
   )
