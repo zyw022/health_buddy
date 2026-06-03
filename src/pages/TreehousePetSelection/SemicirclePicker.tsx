@@ -43,7 +43,7 @@ export const SemicirclePicker: React.FC<Props> = ({
   const ready = gender !== null && featherColor !== null
 
   return (
-    <div className="absolute inset-0 z-20 pointer-events-none">
+    <div className="absolute inset-0 z-20 pointer-events-none [&_button]:pointer-events-auto">
       <div
         className="absolute pointer-events-auto"
         style={{

@@ -10,7 +10,7 @@ interface Props {
 
 export const PersonalityBubbles: React.FC<Props> = ({ selected, onSelect }) => {
   return (
-    <div className="absolute inset-0 z-[25] pointer-events-none">
+    <div className="absolute inset-0 z-[25] pointer-events-none [&_button]:pointer-events-auto">
       {PERSONALITY_OPTIONS.map((p, i) => {
         const layout = PERSONALITY_BUBBLE_LAYOUT[i]
         return (

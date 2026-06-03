@@ -63,6 +63,7 @@ export interface ElectronAPI {
   openTreehouse(route?: 'entry' | 'report' | 'change-pet'): Promise<boolean>
   notifyPetConfigUpdated(): Promise<boolean>
   showPetContextMenu(): void
+  showTreehouseContextMenu(): void
   setIgnoreMouseEvents(ignore: boolean): void
   onPetAction(cb: (action: string) => void): void
   onSpeechBubble(cb: (payload: { text: string; duration?: number }) => void): void

@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { AnimatePresence, motion } from 'framer-motion'
 import { BarChart, DimensionChart, LineChart } from '../../components/HealthChart'
-import { getElectronAPI } from '../../store/petStore'
-import { usePetStore } from '../../store/petStore'
+import { TreehouseShell } from '../../components/TreehouseShell'
+import { getElectronAPI, usePetStore } from '../../store/petStore'
 import { HOTSPOTS, type ChartSeriesBundle, type HotspotDef } from './hotspots'
 
 const TreehouseReport: React.FC = () => {
@@ -20,9 +20,8 @@ const TreehouseReport: React.FC = () => {
         setSeries(data)
         return
       }
-      // Fallback: build minimal chart data from health-today if script not run
       const today = await api.readData('health-today.json') as {
-        raw?: { sleepMinutes?: number; waterCups?: number; steps?: number; sedentaryMinutes?: number; screenTimeMinutes?: number }
+        raw?: { sleepMinutes?: number; waterCups?: number; steps?: number; sedentaryMinutes?: number }
         state?: { energy?: number; stress?: number; burnout?: number; sedentary?: number }
       } | null
       if (today?.raw && today?.state) {
@@ -64,8 +63,8 @@ const TreehouseReport: React.FC = () => {
   const onHotspotEnter = useCallback((spot: HotspotDef, e: React.MouseEvent<HTMLButtonElement>) => {
     const rect = e.currentTarget.getBoundingClientRect()
     setPanelPos({
-      x: Math.min(rect.right + 12, window.innerWidth - 300),
-      y: Math.max(16, rect.top - 40),
+      x: Math.min(rect.right + 8, window.innerWidth - 280),
+      y: Math.max(40, rect.top - 8),
     })
     setActive(spot)
   }, [])
@@ -84,6 +83,8 @@ const TreehouseReport: React.FC = () => {
             { label: '过劳', value: d.burnout, color: '#fdba74' },
             { label: '久坐', value: d.sedentary, color: '#93c5fd' },
           ]}
+          width={260}
+          height={130}
         />
       )
     }
@@ -98,6 +99,8 @@ const TreehouseReport: React.FC = () => {
           unit={s.unit}
           points={s.points}
           color={spot.id === 'book' ? '#c4b5fd' : '#7dd3fc'}
+          width={260}
+          height={130}
         />
       )
     }
@@ -108,121 +111,81 @@ const TreehouseReport: React.FC = () => {
         unit={s.unit}
         points={s.points}
         color={spot.id === 'cup' ? '#67e8f9' : '#86efac'}
+        width={260}
+        height={130}
       />
     )
   }
 
   return (
-    <div
-      className="w-screen h-screen relative overflow-hidden"
-      style={{ background: '#0d0d1a' }}
+    <TreehouseShell
+      title={config?.name ? `${config.name} 的树屋` : '健康树屋'}
+      subtitle="鼠标移到物品上查看健康数据"
+      actions={
+        <button
+          type="button"
+          onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
+          className="px-2.5 h-6 rounded-full bg-white/15 hover:bg-white/25 text-white/75 text-[10px] transition-colors"
+        >
+          更换宠物
+        </button>
+      }
+      footer={
+        <div className="flex flex-wrap gap-1.5 justify-center pointer-events-none">
+          {HOTSPOTS.map((spot) => (
+            <span
+              key={spot.id}
+              className="text-white/40 text-[10px] px-2 py-0.5 rounded-full border border-white/15"
+            >
+              {spot.label}
+            </span>
+          ))}
+        </div>
+      }
     >
-      <motion.img
-        src="treehouse/treehouseorigin.jpg"
-        alt="树屋"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.8 }}
-        className="absolute inset-0 w-full h-full object-cover"
-        draggable={false}
-      />
+      {HOTSPOTS.map((spot) => (
+        <button
+          key={spot.id}
+          type="button"
+          className="absolute rounded-lg border-2 transition-all duration-200 focus:outline-none pointer-events-auto"
+          style={{
+            left: `${spot.x}%`,
+            top: `${spot.y}%`,
+            width: `${spot.w}%`,
+            height: `${spot.h}%`,
+            borderColor: active?.id === spot.id ? 'rgba(125,211,252,0.85)' : 'rgba(255,255,255,0)',
+            background: active?.id === spot.id ? 'rgba(125,211,252,0.12)' : 'transparent',
+          }}
+          onMouseEnter={(e) => onHotspotEnter(spot, e)}
+          onMouseLeave={() => setActive(null)}
+          aria-label={spot.label}
+        />
+      ))}
 
-      <div
-        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 py-5"
-        style={{ background: 'linear-gradient(to bottom, rgba(13,13,26,0.85), transparent)' }}
-      >
-        <div>
-          <h1 className="text-xl font-light text-white tracking-wide">
-            {config?.name ? `${config.name} 的树屋` : '健康树屋'}
-          </h1>
-          <p className="text-white/45 text-xs mt-1">
-            将鼠标移到物品上，查看对应健康记录
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
-            className="px-3 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-xs transition-colors"
-            title="更换宠物"
-          >
-            更换宠物
-          </button>
-          <button
-            type="button"
-            onClick={() => getElectronAPI()?.closeTreehouse()}
-            className="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white/70 text-sm transition-colors"
-            title="关闭"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
-
-      {/* Interactive hotspots */}
-      <div className="absolute inset-0 z-10">
-        {HOTSPOTS.map((spot) => (
-          <button
-            key={spot.id}
-            type="button"
-            className="absolute rounded-lg border-2 transition-all duration-200 focus:outline-none"
-            style={{
-              left: `${spot.x}%`,
-              top: `${spot.y}%`,
-              width: `${spot.w}%`,
-              height: `${spot.h}%`,
-              borderColor: active?.id === spot.id ? 'rgba(125,211,252,0.9)' : 'rgba(255,255,255,0)',
-              background: active?.id === spot.id ? 'rgba(125,211,252,0.15)' : 'rgba(255,255,255,0)',
-              boxShadow: active?.id === spot.id ? '0 0 20px rgba(125,211,252,0.35)' : 'none',
-            }}
-            onMouseEnter={(e) => onHotspotEnter(spot, e)}
-            onMouseLeave={() => setActive(null)}
-            aria-label={spot.label}
-          />
-        ))}
-      </div>
-
-      {/* Hover chart panel */}
       <AnimatePresence>
         {active && series && (
           <motion.div
             key={active.id}
-            initial={{ opacity: 0, scale: 0.92, y: 8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 8 }}
-            transition={{ duration: 0.18 }}
-            className="fixed z-30 rounded-2xl p-3 pointer-events-none"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.92 }}
+            transition={{ duration: 0.15 }}
+            className="absolute z-30 rounded-2xl p-2.5 pointer-events-none"
             style={{
               left: panelPos.x,
               top: panelPos.y,
               background: 'rgba(15, 18, 35, 0.92)',
               border: '1px solid rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(12px)',
-              boxShadow: '0 12px 40px rgba(0,0,0,0.45)',
+              boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
             }}
           >
-            <p className="text-white/90 text-sm font-medium mb-0.5 px-1">{active.label}</p>
-            <p className="text-white/40 text-xs mb-2 px-1">{active.hint}</p>
+            <p className="text-white/90 text-xs font-medium px-1">{active.label}</p>
+            <p className="text-white/40 text-[10px] px-1 mb-1">{active.hint}</p>
             {renderChart(active)}
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Legend */}
-      <div
-        className="absolute bottom-0 inset-x-0 z-20 px-6 py-4 flex flex-wrap gap-3 justify-center"
-        style={{ background: 'linear-gradient(to top, rgba(13,13,26,0.9), transparent)' }}
-      >
-        {HOTSPOTS.map((spot) => (
-          <span
-            key={spot.id}
-            className="text-white/35 text-xs px-2 py-1 rounded-full border border-white/10"
-          >
-            {spot.label}
-          </span>
-        ))}
-      </div>
-    </div>
+    </TreehouseShell>
   )
 }
 

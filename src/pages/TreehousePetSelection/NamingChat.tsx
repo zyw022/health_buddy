@@ -24,7 +24,7 @@ export const NamingChat: React.FC<Props> = ({
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="absolute inset-0 z-40 flex items-end justify-center pb-16 px-6"
+      className="absolute inset-0 z-40 flex items-end justify-center pb-16 px-6 pointer-events-auto"
       style={{ background: 'rgba(8,10,22,0.55)' }}
     >
       <motion.div

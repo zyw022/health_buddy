@@ -24,18 +24,19 @@ const DATA_DIR = isDev
   ? path.join(__dirname, '../../assetstore/data')
   : path.join(process.resourcesPath, 'assetstore/data')
 
-// ── TreehouseWindow (startup + pet selection) ─────────────────────────────
+// ── TreehouseWindow (floating image, like pet) ────────────────────────────
+
+const TREEHOUSE_W = 520
+const TREEHOUSE_H = 347
 
 function loadTreehouseWindow(win: BrowserWindow, route: TreehouseRoute = 'entry'): void {
-  const query =
-    route === 'report' ? { route: 'report' }
-    : route === 'change-pet' ? { route: 'change-pet' }
-    : undefined
+  const query: Record<string, string> = { mode: 'treehouse' }
+  if (route !== 'entry') query.route = route
 
   if (isDev) {
     const base = process.env['ELECTRON_RENDERER_URL'] ?? 'http://localhost:5173'
-    const url = query ? `${base}?route=${query.route}` : base
-    void win.loadURL(url)
+    const qs = new URLSearchParams(query).toString()
+    void win.loadURL(`${base}?${qs}`)
   } else {
     void win.loadFile(path.join(__dirname, '../renderer/index.html'), { query })
   }
@@ -44,18 +45,32 @@ function loadTreehouseWindow(win: BrowserWindow, route: TreehouseRoute = 'entry'
 function createTreehouseWindow(route: TreehouseRoute = 'entry'): void {
   if (treehouseWindow && !treehouseWindow.isDestroyed()) {
     loadTreehouseWindow(treehouseWindow, route)
+    const [x, y] = treehouseWindow.getPosition()
+    treehouseWindow.setBounds({ x, y, width: TREEHOUSE_W, height: TREEHOUSE_H })
     treehouseWindow.show()
     treehouseWindow.focus()
     return
   }
 
+  const { width: sw, height: sh } = screen.getPrimaryDisplay().workAreaSize
+
   treehouseWindow = new BrowserWindow({
-    width: 960,
-    height: 640,
-    center: true,
+    width: TREEHOUSE_W,
+    height: TREEHOUSE_H,
+    x: Math.round((sw - TREEHOUSE_W) / 2),
+    y: Math.round((sh - TREEHOUSE_H) / 2),
     frame: false,
+    transparent: true,
+    alwaysOnTop: true,
+    skipTaskbar: true,
     resizable: false,
-    backgroundColor: '#0d0d1a',
+    hasShadow: false,
+    thickFrame: false,
+    useContentSize: true,
+    minWidth: TREEHOUSE_W,
+    maxWidth: TREEHOUSE_W,
+    minHeight: TREEHOUSE_H,
+    maxHeight: TREEHOUSE_H,
     webPreferences: {
       preload: path.join(__dirname, '../preload/index.js'),
       contextIsolation: true,
@@ -234,12 +249,19 @@ function registerIpcHandlers(): void {
     }
   })
 
-  // Drag the pet window
+  // Drag the pet window (treehouse uses -webkit-app-region drag on title bar)
   ipcMain.on(IPC.WINDOW_MOVE, (event, { deltaX, deltaY }: { deltaX: number; deltaY: number }) => {
     const win = BrowserWindow.fromWebContents(event.sender)
-    if (win && !win.isDestroyed()) {
-      const [x, y] = win.getPosition()
-      win.setPosition(x + Math.round(deltaX), y + Math.round(deltaY))
+    if (!win || win.isDestroyed()) return
+
+    const [x, y] = win.getPosition()
+    const newX = x + Math.round(deltaX)
+    const newY = y + Math.round(deltaY)
+
+    if (win === treehouseWindow) {
+      win.setBounds({ x: newX, y: newY, width: TREEHOUSE_W, height: TREEHOUSE_H })
+    } else {
+      win.setPosition(newX, newY)
     }
   })
 
@@ -257,10 +279,10 @@ function registerIpcHandlers(): void {
     return true
   })
 
-  // Close the treehouse window (called from renderer after PetWindow is ready)
+  // Close / hide the treehouse window
   ipcMain.on(IPC.CLOSE_TREEHOUSE, () => {
     if (treehouseWindow && !treehouseWindow.isDestroyed()) {
-      treehouseWindow.close()
+      treehouseWindow.hide()
     }
   })
 
@@ -281,6 +303,27 @@ function registerIpcHandlers(): void {
       createPetWindow()
     }
     return true
+  })
+
+  // Right-click context menu on the floating treehouse
+  ipcMain.on(IPC.SHOW_TREEHOUSE_MENU, () => {
+    if (!treehouseWindow || treehouseWindow.isDestroyed()) return
+
+    Menu.buildFromTemplate([
+      {
+        label: '查看健康报告',
+        click: () => loadTreehouseWindow(treehouseWindow!, 'report'),
+      },
+      {
+        label: '更换宠物',
+        click: () => loadTreehouseWindow(treehouseWindow!, 'change-pet'),
+      },
+      { type: 'separator' },
+      {
+        label: '关闭树屋',
+        click: () => treehouseWindow?.hide(),
+      },
+    ]).popup({ window: treehouseWindow })
   })
 
   // Right-click context menu on the floating pet

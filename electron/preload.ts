@@ -32,6 +32,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   showPetContextMenu: () =>
     ipcRenderer.send(IPC.SHOW_PET_MENU),
 
+  showTreehouseContextMenu: () =>
+    ipcRenderer.send(IPC.SHOW_TREEHOUSE_MENU),
+
   // Toggle click-through for transparent pet window
   setIgnoreMouseEvents: (ignore: boolean) =>
     ipcRenderer.send(IPC.SET_IGNORE_MOUSE, ignore),
