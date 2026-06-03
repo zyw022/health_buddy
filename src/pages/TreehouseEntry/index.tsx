@@ -62,6 +62,8 @@ const TreehouseEntry: React.FC = () => {
 
   const hintText = isOnboarded ? '点击任意处进入' : '点击树屋，开始相遇'
 
+  if (phase === 'done') return null
+
   return (
     <TreehouseShell
       pureImage

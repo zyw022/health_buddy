@@ -117,11 +117,6 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
         height={size}
         style={{ imageRendering: 'pixelated', display: 'block' }}
       />
-      {!loaded && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span style={{ fontSize: size * 0.35 }}>🐦</span>
-        </div>
-      )}
     </div>
   )
 }

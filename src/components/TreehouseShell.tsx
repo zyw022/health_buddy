@@ -150,7 +150,11 @@ export const TreehouseShell: React.FC<Props> = ({
       transition={{ duration, ease }}
       onAnimationComplete={() => {
         if (fadePhase === 'in')  onFadeInComplete?.()
-        if (fadePhase === 'out') onFadeOutComplete?.()
+        if (fadePhase === 'out') {
+          // Immediately hide to prevent any flash on re-render after fade completes
+          if (containerRef.current) containerRef.current.style.visibility = 'hidden'
+          onFadeOutComplete?.()
+        }
       }}
     >
       {/* ── Background parallax layers ───────────────────────────────── */}
