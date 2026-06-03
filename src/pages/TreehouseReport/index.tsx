@@ -473,8 +473,8 @@ const CanopyBubble: React.FC<{
         style={{
           display:        'flex',
           alignItems:     'center',
-          gap:            5,
-          padding:        '5px 9px',
+          gap:            7,
+          padding:        '7px 12px',
           background:     active ? 'rgba(255,255,255,0.30)' : hov ? 'rgba(255,255,255,0.26)' : 'rgba(255,255,255,0.16)',
           outline:        active ? `2px solid ${accent}` : `2px solid rgba(255,255,255,0.80)`,
           outlineOffset:  '2px',
@@ -487,8 +487,8 @@ const CanopyBubble: React.FC<{
           transition:     'background 0.1s, outline-color 0.1s',
         }}
       >
-        <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
-        <span style={{ fontFamily: PXF, fontSize: 6, fontWeight: 'bold',
+        <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
+        <span style={{ fontFamily: PXF, fontSize: 10, fontWeight: 'bold',
           color: active ? accent : 'rgba(255,255,255,0.92)',
           textShadow: '0 1px 3px rgba(0,0,0,0.85)', lineHeight: 1 }}>
           {label}
