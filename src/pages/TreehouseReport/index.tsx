@@ -230,23 +230,28 @@ const FurnitureItem: React.FC<{
 
   return (
     <div className="absolute inset-0 pointer-events-none">
-      {/* Pure CSS: opacity fade-in + scale/glow animations — framer-motion NOT used here
-          so it cannot overwrite the CSS transform produced by furn-pulse keyframes */}
+      {/* Opacity wrapper — plain CSS transition, no framer, no transform */}
       <div
-        className={`absolute inset-0 ${scaleClass} ${glowClass}`}
-        style={{
-          transformOrigin: `${ox} ${oy}`,
-          opacity:    visible ? 1 : 0,
-          transition: 'opacity 0.4s ease',
-        }}
+        className="absolute inset-0"
+        style={{ opacity: visible ? 1 : 0, transition: 'opacity 0.4s ease' }}
       >
-        <img
-          src={item.src}
-          alt={item.label}
-          draggable={false}
-          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
-          style={{ imageRendering: 'pixelated' }}
-        />
+        {/* Scale layer — only the scale keyframe, transform-origin at hitbox centre */}
+        <div
+          className={`absolute inset-0 ${scaleClass}`}
+          style={{ transformOrigin: `${ox} ${oy}` }}
+        >
+          {/* Glow layer — only the drop-shadow keyframe, separate from scale so
+              both CSS animations can run concurrently without overwriting each other */}
+          <div className={`absolute inset-0 ${glowClass}`}>
+            <img
+              src={item.src}
+              alt={item.label}
+              draggable={false}
+              className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Invisible hit-target sized to actual furniture silhouette */}
