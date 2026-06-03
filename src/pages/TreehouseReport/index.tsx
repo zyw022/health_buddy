@@ -550,10 +550,10 @@ const ActionPanel: React.FC<{
       exit={{    opacity: 0, scale: 0.9, y: 6 }}
       transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
       style={{
-        position:     'absolute',
+        position:     'fixed',
         left:         pos.x,
         top:          pos.y,
-        zIndex:       60,
+        zIndex:       9999,
         pointerEvents:'auto',
         width:        248,
         ...pixelBox(),
@@ -642,7 +642,7 @@ const ChartsPanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
         <span style={{ fontFamily: PXF, fontSize: 7, color: '#86efac', textShadow: '0 0 6px #86efac66' }}>📊 健康图表</span>
@@ -717,7 +717,7 @@ const AdvicePanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
         <span style={{ fontFamily: PXF, fontSize: 7, color: '#fde68a', textShadow: '0 0 6px #fde68a66' }}>💡 历史建议</span>
@@ -798,7 +798,7 @@ const ShopPanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 296, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 296, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
@@ -932,6 +932,25 @@ const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSp
     setOpen(key)
   }, [open])
 
+  // Panels are portalled to document.body so position:fixed is relative to the
+  // true viewport — not the ParallaxLayer's CSS-transform stacking context.
+  const panels = (
+    <AnimatePresence>
+      {open === 'action' && (
+        <ActionPanel key="action" species={species} pos={panelPos} onClose={() => setOpen(null)} />
+      )}
+      {open === 'charts' && (
+        <ChartsPanel key="charts" series={series} pos={panelPos} onClose={() => setOpen(null)} />
+      )}
+      {open === 'advice' && (
+        <AdvicePanel key="advice" pos={panelPos} onClose={() => setOpen(null)} />
+      )}
+      {open === 'shop' && (
+        <ShopPanel key="shop" pos={panelPos} onClose={() => setOpen(null)} />
+      )}
+    </AnimatePresence>
+  )
+
   return (
     <>
       {CANOPY_ENTRIES.map((e) => (
@@ -947,20 +966,16 @@ const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSp
         />
       ))}
 
-      <AnimatePresence>
-        {open === 'action' && (
-          <ActionPanel key="action" species={species} pos={panelPos} onClose={() => setOpen(null)} />
-        )}
-        {open === 'charts' && (
-          <ChartsPanel key="charts" series={series} pos={panelPos} onClose={() => setOpen(null)} />
-        )}
-        {open === 'advice' && (
-          <AdvicePanel key="advice" pos={panelPos} onClose={() => setOpen(null)} />
-        )}
-        {open === 'shop' && (
-          <ShopPanel key="shop" pos={panelPos} onClose={() => setOpen(null)} />
-        )}
-      </AnimatePresence>
+      {/* Click-away backdrop to close panels — also portalled */}
+      {open && createPortal(
+        <div
+          style={{ position: 'fixed', inset: 0, zIndex: 9990, pointerEvents: 'auto' }}
+          onClick={() => setOpen(null)}
+        />,
+        document.body,
+      )}
+
+      {createPortal(panels, document.body)}
     </>
   )
 }
