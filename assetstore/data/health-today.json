@@ -1,24 +1,24 @@
 {
   "raw": {
-    "steps": 11341,
-    "sleepMinutes": 424,
-    "sleepQuality": 3,
-    "heartRate": 69,
-    "waterCups": 8,
-    "mood": 2,
-    "sedentaryMinutes": 52,
-    "keystrokesPerMin": 26,
-    "screenTimeMinutes": 283,
-    "activeMinutes": 367
+    "steps": 820,
+    "sleepMinutes": 450,
+    "sleepQuality": 4,
+    "heartRate": 72,
+    "waterCups": 2,
+    "mood": null,
+    "sedentaryMinutes": 106,
+    "keystrokesPerMin": 28,
+    "screenTimeMinutes": 263,
+    "activeMinutes": 263
   },
   "state": {
-    "energy": 77,
-    "stress": 39,
-    "burnout": 18,
-    "sedentary": 58,
+    "energy": 88,
+    "stress": 46,
+    "burnout": 8,
+    "sedentary": 100,
     "hydrationDue": false,
-    "sleepDue": false,
-    "timestamp": 1780545600000
+    "sleepDue": true,
+    "timestamp": 1780511777510
   },
-  "date": "2026-06-03T18:16:48.781Z"
+  "date": "2026-06-03T18:36:17.511Z"
 }

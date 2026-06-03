@@ -899,12 +899,12 @@ type PanelKey = 'action' | 'charts' | 'advice' | 'shop' | null
 //  商店:   win 68%, 27%  → ctr 66%, 31%
 //  关闭:   win 80%, 33%  → ctr 75%, 37%
 const CANOPY_ENTRIES = [
-  { key:'changePet' as const, icon:'🔄', label:'换宠物', accent:'rgba(255,255,255,0.9)', left:'16%', top:'37%', delay:0 },
-  { key:'action'   as const, icon:'🐦', label:'动作',   accent:'#7dd3fc',               left:'26%', top:'29%', delay:1 },
-  { key:'charts'   as const, icon:'📊', label:'图表',   accent:'#86efac',               left:'40%', top:'23%', delay:2 },
-  { key:'advice'   as const, icon:'💡', label:'建议',   accent:'#fde68a',               left:'53%', top:'28%', delay:3 },
-  { key:'shop'     as const, icon:'🌾', label:'商店',   accent:'#fbbf24',               left:'66%', top:'31%', delay:4 },
-  { key:'close'    as const, icon:'✕',  label:'关闭',   accent:'rgba(255,120,120,0.9)', left:'75%', top:'37%', delay:5 },
+  { key:'changePet' as const, icon:'🔄', label:'换宠物', accent:'rgba(255,255,255,0.9)', left:'20%', top:'33%', delay:0 },
+  { key:'action'   as const, icon:'🐦', label:'动作',   accent:'#7dd3fc',               left:'35%', top:'20%', delay:1 },
+  { key:'charts'   as const, icon:'📊', label:'图表',   accent:'#86efac',               left:'47%', top:'12%', delay:2 },
+  { key:'advice'   as const, icon:'💡', label:'建议',   accent:'#fde68a',               left:'60%', top:'18%', delay:3 },
+  { key:'shop'     as const, icon:'🌾', label:'商店',   accent:'#fbbf24',               left:'75%', top:'13%', delay:4 },
+  { key:'close'    as const, icon:'✕',  label:'关闭',   accent:'rgba(255,120,120,0.9)', left:'90%', top:'20%', delay:5 },
 ] as const
 
 type EntryKey = typeof CANOPY_ENTRIES[number]['key']
