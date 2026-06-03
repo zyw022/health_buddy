@@ -146,28 +146,16 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
       fadePhase={fadePhase}
       onFadeOutComplete={() => { void handleFadeOutComplete() }}
       actions={
-        <div style={{ display: 'flex', gap: 8 }}>
-          {showBack && (
-            <button
-              type="button"
-              onClick={goBack}
-              className="px-btn px-label"
-              style={{ padding: '4px 10px', fontSize: 9 }}
-            >
-              ← 返回
-            </button>
-          )}
-          {isChangeMode && (
-            <button
-              type="button"
-              onClick={handleClose}
-              className="px-btn px-label"
-              style={{ padding: '4px 10px', fontSize: 9, color: 'rgba(255,120,120,0.9)' }}
-            >
-              ✕ 退出
-            </button>
-          )}
-        </div>
+        showBack ? (
+          <button
+            type="button"
+            onClick={goBack}
+            className="px-btn px-label"
+            style={{ padding: '4px 10px', fontSize: 9 }}
+          >
+            ← 返回
+          </button>
+        ) : undefined
       }
     >
       {/* ── Species selection: 2×2 pixel card grid ──────────────────── */}
@@ -179,9 +167,22 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.25 }}
-            className="absolute inset-0 flex items-center justify-center pointer-events-auto z-30"
+            className="absolute inset-0 flex flex-col items-center justify-center pointer-events-auto z-30"
             style={{ background: 'rgba(6,8,20,0.60)' }}
           >
+            {/* 更换模式下显示退出按钮 */}
+            {isChangeMode && (
+              <div className="w-full max-w-[280px] px-5 flex justify-end mb-3">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="px-btn px-label"
+                  style={{ padding: '4px 12px', fontSize: 9, color: 'rgba(255,120,120,0.9)' }}
+                >
+                  ✕ 退出
+                </button>
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3 px-5 w-full max-w-[280px]">
               {SPECIES_CARDS.map((card, i) => (
                 <motion.button
