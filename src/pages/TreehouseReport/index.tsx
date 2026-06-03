@@ -642,17 +642,17 @@ const ChartsPanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 300, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
-        <span style={{ fontFamily: PXF, fontSize: 7, color: '#86efac', textShadow: '0 0 6px #86efac66' }}>📊 健康图表</span>
-        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color: '#86efac', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 9, color: '#86efac', textShadow: '0 0 6px #86efac66' }}>📊 健康图表</span>
+        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 9, color: '#86efac', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
       </div>
       {/* Tab: time series / dimensions */}
-      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 8px 0' }}>
+      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 10px 0' }}>
         {(['time','dims'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
-            fontFamily: PXF, fontSize: 5, fontWeight: 'bold', padding: '3px 8px',
+            fontFamily: PXF, fontSize: 7, padding: '4px 10px',
             background: tab===t ? 'rgba(134,239,172,0.18)' : 'transparent',
             color: tab===t ? '#86efac' : 'rgba(255,255,255,0.45)',
             border: 'none', borderBottom: tab===t ? '2px solid #86efac' : '2px solid transparent',
@@ -660,22 +660,22 @@ const ChartsPanel: React.FC<{
           }}>{t==='time' ? '时序' : '四维度'}</button>
         ))}
       </div>
-      <div style={{ padding: 8 }}>
-        {!series && <p style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.35)', padding:4 }}>数据加载中…</p>}
+      <div style={{ padding: 10 }}>
+        {!series && <p style={{ fontFamily: PXF, fontSize: 7, color:'rgba(255,255,255,0.35)', padding:4 }}>数据加载中…</p>}
         {series && tab === 'dims' && (
           <DimensionChart title="今日四维度" dims={[
             { label: '能量', value: series.dimensions.energy,    color: '#86efac' },
             { label: '压力', value: series.dimensions.stress,    color: '#fca5a5' },
             { label: '过劳', value: series.dimensions.burnout,   color: '#fdba74' },
             { label: '久坐', value: series.dimensions.sedentary, color: '#93c5fd' },
-          ]} width={256} height={120} />
+          ]} width={276} height={130} />
         )}
         {series && tab === 'time' && cur && (
           <>
-            <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:6 }}>
+            <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:8 }}>
               {charts.map((c, i) => (
                 <button key={i} onClick={() => setChartIdx(i)} style={{
-                  fontFamily: PXF, fontSize: 4, padding: '2px 6px',
+                  fontFamily: PXF, fontSize: 6, padding: '3px 7px',
                   background: chartIdx===i ? `${c.color}22` : 'transparent',
                   color: chartIdx===i ? c.color : 'rgba(255,255,255,0.4)',
                   outline: chartIdx===i ? `1px solid ${c.color}` : '1px solid rgba(255,255,255,0.15)',
@@ -684,8 +684,8 @@ const ChartsPanel: React.FC<{
               ))}
             </div>
             {cur.type === 'line'
-              ? <LineChart title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={256} height={110} />
-              : <BarChart  title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={256} height={110} />
+              ? <LineChart title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={276} height={120} />
+              : <BarChart  title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={276} height={120} />
             }
           </>
         )}
@@ -798,23 +798,23 @@ const ShopPanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 296, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       {/* Header */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
-        <span style={{ fontFamily: PXF, fontSize: 7, color: '#fbbf24', textShadow: '0 0 6px #fbbf2466' }}>🌾 鸟粮商店</span>
-        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color:'#fbbf24', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 9, color: '#fbbf24', textShadow: '0 0 6px #fbbf2466' }}>🌾 鸟粮商店</span>
+        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 9, color:'#fbbf24', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
       </div>
       {/* Seeds balance */}
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
-        <span style={{ fontFamily: PXF, fontSize: 6, color:'rgba(255,255,255,0.6)' }}>余额</span>
-        <span style={{ fontFamily: PXF, fontSize: 8, color:'#fde68a', textShadow:'0 0 8px #fde68a88' }}>🌾 {seeds}</span>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'6px 12px', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 7, color:'rgba(255,255,255,0.6)' }}>余额</span>
+        <span style={{ fontFamily: PXF, fontSize: 9, color:'#fde68a', textShadow:'0 0 8px #fde68a88' }}>🌾 {seeds}</span>
       </div>
       {/* Flash message */}
       <AnimatePresence>
         {msg && (
           <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
-            style={{ fontFamily: PXF, fontSize: 5, textAlign:'center', padding:'4px 8px',
+            style={{ fontFamily: PXF, fontSize: 7, textAlign:'center', padding:'5px 8px',
               color: msg.startsWith('🎉') ? '#86efac' : '#fca5a5',
               background: msg.startsWith('🎉') ? 'rgba(134,239,172,0.10)' : 'rgba(252,165,165,0.10)' }}>
             {msg}
@@ -822,10 +822,10 @@ const ShopPanel: React.FC<{
         )}
       </AnimatePresence>
       {/* Category tabs */}
-      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 8px 0', gap:2 }}>
+      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 10px 0', gap:2 }}>
         {(Object.keys(CATEGORY_LABELS) as Array<keyof typeof CATEGORY_LABELS>).map(c => (
           <button key={c} onClick={() => setCat(c as typeof cat)} style={{
-            fontFamily: PXF, fontSize: 4, padding:'2px 5px',
+            fontFamily: PXF, fontSize: 6, padding:'3px 7px',
             background: cat===c ? 'rgba(251,191,36,0.18)' : 'transparent',
             color: cat===c ? '#fbbf24' : 'rgba(255,255,255,0.4)',
             border: 'none', borderBottom: cat===c ? '2px solid #fbbf24' : '2px solid transparent',
@@ -833,33 +833,57 @@ const ShopPanel: React.FC<{
           }}>{CATEGORY_LABELS[c]}</button>
         ))}
       </div>
-      {/* Items grid */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:8, maxHeight:220, overflowY:'auto' }}>
+      {/* Items grid — 2 columns, pixel-art style cards */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8, padding:10, maxHeight:260, overflowY:'auto' }}>
         {filtered.map(item => {
           const owned   = ownedIds.has(item.id)
           const isFired = flash === item.id
           const canBuy  = seeds >= item.price && !owned
+          const borderColor = isFired ? 'rgba(253,200,50,0.9)' : owned ? 'rgba(134,239,172,0.7)' : 'rgba(255,255,255,0.22)'
+          const bgColor     = isFired ? 'rgba(253,230,138,0.18)' : owned ? 'rgba(134,239,172,0.06)' : 'rgba(255,255,255,0.03)'
           return (
             <button key={item.id} onClick={() => void handleBuy(item)} title={item.desc} style={{
-              display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px',
-              background: isFired ? 'rgba(253,230,138,0.22)' : owned ? 'rgba(134,239,172,0.08)' : 'rgba(255,255,255,0.04)',
-              outline: isFired ? '2px solid rgba(253,200,50,0.9)' : owned ? '2px solid rgba(134,239,172,0.5)' : '1px solid rgba(255,255,255,0.18)',
-              outlineOffset:'1px', border:'1px solid rgba(0,0,0,0.5)',
+              display:'flex', flexDirection:'row', alignItems:'center', gap:8, padding:'8px 10px',
+              background: bgColor,
+              border: 'none',
+              outline: `2px solid ${borderColor}`,
+              outlineOffset: '1px',
+              boxShadow: `inset 0 0 0 1px rgba(0,0,0,0.5), 2px 2px 0 rgba(0,0,0,0.6)`,
               cursor: canBuy ? 'pointer' : 'default',
-              opacity: !canBuy && !owned ? 0.55 : 1,
-              transition:'background 0.1s',
+              opacity: !canBuy && !owned ? 0.5 : 1,
+              transition:'background 0.12s, outline-color 0.12s',
               imageRendering:'pixelated',
+              textAlign: 'left',
             }}>
-              <span style={{ fontSize:22, lineHeight:1 }}>{item.emoji}</span>
-              <span style={{ fontFamily:PXF, fontSize:4, fontWeight:'bold', color: owned ? '#86efac' : 'rgba(255,255,255,0.85)', lineHeight:1, textAlign:'center' }}>{item.name}</span>
-              <span style={{ fontFamily:PXF, fontSize:4, color: owned ? '#86efac' : canBuy ? '#fde68a' : 'rgba(255,255,255,0.35)' }}>
-                {owned ? '✓ 已有' : `🌾${item.price}`}
-              </span>
+              {/* Pixel icon block */}
+              <div style={{
+                width: 36, height: 36, flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: 'rgba(0,0,0,0.45)',
+                outline: `2px solid ${borderColor}`,
+                outlineOffset: '-1px',
+                boxShadow: 'inset 1px 1px 0 rgba(255,255,255,0.08)',
+                imageRendering: 'pixelated',
+                fontSize: 22,
+                lineHeight: 1,
+              }}>{item.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily:PXF, fontSize:7, fontWeight:'bold',
+                  color: owned ? '#86efac' : 'rgba(255,255,255,0.9)',
+                  lineHeight: 1.5, marginBottom: 3,
+                  whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                }}>{item.name}</div>
+                <div style={{ fontFamily:PXF, fontSize:6,
+                  color: owned ? '#86efac' : canBuy ? '#fde68a' : 'rgba(255,255,255,0.3)',
+                }}>
+                  {owned ? '✓ 已拥有' : `🌾 ${item.price}`}
+                </div>
+              </div>
             </button>
           )
         })}
       </div>
-      <div style={{ padding:'4px 10px 6px', fontFamily:PXF, fontSize:4, color:'rgba(255,255,255,0.25)', textAlign:'center' }}>
+      <div style={{ padding:'5px 12px 7px', fontFamily:PXF, fontSize:6, color:'rgba(255,255,255,0.25)', textAlign:'center' }}>
         与宠物互动可获得鸟粮
       </div>
     </motion.div>
@@ -926,7 +950,7 @@ const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSp
       void getElectronAPI()?.openTreehouse('change-pet')
       return
     }
-    const panelW = key === 'shop' ? 296 : key === 'advice' ? 340 : 280
+    const panelW = key === 'shop' ? 340 : key === 'advice' ? 340 : key === 'charts' ? 300 : 280
     if (open === key) { setOpen(null); return }
     setPanelPos(calcBubblePos(btn, panelW))
     setOpen(key)
