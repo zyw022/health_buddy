@@ -22,12 +22,8 @@ export const SpeechBubble: React.FC<Props> = ({
   const [ready, setReady] = useState(false)
   useEffect(() => {
     if (!text) { setReady(false); return }
-    let id1: number
-    let id2: number
-    id1 = requestAnimationFrame(() => {
-      id2 = requestAnimationFrame(() => setReady(true))
-    })
-    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2) }
+    const t = setTimeout(() => setReady(true), 150)
+    return () => clearTimeout(t)
   }, [text])
 
   useEffect(() => {
