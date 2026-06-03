@@ -357,7 +357,7 @@ export const TreehouseShell: React.FC<Props> = ({
               className="text-center text-white/40 mt-1"
               style={{
                 fontFamily: '"Press Start 2P", monospace',
-                fontSize: 6,
+                fontSize: 9,
                 textShadow: '0 1px 4px rgba(0,0,0,0.9)',
                 letterSpacing: '0.03em',
               }}
