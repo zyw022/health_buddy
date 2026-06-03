@@ -22,12 +22,16 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
 
   const [loaded, setLoaded] = useState(false)
 
+  // For idle action: pause on frame 0 between blink cycles (simulate occasional blinking)
+  const idlePauseRef = useRef<{ pauseUntil: number }>({ pauseUntil: 0 })
+
   useEffect(() => {
     const cfg = getSpriteConfig(species, action)
     const src = cfg.file
 
     if (stateRef.current.currentSrc === src && stateRef.current.img?.complete) {
       stateRef.current.frameIdx = 0
+      idlePauseRef.current.pauseUntil = 0
       return
     }
 
@@ -87,12 +91,34 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
     function loop(ts: number) {
       const cfg = getSpriteConfig(species, action)
       const totalFrames = cfg.cols * cfg.rows
-      const interval = 1000 / cfg.fps
 
-      if (ts - s.lastTick >= interval) {
-        s.frameIdx = (s.frameIdx + 1) % totalFrames
-        s.lastTick = ts
-        draw()
+      if (action === 'idle') {
+        // Occasional blink: play through all frames once, then pause on frame 0 for 2-4s
+        if (ts < idlePauseRef.current.pauseUntil) {
+          // In pause phase — hold frame 0, wait
+        } else {
+          const blinkInterval = 1000 / cfg.fps
+          if (ts - s.lastTick >= blinkInterval) {
+            const next = s.frameIdx + 1
+            if (next >= totalFrames) {
+              // Finished one blink cycle — return to frame 0 and schedule a pause
+              s.frameIdx = 0
+              const pauseMs = 2000 + Math.random() * 2000  // 2–4 s
+              idlePauseRef.current.pauseUntil = ts + pauseMs
+            } else {
+              s.frameIdx = next
+            }
+            s.lastTick = ts
+            draw()
+          }
+        }
+      } else {
+        const interval = 1000 / cfg.fps
+        if (ts - s.lastTick >= interval) {
+          s.frameIdx = (s.frameIdx + 1) % totalFrames
+          s.lastTick = ts
+          draw()
+        }
       }
 
       s.animId = requestAnimationFrame(loop)

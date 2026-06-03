@@ -45,7 +45,7 @@ export function usePromptScheduler(): void {
       // Priority order: sedentary > hydration > fatigue > stress
       let triggered = false
 
-      if (!triggered && health.sedentary >= 65 && canFire('sedentary')) {
+      if (!triggered && health.sedentary >= 80 && canFire('sedentary')) {
         fire('sedentary')
         const out = forceMessage(rawData, config)
         setAction('stretch')
@@ -65,7 +65,7 @@ export function usePromptScheduler(): void {
         triggered = true
       }
 
-      if (!triggered && health.energy < 25 && canFire('fatigue')) {
+      if (!triggered && health.energy < 20 && canFire('fatigue')) {
         fire('fatigue')
         const out = forceMessage(rawData, config)
         setAction('yawn')
@@ -73,7 +73,7 @@ export function usePromptScheduler(): void {
         triggered = true
       }
 
-      if (!triggered && health.stress >= 65 && canFire('stress')) {
+      if (!triggered && health.stress >= 75 && canFire('stress')) {
         fire('stress')
         const out = forceMessage(rawData, config)
         setAction('worried')

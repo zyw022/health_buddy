@@ -145,7 +145,7 @@ const PetOverlay: React.FC = () => {
           onContextMenu={onPetContextMenu}
           title="单击互动 · 双击打开树屋 · 右键菜单"
         >
-          <PetSprite action={action} species={config?.species ?? 'sparrow'} size={160} />
+          <PetSprite action={action} species={config?.species ?? 'sparrow'} size={110} />
         </div>
       </div>
     </div>
