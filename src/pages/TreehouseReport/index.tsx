@@ -107,18 +107,18 @@ const PreferencesPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
   const submit = async () => { if (draft.trim()) { await add(draft); setDraft('') } }
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
+      <div style={{ maxHeight: 150, overflowY: 'auto', marginBottom: 8 }}>
         {items.length === 0 && (
-          <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.3)', lineHeight: 2 }}>
+          <p style={{ fontFamily: PX, fontSize: 9, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
             还没有偏好，添加一条吧
           </p>
         )}
         {items.map(p => (
-          <div key={p.id} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'flex-start' }}>
-            <span style={{ fontFamily: PX, fontSize: 6, color: '#fde68a', flexShrink: 0, marginTop: 1 }}>▸</span>
-            <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, flex: 1 }}>{p.text}</p>
+          <div key={p.id} style={{ display: 'flex', gap: 6, marginBottom: 4, alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: PX, fontSize: 8, color: '#fde68a', flexShrink: 0, marginTop: 1 }}>▸</span>
+            <p style={{ fontFamily: PX, fontSize: 9, color: 'rgba(255,255,255,0.85)', lineHeight: 1.5, flex: 1 }}>{p.text}</p>
             <button onClick={() => void remove(p.id)}
-              style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
+              style={{ fontFamily: PX, fontSize: 8, color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
           </div>
         ))}
       </div>
@@ -127,14 +127,14 @@ const PreferencesPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
           onKeyDown={e => { if (e.key === 'Enter') void submit() }}
           placeholder="新增偏好…" maxLength={50}
           style={{
-            flex: 1, fontFamily: PX, fontSize: 5,
+            flex: 1, fontFamily: PX, fontSize: 9,
             background: 'rgba(255,255,255,0.06)',
             border: '1px solid rgba(253,230,138,0.3)',
-            color: 'white', padding: '6px 8px', outline: 'none',
+            color: 'white', padding: '5px 8px', outline: 'none',
           }} />
         <button onClick={() => void submit()} disabled={!draft.trim()}
           style={{
-            fontFamily: PX, fontSize: 6, padding: '6px 10px',
+            fontFamily: PX, fontSize: 9, padding: '5px 10px',
             background: '#fde68a', color: '#1a1205',
             border: 'none', cursor: 'pointer', opacity: draft.trim() ? 1 : 0.35,
           }}>+</button>
@@ -153,20 +153,20 @@ const HistoryPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
     <div style={{ width: '100%' }}>
       {records.length > 0 && (
         <button onClick={() => void clear()}
-          style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,80,80,0.6)', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 8 }}>
+          style={{ fontFamily: PX, fontSize: 8, color: 'rgba(255,80,80,0.65)', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 6 }}>
           CLEAR ALL
         </button>
       )}
-      <div style={{ maxHeight: 170, overflowY: 'auto' }}>
+      <div style={{ maxHeight: 180, overflowY: 'auto' }}>
         {records.length === 0 && (
-          <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.3)', lineHeight: 2 }}>
+          <p style={{ fontFamily: PX, fontSize: 9, color: 'rgba(255,255,255,0.3)', lineHeight: 1.5 }}>
             还没有记录，跟宠物多互动吧
           </p>
         )}
         {records.map(r => (
-          <div key={r.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
-            <span style={{ fontFamily: PX, fontSize: 4, color: 'rgba(253,230,138,0.5)', flexShrink: 0, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{fmt(r.createdAt)}</span>
-            <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.9 }}>{r.text}</p>
+          <div key={r.id} style={{ display: 'flex', gap: 6, marginBottom: 5, alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: PX, fontSize: 7, color: 'rgba(253,230,138,0.55)', flexShrink: 0, marginTop: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{fmt(r.createdAt)}</span>
+            <p style={{ fontFamily: PX, fontSize: 9, color: 'rgba(255,255,255,0.8)', lineHeight: 1.5 }}>{r.text}</p>
           </div>
         ))}
       </div>
