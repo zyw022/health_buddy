@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PetSprite } from '../../components/PetSprite'
 import { SpeechBubble } from '../../components/SpeechBubble'
@@ -29,31 +28,16 @@ const PixelContextMenu: React.FC<{
   pos:   { x: number; y: number }
   onClose: () => void
 }> = ({ items, pos, onClose }) => {
-  const ref = useRef<HTMLDivElement>(null)
-
-  // Close on outside click
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose()
-    }
-    window.addEventListener('mousedown', handler)
-    return () => window.removeEventListener('mousedown', handler)
-  }, [onClose])
-
   return (
     <div
-      ref={ref}
       style={{
-        position:   'fixed',
-        left:       pos.x,
-        top:        pos.y,
-        zIndex:     9999,
-        minWidth:   140,
-        background: 'rgba(6,8,20,0.97)',
-        outline:    '2px solid rgba(125,211,252,0.5)',
+        position:   'relative',
+        minWidth:   160,
+        background: '#060814',  // fully opaque — transparent pixels pass through in Electron
+        outline:    '2px solid rgba(125,211,252,0.6)',
         outlineOffset: 0,
-        boxShadow:  '3px 3px 0 rgba(0,0,0,0.8), 0 0 12px rgba(125,211,252,0.15)',
-        border:     '1px solid rgba(0,0,0,0.8)',
+        boxShadow:  '3px 3px 0 rgba(0,0,0,0.9), 0 0 14px rgba(125,211,252,0.18)',
+        border:     '1px solid #000',
       }}
     >
       {/* Corner accents */}
@@ -545,29 +529,34 @@ const PetOverlay: React.FC = () => {
         </div>
       </div>
 
-      {/* Pixel context menu — portal to body, escapes window overflow + transform clipping */}
-      {ctxMenu && createPortal(
-        <AnimatePresence>
-          <motion.div
-            key="ctx-backdrop"
-            initial={{ opacity:0 }}
-            animate={{ opacity:1 }}
-            exit={{    opacity:0 }}
-            transition={{ duration:0.08 }}
-            style={{ position:'fixed', inset:0, zIndex:9998, pointerEvents:'auto' }}
-            onMouseDown={closeCtxMenu}
-          >
-            <div onMouseDown={e => e.stopPropagation()}>
+      {/* Pixel context menu — fixed in viewport, pointerEvents:auto keeps it clickable */}
+      <AnimatePresence>
+        {ctxMenu && (
+          <>
+            {/* Full-screen transparent hit-area to close on outside click */}
+            <div
+              style={{ position:'fixed', inset:0, zIndex:9997, pointerEvents:'auto' }}
+              onMouseDown={closeCtxMenu}
+            />
+            <motion.div
+              key="ctx"
+              initial={{ opacity:0, scale:0.93, y:-4 }}
+              animate={{ opacity:1, scale:1,    y:0 }}
+              exit={{    opacity:0, scale:0.93, y:-4 }}
+              transition={{ duration:0.1 }}
+              style={{ position:'fixed', left:ctxMenu.x, top:ctxMenu.y,
+                       zIndex:9998, pointerEvents:'auto' }}
+              onMouseDown={e => e.stopPropagation()}
+            >
               <PixelContextMenu
                 items={contextMenuItems}
-                pos={ctxMenu}
+                pos={{ x:0, y:0 }}
                 onClose={closeCtxMenu}
               />
-            </div>
-          </motion.div>
-        </AnimatePresence>,
-        document.body,
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

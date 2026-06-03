@@ -297,7 +297,13 @@ function registerIpcHandlers(): void {
   ipcMain.on(IPC.SET_IGNORE_MOUSE, (event, ignore: boolean) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win && !win.isDestroyed()) {
-      win.setIgnoreMouseEvents(ignore, { forward: true })
+      if (ignore) {
+        // forward:true lets mouse-move events reach renderer for hover detection
+        win.setIgnoreMouseEvents(true, { forward: true })
+      } else {
+        // Must NOT pass forward here — full mouse capture
+        win.setIgnoreMouseEvents(false)
+      }
     }
   })
 
