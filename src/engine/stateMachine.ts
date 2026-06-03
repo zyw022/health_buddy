@@ -19,7 +19,19 @@ export function transition(next: PetAction): PetAction {
   if (sm.current === next) return sm.current
 
   // Allow immediate transition to higher-priority states
-  const priority: PetAction[] = ['sleep', 'yawn', 'stretch', 'worried', 'talk', 'happy', 'idle']
+  // Lower index = higher priority
+  const priority: PetAction[] = [
+    'sleep',
+    'drowsy',    // low energy, about to sleep
+    'yawn',
+    'stretch',
+    'worried',
+    'talk',
+    'flyhappy',  // celebration / milestone achieved
+    'takeoff',   // greet / wake-up
+    'happy',
+    'idle',
+  ]
   const currentPriority = priority.indexOf(sm.current)
   const nextPriority    = priority.indexOf(next)
 

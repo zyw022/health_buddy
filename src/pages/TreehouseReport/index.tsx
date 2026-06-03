@@ -3,7 +3,7 @@ import { AnimatePresence, motion, useMotionValue, useSpring } from 'framer-motio
 import { BarChart, DimensionChart, LineChart } from '../../components/HealthChart'
 import { TreehouseShell } from '../../components/TreehouseShell'
 import { getElectronAPI, usePetStore } from '../../store/petStore'
-import { FURNITURE, type ChartSeriesBundle, type FurnitureDef } from './hotspots'
+import { FURNITURE, type ChartSeriesBundle, type FurnitureDef, type HotspotId } from './hotspots'
 
 // ── Parallax mouse tracking ───────────────────────────────────────────────
 
@@ -57,20 +57,32 @@ const TreehouseReport: React.FC = () => {
       const data = await api.readData('chart-series.json') as ChartSeriesBundle | null
       if (data) { setSeries(data); return }
       const today = await api.readData('health-today.json') as {
-        raw?:   { sleepMinutes?: number; waterCups?: number; steps?: number; sedentaryMinutes?: number }
+        raw?:   {
+          sleepMinutes?:    number
+          sleepQuality?:    number
+          waterCups?:       number
+          steps?:           number
+          sedentaryMinutes?: number
+          activeMinutes?:   number
+          heartRate?:       number
+        }
         state?: { energy?: number; stress?: number; burnout?: number; sedentary?: number }
       } | null
       if (today?.raw && today?.state) {
-        const d = new Date().toISOString().split('T')[0]
-        const pt = (v: number) => [{ date: d, label: d, value: v }]
+        const d   = new Date().toISOString().split('T')[0]
+        const pt  = (v: number) => [{ date: d, label: d, value: v }]
+        const slh = Math.round((today.raw.sleepMinutes ?? 0) / 60 * 10) / 10
         setSeries({
-          book:    { title: '睡眠时长', unit: '小时', points: pt(Math.round((today.raw.sleepMinutes ?? 0) / 60 * 10) / 10) },
-          note:    { title: '睡眠时长', unit: '小时', points: pt(Math.round((today.raw.sleepMinutes ?? 0) / 60 * 10) / 10) },
-          clock:   { title: '久坐分钟', unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
-          cup:     { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
-          bowl:    { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
-          shoes:   { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
-          flower:  { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
+          book:     { title: '睡眠时长',   unit: '小时', points: pt(slh) },
+          note:     { title: '睡眠时长',   unit: '小时', points: pt(slh) },
+          clock:    { title: '久坐分钟',   unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
+          cup:      { title: '饮水杯数',   unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          bowl:     { title: '饮水杯数',   unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          shoes:    { title: '步数',       unit: '步',   points: pt(today.raw.steps ?? 0) },
+          flower:   { title: '步数',       unit: '步',   points: pt(today.raw.steps ?? 0) },
+          lamp:     { title: '活跃时长',   unit: '分钟', points: pt(today.raw.activeMinutes ?? 0) },
+          painting: { title: '睡眠质量',   unit: '分',   points: pt((today.raw.sleepQuality ?? 3) * 20) },
+          potion:   { title: '心率',       unit: 'bpm',  points: pt(today.raw.heartRate ?? 0) },
           dimensions: {
             title:     '今日四维度',
             energy:    today.state.energy    ?? 0,
@@ -121,13 +133,25 @@ const TreehouseReport: React.FC = () => {
     const s = series[item.seriesKey as keyof Omit<ChartSeriesBundle, 'dimensions'>]
     if (!s || !('points' in s)) return null
 
+    const LINE_COLORS: Partial<Record<HotspotId, string>> = {
+      note:     '#c4b5fd',
+      clock:    '#7dd3fc',
+      painting: '#86efac',
+    }
+    const BAR_COLORS: Partial<Record<HotspotId, string>> = {
+      bowl:   '#67e8f9',
+      flower: '#86efac',
+      lamp:   '#fde68a',
+      potion: '#fca5a5',
+    }
+
     if (item.chartType === 'line') {
       return (
         <LineChart
           title={s.title}
           unit={s.unit}
           points={s.points}
-          color={item.id === 'note' ? '#c4b5fd' : '#7dd3fc'}
+          color={LINE_COLORS[item.id] ?? '#7dd3fc'}
           width={260}
           height={130}
         />
@@ -139,7 +163,7 @@ const TreehouseReport: React.FC = () => {
         title={s.title}
         unit={s.unit}
         points={s.points}
-        color={item.id === 'bowl' ? '#67e8f9' : '#86efac'}
+        color={BAR_COLORS[item.id] ?? '#86efac'}
         width={260}
         height={130}
       />

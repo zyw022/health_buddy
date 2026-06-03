@@ -19,13 +19,18 @@ export function decide(raw: RawHealthData, config: PetConfig): BrainOutput {
   let message: string | null = null
 
   if (now - lastMessageAt >= MESSAGE_COOLDOWN_MS) {
-    // Only emit a message when something notable happened
-    if (action !== 'idle' && action !== 'happy') {
-      message = getPetMessage(config.personality, action)
-      lastMessageAt = now
-    } else if (action === 'happy' && Math.random() < 0.3) {
-      message = getPetMessage(config.personality, 'happy')
-      lastMessageAt = now
+    const silentActions = new Set(['idle'])
+    const rareActions   = new Set(['happy', 'takeoff'])   // emit with probability
+    if (!silentActions.has(action)) {
+      if (rareActions.has(action)) {
+        if (Math.random() < 0.3) {
+          message = getPetMessage(config.personality, action)
+          lastMessageAt = now
+        }
+      } else {
+        message = getPetMessage(config.personality, action)
+        lastMessageAt = now
+      }
     }
   }
 

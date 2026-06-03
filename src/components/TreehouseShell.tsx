@@ -62,7 +62,7 @@ export const TreehouseShell: React.FC<Props> = ({
       }}
     >
       <img
-        src="materials/treehouse/树屋.png"
+        src="materials/treehouse/treehouse.png"
         alt="树屋"
         draggable={false}
         className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"

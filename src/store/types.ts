@@ -16,8 +16,18 @@ export interface PetConfig {
   adopted?:     boolean
 }
 
-// Seven animation states driven by Pet Brain
-export type PetAction = 'idle' | 'happy' | 'yawn' | 'sleep' | 'stretch' | 'worried' | 'talk'
+// Ten animation states (birds have all 10 sprite sheets)
+export type PetAction =
+  | 'idle'
+  | 'happy'
+  | 'yawn'
+  | 'sleep'
+  | 'stretch'
+  | 'worried'
+  | 'talk'
+  | 'takeoff'    // 小起飞 — used for greet / wake-up moments
+  | 'flyhappy'   // 快乐起飞 — used for celebration / milestone
+  | 'drowsy'     // 犯困 — used for low-energy / bedtime reminder
 
 export interface RawHealthData {
   steps:             number
