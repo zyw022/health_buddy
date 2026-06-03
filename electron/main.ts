@@ -147,8 +147,9 @@ function createPetWindow(): void {
 }
 
 // ── ChatWindow (dedicated pixel chat box near the pet) ───────────────────
-const CHAT_W = 280
-const CHAT_H = 400
+const CHAT_W  = 280
+const CHAT_H  = 400
+const BIRD_H  = 90   // transparent space above the chat box for the bird sprite
 
 function createChatWindow(): void {
   if (chatWindow && !chatWindow.isDestroyed()) {
@@ -166,12 +167,12 @@ function createChatWindow(): void {
     const [px, py] = petWindow.getPosition()
     // Place chat just left of the pet, vertically aligned to its bottom area
     x = Math.max(10, px - CHAT_W + 40)
-    y = Math.max(10, py - CHAT_H + 200)
+    y = Math.max(10, py - CHAT_H - BIRD_H + 200)
   }
 
   chatWindow = new BrowserWindow({
     width: CHAT_W,
-    height: CHAT_H,
+    height: CHAT_H + BIRD_H,
     x,
     y,
     frame: false,
