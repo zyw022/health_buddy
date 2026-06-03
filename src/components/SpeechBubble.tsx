@@ -66,7 +66,7 @@ export const SpeechBubble: React.FC<Props> = ({
   const TAIL_H = 10
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       {text && (
         <motion.div
           key={text}
