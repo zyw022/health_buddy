@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { motion, useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { getElectronAPI } from '../store/petStore'
 
@@ -72,20 +72,24 @@ export const TreehouseShell: React.FC<Props> = ({
 
   const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    const el = containerRef.current
-    if (!el) return
-    const { left, top, width, height } = el.getBoundingClientRect()
-    const nx = ((e.clientX - left) / width  - 0.5) * 2   // –1 … +1
-    const ny = ((e.clientY - top)  / height - 0.5) * 2
-    rawX.set(nx)
-    rawY.set(ny)
+  // Listen on window so parallax keeps working even when mouse is outside the Electron window.
+  // We normalise against the treehouse window's own size so depth feels consistent.
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const el = containerRef.current
+      if (!el) return
+      const { left, top, width, height } = el.getBoundingClientRect()
+      // Use screen coordinates relative to window center; clamp to ±1.5 so
+      // moving far away from the window still produces a meaningful parallax.
+      const nx = Math.max(-1.5, Math.min(1.5, ((e.clientX - left) / width  - 0.5) * 2))
+      const ny = Math.max(-1.5, Math.min(1.5, ((e.clientY - top)  / height - 0.5) * 2))
+      rawX.set(nx)
+      rawY.set(ny)
+    }
+    window.addEventListener('mousemove', onMove)
+    return () => window.removeEventListener('mousemove', onMove)
   }, [rawX, rawY])
 
-  const handleMouseLeave = useCallback(() => {
-    rawX.set(0)
-    rawY.set(0)
-  }, [rawX, rawY])
 
   return (
     <motion.div
@@ -102,8 +106,6 @@ export const TreehouseShell: React.FC<Props> = ({
         if (fadePhase === 'in')  onFadeInComplete?.()
         if (fadePhase === 'out') onFadeOutComplete?.()
       }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
     >
       {/* ── Background parallax layers ───────────────────────────────── */}
       {BG_LAYERS.map((layer) => (
