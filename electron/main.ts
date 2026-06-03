@@ -184,10 +184,24 @@ function createTray(): void {
       },
       {
         label: '记录步数...',
-        click: () => {
-          petWindow?.webContents.send(IPC.SHOW_SPEECH_BUBBLE, {
-            text: '步数记录功能开发中，敬请期待～',
+        click: async () => {
+          const win = petWindow ?? treehouseWindow
+          const result = await dialog.showMessageBox({
+            type: 'question',
+            title: '记录步数',
+            message: '今天走了多少步？',
+            buttons: ['+1000 步', '+3000 步', '+5000 步', '+8000 步', '取消'],
+            defaultId: 1,
+            cancelId: 4,
           })
+          const increments = [1000, 3000, 5000, 8000]
+          if (result.response < 4) {
+            const steps = increments[result.response]
+            petWindow?.webContents.send(IPC.ADD_STEPS, steps)
+            win?.webContents.send(IPC.SHOW_SPEECH_BUBBLE, {
+              text: `👟 已记录 +${steps.toLocaleString()} 步，继续加油！`,
+            })
+          }
         },
       },
       { type: 'separator' },

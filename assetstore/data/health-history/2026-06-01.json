@@ -1,12 +1,24 @@
 {
+  "raw": {
+    "steps": 10340,
+    "sleepMinutes": 431,
+    "sleepQuality": 4,
+    "heartRate": 75,
+    "waterCups": 8,
+    "mood": 5,
+    "sedentaryMinutes": 81,
+    "keystrokesPerMin": 23,
+    "screenTimeMinutes": 241,
+    "activeMinutes": 216
+  },
   "state": {
-    "energy": 88,
-    "stress": 46,
+    "energy": 86,
+    "stress": 37,
     "burnout": 8,
-    "sedentary": 100,
+    "sedentary": 90,
     "hydrationDue": false,
-    "sleepDue": true,
-    "timestamp": 1780339006790
+    "sleepDue": false,
+    "timestamp": 1780286400000
   },
   "date": "2026-06-01"
 }

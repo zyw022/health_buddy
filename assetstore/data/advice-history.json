@@ -1,20 +1,8 @@
 [
   {
-    "id": "adv-1",
-    "text": "已超过最佳睡眠时间，建议就寝。",
-    "action": "sleep",
-    "createdAt": "2026-06-03T23:00:00.000Z"
-  },
-  {
-    "id": "adv-2",
-    "text": "连续坐超过一小时对脊椎有压力。建议站立活动。",
-    "action": "stretch",
-    "createdAt": "2026-06-03T21:00:00.000Z"
-  },
-  {
-    "id": "adv-3",
-    "text": "记得补水。脱水会降低认知能力。",
-    "action": "worried",
-    "createdAt": "2026-06-03T19:30:00.000Z"
+    "id": "36afad70-3f20-42bf-be32-ef6b0ab06cb7",
+    "text": "步数记录功能开发中，敬请期待～",
+    "action": "system",
+    "createdAt": "2026-06-03T18:09:39.119Z"
   }
 ]

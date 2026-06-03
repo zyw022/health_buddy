@@ -25,8 +25,8 @@ export const useHealthStore = create<HealthStore>((set) => ({
     if (!api) return
     await api.writeData('health-today.json', { raw, state, date: new Date().toISOString() })
 
-    // Daily archive at midnight: write health-history/YYYY-MM-DD.json
+    // Daily archive: write health-history/YYYY-MM-DD.json — include raw so chart scripts can use it
     const today = new Date().toISOString().split('T')[0]
-    await api.writeData(`health-history/${today}.json`, { state, date: today })
+    await api.writeData(`health-history/${today}.json`, { raw, state, date: today })
   },
 }))

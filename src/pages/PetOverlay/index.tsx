@@ -7,6 +7,8 @@ import { useHealthSnapshot } from '../../hooks/useHealthSnapshot'
 import { usePetBrain } from '../../hooks/usePetBrain'
 import { usePromptScheduler } from '../../features/health-prompt/promptScheduler'
 import { getInteractionMessage } from '../../engine/dialogLibrary'
+import { useHealthStore } from '../../store/healthStore'
+import { analyzeHealth } from '../../engine/healthAnalyzer'
 
 const PetOverlay: React.FC = () => {
   const config    = usePetStore((s) => s.config)
@@ -16,6 +18,7 @@ const PetOverlay: React.FC = () => {
   const setAction = usePetStore((s) => s.setAction)
   const initFromFile = usePetStore((s) => s.initFromFile)
   const pushAdvice = useAdviceHistoryStore((s) => s.push)
+  const { setRaw, setState, persistToday } = useHealthStore()
 
   useHealthSnapshot()
   usePetBrain()
@@ -94,8 +97,16 @@ const PetOverlay: React.FC = () => {
     api.onWaterRecord((cups) => {
       setBubble(cups > 0 ? `✅ 已记录 +${cups} 杯水，继续保持！` : '好的，我记录了！')
     })
-    api.onStepsRecord((steps) => {
-      setBubble(`👟 步数 ${steps.toLocaleString()} 已记录！`)
+    api.onStepsRecord((delta) => {
+      const currentRaw = useHealthStore.getState().raw
+      if (currentRaw) {
+        const updatedRaw = { ...currentRaw, steps: currentRaw.steps + delta }
+        const updatedState = analyzeHealth(updatedRaw)
+        setRaw(updatedRaw)
+        setState(updatedState)
+        void persistToday(updatedRaw, updatedState)
+      }
+      setBubble(`👟 已记录 +${delta.toLocaleString()} 步，继续加油！`)
     })
     api.onPetConfigUpdated(() => {
       void initFromFile().then(() => {
@@ -122,7 +133,7 @@ const PetOverlay: React.FC = () => {
       api.removeAllListeners('pet-action-trigger')
       clearTimeout(actionRestoreTimer)
     }
-  }, [setBubble, initFromFile, setAction, pushAdvice])
+  }, [setBubble, initFromFile, setAction, pushAdvice, setRaw, setState, persistToday])
 
   const dismissBubble = useCallback(() => setBubble(null), [setBubble])
 

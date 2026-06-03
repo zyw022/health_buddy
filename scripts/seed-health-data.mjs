@@ -18,24 +18,35 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const DATA_DIR = path.resolve(__dirname, '../assetstore/data')
 const HISTORY_DIR = path.join(DATA_DIR, 'health-history')
 
-const DAYS = 7
-const END_DATE = new Date('2026-06-02T12:00:00')
+const DAYS = 14
+const END_DATE = new Date('2026-06-04T12:00:00')
 
-function buildRawForDay(dayIndex) {
+function buildRawForDay(dayIndex, dateStr) {
   // dayIndex 0 = oldest, DAYS-1 = today
   const seed = dayIndex + 1
+  // Determine if weekend (lower steps, more sedentary)
+  const dow = new Date(dateStr + 'T12:00:00').getDay()
+  const isWeekend = dow === 0 || dow === 6
 
   return {
-    steps:             seededNoise(seed * 3, 5200, 11200),
-    sleepMinutes:      seededNoise(seed * 5, 360, 510),       // 6h–8.5h
+    steps:             isWeekend
+                         ? seededNoise(seed * 3,  3000, 7500)   // weekend: less walking
+                         : seededNoise(seed * 3,  5500, 12000), // weekday: more active
+    sleepMinutes:      isWeekend
+                         ? seededNoise(seed * 5,  450, 570)     // weekend: sleep more
+                         : seededNoise(seed * 5,  360, 510),    // 6h–8.5h
     sleepQuality:      Math.min(5, Math.max(1, seededNoise(seed * 7, 2, 5))),
     heartRate:         seededNoise(seed * 11, 65, 82),
     waterCups:         seededNoise(seed * 13, 3, 9),
     mood:              seededNoise(seed * 17, 2, 5),
-    sedentaryMinutes:  seededNoise(seed * 19, 35, 105),
-    keystrokesPerMin:  seededNoise(seed * 23, 12, 38),
-    screenTimeMinutes: seededNoise(seed * 29, 180, 320),
-    activeMinutes:     seededNoise(seed * 31, 200, 380),
+    sedentaryMinutes:  isWeekend
+                         ? seededNoise(seed * 19, 60, 150)      // weekend: more sitting
+                         : seededNoise(seed * 19, 35, 110),
+    keystrokesPerMin:  isWeekend
+                         ? seededNoise(seed * 23,  5, 18)       // weekend: less typing
+                         : seededNoise(seed * 23, 12, 38),
+    screenTimeMinutes: seededNoise(seed * 29, 180, 340),
+    activeMinutes:     seededNoise(seed * 31, 200, 400),
   }
 }
 
@@ -47,7 +58,7 @@ async function main() {
 
   for (let i = 0; i < DAYS; i++) {
     const date = formatDate(addDays(startDate, i))
-    const raw = buildRawForDay(i)
+    const raw = buildRawForDay(i, date)
     const state = analyzeHealth(raw, date)
 
     const isToday = i === DAYS - 1

@@ -18,10 +18,15 @@ export const MOCK_HEALTH: RawHealthData = {
   activeMinutes:     263,
 }
 
-// Returns slightly varied mock data each call to simulate live changes
+// Returns slightly varied mock data each call to simulate live changes.
+// Steps accumulate gradually during the day (base + elapsed-minutes-based drift).
 export function getMockHealthData(): RawHealthData {
+  const minuteOfDay = new Date().getHours() * 60 + new Date().getMinutes()
+  // Simulate ~8000 steps by end of day; add small random noise per poll
+  const stepsAccum = Math.round((minuteOfDay / 1440) * 8000 + (Math.random() - 0.5) * 200)
   return {
     ...MOCK_HEALTH,
+    steps:            Math.max(0, stepsAccum),
     sedentaryMinutes: MOCK_HEALTH.sedentaryMinutes + Math.floor(Math.random() * 10),
     keystrokesPerMin: Math.max(5, MOCK_HEALTH.keystrokesPerMin + Math.round((Math.random() - 0.5) * 10)),
   }

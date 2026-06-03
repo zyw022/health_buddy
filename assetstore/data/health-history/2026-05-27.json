@@ -1,21 +1,21 @@
 {
   "raw": {
-    "steps": 5254,
-    "sleepMinutes": 420,
-    "sleepQuality": 3,
-    "heartRate": 76,
-    "waterCups": 7,
-    "mood": 4,
-    "sedentaryMinutes": 52,
-    "keystrokesPerMin": 21,
-    "screenTimeMinutes": 316,
-    "activeMinutes": 231
+    "steps": 7657,
+    "sleepMinutes": 453,
+    "sleepQuality": 5,
+    "heartRate": 70,
+    "waterCups": 9,
+    "mood": 2,
+    "sedentaryMinutes": 54,
+    "keystrokesPerMin": 31,
+    "screenTimeMinutes": 196,
+    "activeMinutes": 257
   },
   "state": {
-    "energy": 76,
-    "stress": 41,
-    "burnout": 16,
-    "sedentary": 58,
+    "energy": 97,
+    "stress": 29,
+    "burnout": 0,
+    "sedentary": 60,
     "hydrationDue": false,
     "sleepDue": false,
     "timestamp": 1779854400000
