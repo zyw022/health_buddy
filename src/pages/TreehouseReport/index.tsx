@@ -717,27 +717,27 @@ const AdvicePanel: React.FC<{
     <motion.div
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
-        <span style={{ fontFamily: PXF, fontSize: 7, color: '#fde68a', textShadow: '0 0 6px #fde68a66' }}>💡 历史建议</span>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 9, color: '#fde68a', textShadow: '0 0 6px #fde68a66' }}>💡 历史建议</span>
         <div style={{ display:'flex', gap:6, alignItems:'center' }}>
           {records.length > 0 && (
-            <button onClick={() => void clear()} style={{ fontFamily: PXF, fontSize: 4, color:'rgba(255,80,80,0.7)', background:'transparent', border:'none', cursor:'pointer' }}>清空</button>
+            <button onClick={() => void clear()} style={{ fontFamily: PXF, fontSize: 7, color:'rgba(255,80,80,0.7)', background:'transparent', border:'none', cursor:'pointer' }}>清空</button>
           )}
-          <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color:'#fde68a', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+          <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 9, color:'#fde68a', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
         </div>
       </div>
       {/* Top advice callout */}
       {topText && (
-        <div style={{ margin:'6px 8px 2px', padding:'5px 8px', background:'rgba(253,230,138,0.10)', outline:'1px solid rgba(253,230,138,0.35)', outlineOffset:1, border:'1px solid rgba(0,0,0,0.5)' }}>
-          <div style={{ fontFamily: PXF, fontSize: 4, color:'#fde68a', marginBottom:3 }}>⭐ 最常出现（{freq[topText]}次）</div>
-          <div style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.85)', lineHeight:1.8 }}>{topText}</div>
+        <div style={{ margin:'6px 8px 2px', padding:'6px 10px', background:'rgba(253,230,138,0.10)', outline:'1px solid rgba(253,230,138,0.35)', outlineOffset:1, border:'1px solid rgba(0,0,0,0.5)' }}>
+          <div style={{ fontFamily: PXF, fontSize: 7, color:'#fde68a', marginBottom:4 }}>⭐ 最常出现（{freq[topText]}次）</div>
+          <div style={{ fontFamily: PXF, fontSize: 8, color:'rgba(255,255,255,0.85)', lineHeight:1.8 }}>{topText}</div>
         </div>
       )}
-      <div style={{ maxHeight: 200, overflowY:'auto', padding:'4px 8px 8px' }}>
+      <div style={{ maxHeight: 260, overflowY:'auto', padding:'4px 8px 8px' }}>
         {records.length === 0 && (
-          <p style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.3)', lineHeight:2 }}>还没有记录，多和宠物互动吧</p>
+          <p style={{ fontFamily: PXF, fontSize: 8, color:'rgba(255,255,255,0.3)', lineHeight:2 }}>还没有记录，多和宠物互动吧</p>
         )}
         {records.map(r => {
           const f = freq[r.text]
@@ -745,15 +745,15 @@ const AdvicePanel: React.FC<{
           const heat = Math.round((f / maxFreq) * 3)  // 0-3 heat level
           const barColor = isTop ? '#fde68a' : heat >= 2 ? '#86efac' : 'rgba(255,255,255,0.25)'
           return (
-            <div key={r.id} style={{ display:'flex', gap:6, marginBottom:6, alignItems:'flex-start', padding:'3px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-              <span style={{ fontFamily: PXF, fontSize: 4, color:'rgba(253,230,138,0.5)', flexShrink:0, marginTop:2, fontVariantNumeric:'tabular-nums', minWidth:52 }}>{fmt(r.createdAt)}</span>
+            <div key={r.id} style={{ display:'flex', gap:8, marginBottom:8, alignItems:'flex-start', padding:'4px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ fontFamily: PXF, fontSize: 7, color:'rgba(253,230,138,0.5)', flexShrink:0, marginTop:2, fontVariantNumeric:'tabular-nums', minWidth:62 }}>{fmt(r.createdAt)}</span>
               <div style={{ flex:1 }}>
-                <p style={{ fontFamily: PXF, fontSize: 5, color: isTop ? '#fde68a' : 'rgba(255,255,255,0.72)', lineHeight:1.8, margin:0 }}>{r.text}</p>
-                {f > 1 && <div style={{ display:'flex', gap:2, marginTop:2 }}>
+                <p style={{ fontFamily: PXF, fontSize: 8, color: isTop ? '#fde68a' : 'rgba(255,255,255,0.82)', lineHeight:1.8, margin:0 }}>{r.text}</p>
+                {f > 1 && <div style={{ display:'flex', gap:2, marginTop:3 }}>
                   {Array.from({length: Math.min(f, 5)}).map((_,i) => (
-                    <div key={i} style={{ width:4, height:4, background: barColor, opacity: 0.7+i*0.06 }} />
+                    <div key={i} style={{ width:5, height:5, background: barColor, opacity: 0.7+i*0.06 }} />
                   ))}
-                  <span style={{ fontFamily: PXF, fontSize: 3, color: barColor, marginLeft:2 }}>×{f}</span>
+                  <span style={{ fontFamily: PXF, fontSize: 6, color: barColor, marginLeft:3 }}>×{f}</span>
                 </div>}
               </div>
             </div>
@@ -926,7 +926,7 @@ const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSp
       void getElectronAPI()?.openTreehouse('change-pet')
       return
     }
-    const panelW = key === 'shop' ? 296 : 280
+    const panelW = key === 'shop' ? 296 : key === 'advice' ? 340 : 280
     if (open === key) { setOpen(null); return }
     setPanelPos(calcBubblePos(btn, panelW))
     setOpen(key)
