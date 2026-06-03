@@ -494,7 +494,7 @@ const ActionBubble: React.FC<{
       }}
     >
       <motion.div
-        animate={{ y: [0, -6, 0] }}
+        animate={{ y: [0, -4, 0] }}
         transition={{ duration: 2.6 + delay * 0.3, repeat: Infinity, ease: 'easeInOut', delay: delay * 0.4 }}
       >
         <button
@@ -508,43 +508,46 @@ const ActionBubble: React.FC<{
             flexDirection:  'column',
             alignItems:     'center',
             justifyContent: 'center',
-            width:          62,
-            height:         62,
-            borderRadius:   '50%',
+            width:          34,
+            height:         34,
+            /* pixel square — no border-radius */
             background:     hov
               ? 'rgba(255,255,255,0.38)'
               : fired
-                ? 'rgba(253,230,138,0.42)'
-                : 'rgba(255,255,255,0.22)',
+                ? 'rgba(253,230,138,0.50)'
+                : 'rgba(255,255,255,0.20)',
+            /* pixel double-border: white outer outline + black inner border */
             outline:        fired
               ? '2px solid rgba(253,200,50,0.95)'
               : '2px solid rgba(255,255,255,0.85)',
             outlineOffset:  '2px',
-            border:         `2px solid ${hov ? 'rgba(0,0,0,0.55)' : 'rgba(0,0,0,0.75)'}`,
+            border:         `2px solid rgba(0,0,0,0.82)`,
             boxShadow:      [
-              '0 3px 12px rgba(0,0,0,0.45)',
-              'inset -4px -4px 0px rgba(255,255,255,0.28)',
+              '0 2px 8px rgba(0,0,0,0.5)',
+              /* bottom-right inner highlight */
+              'inset -2px -2px 0px rgba(255,255,255,0.30)',
             ].join(', '),
-            backdropFilter:       'blur(5px)',
-            WebkitBackdropFilter: 'blur(5px)',
-            cursor:         'pointer',
-            transition:     'background 0.12s, outline-color 0.12s',
-            padding:        0,
+            backdropFilter:       'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
             imageRendering: 'pixelated',
+            cursor:         'pointer',
+            transition:     'background 0.1s, outline-color 0.1s',
+            padding:        0,
+            gap:            0,
           }}
         >
           {/* Mini sprite preview */}
-          <PetSprite action={action} species={species} size={36} />
+          <PetSprite action={action} species={species} size={20} />
           {/* Label */}
           <span style={{
-            display:     'block',
-            fontFamily:  '"Press Start 2P", monospace',
-            fontSize:    5,
-            fontWeight:  'bold',
-            color:       'rgba(255,255,255,0.95)',
-            textShadow:  '0 1px 3px rgba(0,0,0,0.8)',
-            lineHeight:  1,
-            marginTop:   2,
+            display:    'block',
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize:   4,
+            fontWeight: 'bold',
+            color:      'rgba(255,255,255,0.95)',
+            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
+            lineHeight: 1,
+            marginTop:  1,
           }}>
             {ACTION_LABELS[action]}
           </span>
