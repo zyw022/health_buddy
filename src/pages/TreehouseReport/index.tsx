@@ -7,6 +7,7 @@ import { PetSprite } from '../../components/PetSprite'
 import { getElectronAPI, usePetStore } from '../../store/petStore'
 import { usePreferencesStore } from '../../store/preferencesStore'
 import { useAdviceHistoryStore } from '../../store/adviceHistoryStore'
+import { useShopStore, SHOP_ITEMS, type ShopItem } from '../../store/shopStore'
 import type { PetAction, PetSpecies } from '../../store/types'
 import {
   FURNITURE,
@@ -431,6 +432,72 @@ const FurnitureItem: React.FC<{
   )
 }
 
+// ── Shared pixel-box style ────────────────────────────────────────────────────
+const pxBox = (bg = 'rgba(8,12,28,0.96)'): React.CSSProperties => ({
+  background:           bg,
+  outline:              '2px solid rgba(255,255,255,0.82)',
+  outlineOffset:        '2px',
+  border:               '2px solid rgba(0,0,0,0.85)',
+  boxShadow:            '0 4px 20px rgba(0,0,0,0.65), inset -3px -3px 0px rgba(255,255,255,0.10)',
+  imageRendering:       'pixelated' as const,
+  backdropFilter:       'blur(6px)',
+  WebkitBackdropFilter: 'blur(6px)',
+})
+
+const PXF = '"Press Start 2P", monospace'
+
+// Canopy bubble — small floating entry with icon + label, pixel border
+const CanopyBubble: React.FC<{
+  icon:    string
+  label:   string
+  delay:   number
+  pos:     { left: string; top: string }
+  active:  boolean
+  accent?: string
+  onClick: (ref: HTMLButtonElement) => void
+}> = ({ icon, label, delay, pos, active, accent = 'rgba(255,255,255,0.85)', onClick }) => {
+  const [hov, setHov] = useState(false)
+  const ref = useRef<HTMLButtonElement>(null)
+  return (
+    <motion.div
+      animate={{ y: [0, -5, 0] }}
+      transition={{ duration: 2.8 + delay * 0.25, repeat: Infinity, ease: 'easeInOut', delay: delay * 0.35 }}
+      style={{ position: 'absolute', ...pos, pointerEvents: 'auto', zIndex: 6 }}
+    >
+      <button
+        ref={ref}
+        type="button"
+        onMouseEnter={() => setHov(true)}
+        onMouseLeave={() => setHov(false)}
+        onClick={() => ref.current && onClick(ref.current)}
+        style={{
+          display:        'flex',
+          alignItems:     'center',
+          gap:            5,
+          padding:        '5px 9px',
+          background:     active ? 'rgba(255,255,255,0.30)' : hov ? 'rgba(255,255,255,0.26)' : 'rgba(255,255,255,0.16)',
+          outline:        active ? `2px solid ${accent}` : `2px solid rgba(255,255,255,0.80)`,
+          outlineOffset:  '2px',
+          border:         '2px solid rgba(0,0,0,0.82)',
+          boxShadow:      '0 2px 10px rgba(0,0,0,0.5), inset -2px -2px 0px rgba(255,255,255,0.26)',
+          backdropFilter: 'blur(4px)',
+          WebkitBackdropFilter: 'blur(4px)',
+          imageRendering: 'pixelated',
+          cursor:         'pointer',
+          transition:     'background 0.1s, outline-color 0.1s',
+        }}
+      >
+        <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
+        <span style={{ fontFamily: PXF, fontSize: 6, fontWeight: 'bold',
+          color: active ? accent : 'rgba(255,255,255,0.92)',
+          textShadow: '0 1px 3px rgba(0,0,0,0.85)', lineHeight: 1 }}>
+          {label}
+        </span>
+      </button>
+    </motion.div>
+  )
+}
+
 // ── Action labels (Chinese) ───────────────────────────────────────────────────
 const ACTION_LABELS: Record<PetAction, string> = {
   idle:     '发呆',
@@ -554,77 +621,315 @@ const ActionPanel: React.FC<{
   )
 }
 
-// ── Entry bubble — sits atop the treehouse roof ───────────────────────────────
-const ActionBubbles: React.FC<{ species: PetSpecies }> = ({ species }) => {
-  const [open,   setOpen]   = useState(false)
-  const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
-  const btnRef = useRef<HTMLButtonElement>(null)
-  const [hov, setHov] = useState(false)
+// ── Charts overview panel ─────────────────────────────────────────────────────
+const ChartsPanel: React.FC<{
+  series:  ChartSeriesBundle | null
+  pos:     { x: number; y: number }
+  onClose: () => void
+}> = ({ series, pos, onClose }) => {
+  const [tab, setTab] = useState<'time'|'dims'>('time')
+  const charts = series ? [
+    { title: series.note.title,   unit: series.note.unit,   points: series.note.points,   color: '#c4b5fd', type: 'line' as const },
+    { title: series.clock.title,  unit: series.clock.unit,  points: series.clock.points,  color: '#7dd3fc', type: 'line' as const },
+    { title: series.bowl.title,   unit: series.bowl.unit,   points: series.bowl.points,   color: '#67e8f9', type: 'bar'  as const },
+    { title: series.flower.title, unit: series.flower.unit, points: series.flower.points, color: '#86efac', type: 'bar'  as const },
+    { title: series.potion.title, unit: series.potion.unit, points: series.potion.points, color: '#fb7185', type: 'line' as const },
+  ] : []
+  const [chartIdx, setChartIdx] = useState(0)
+  const cur = charts[chartIdx]
 
-  const handleToggle = useCallback(() => {
-    if (!open && btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect()
-      const pw = 248
-      const x = r.right + 8 + pw > window.innerWidth ? r.left - pw - 8 : r.right + 8
-      const y = Math.max(8, r.top - 10)
-      setPanelPos({ x, y })
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+    >
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 7, color: '#86efac', textShadow: '0 0 6px #86efac66' }}>📊 健康图表</span>
+        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color: '#86efac', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+      </div>
+      {/* Tab: time series / dimensions */}
+      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 8px 0' }}>
+        {(['time','dims'] as const).map(t => (
+          <button key={t} onClick={() => setTab(t)} style={{
+            fontFamily: PXF, fontSize: 5, fontWeight: 'bold', padding: '3px 8px',
+            background: tab===t ? 'rgba(134,239,172,0.18)' : 'transparent',
+            color: tab===t ? '#86efac' : 'rgba(255,255,255,0.45)',
+            border: 'none', borderBottom: tab===t ? '2px solid #86efac' : '2px solid transparent',
+            cursor: 'pointer', marginBottom: -2,
+          }}>{t==='time' ? '时序' : '四维度'}</button>
+        ))}
+      </div>
+      <div style={{ padding: 8 }}>
+        {!series && <p style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.35)', padding:4 }}>数据加载中…</p>}
+        {series && tab === 'dims' && (
+          <DimensionChart title="今日四维度" dims={[
+            { label: '能量', value: series.dimensions.energy,    color: '#86efac' },
+            { label: '压力', value: series.dimensions.stress,    color: '#fca5a5' },
+            { label: '过劳', value: series.dimensions.burnout,   color: '#fdba74' },
+            { label: '久坐', value: series.dimensions.sedentary, color: '#93c5fd' },
+          ]} width={256} height={120} />
+        )}
+        {series && tab === 'time' && cur && (
+          <>
+            <div style={{ display:'flex', gap:4, flexWrap:'wrap', marginBottom:6 }}>
+              {charts.map((c, i) => (
+                <button key={i} onClick={() => setChartIdx(i)} style={{
+                  fontFamily: PXF, fontSize: 4, padding: '2px 6px',
+                  background: chartIdx===i ? `${c.color}22` : 'transparent',
+                  color: chartIdx===i ? c.color : 'rgba(255,255,255,0.4)',
+                  outline: chartIdx===i ? `1px solid ${c.color}` : '1px solid rgba(255,255,255,0.15)',
+                  outlineOffset: '1px', border: 'none', cursor: 'pointer',
+                }}>{c.title}</button>
+              ))}
+            </div>
+            {cur.type === 'line'
+              ? <LineChart title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={256} height={110} />
+              : <BarChart  title={cur.title} unit={cur.unit} points={cur.points} color={cur.color} width={256} height={110} />
+            }
+          </>
+        )}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Advice history panel (with frequency highlight) ───────────────────────────
+const AdvicePanel: React.FC<{
+  pos:     { x: number; y: number }
+  onClose: () => void
+}> = ({ pos, onClose }) => {
+  const { records, clear } = useAdviceHistoryStore()
+
+  // Count frequency of each message text
+  const freq = records.reduce<Record<string,number>>((acc, r) => {
+    acc[r.text] = (acc[r.text] ?? 0) + 1; return acc
+  }, {})
+  const maxFreq = Math.max(1, ...Object.values(freq))
+  const topText = Object.entries(freq).sort((a,b) => b[1]-a[1])[0]?.[0]
+
+  const fmt = (iso: string) => {
+    const d = new Date(iso)
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 280, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+    >
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 7, color: '#fde68a', textShadow: '0 0 6px #fde68a66' }}>💡 历史建议</span>
+        <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+          {records.length > 0 && (
+            <button onClick={() => void clear()} style={{ fontFamily: PXF, fontSize: 4, color:'rgba(255,80,80,0.7)', background:'transparent', border:'none', cursor:'pointer' }}>清空</button>
+          )}
+          <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color:'#fde68a', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+        </div>
+      </div>
+      {/* Top advice callout */}
+      {topText && (
+        <div style={{ margin:'6px 8px 2px', padding:'5px 8px', background:'rgba(253,230,138,0.10)', outline:'1px solid rgba(253,230,138,0.35)', outlineOffset:1, border:'1px solid rgba(0,0,0,0.5)' }}>
+          <div style={{ fontFamily: PXF, fontSize: 4, color:'#fde68a', marginBottom:3 }}>⭐ 最常出现（{freq[topText]}次）</div>
+          <div style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.85)', lineHeight:1.8 }}>{topText}</div>
+        </div>
+      )}
+      <div style={{ maxHeight: 200, overflowY:'auto', padding:'4px 8px 8px' }}>
+        {records.length === 0 && (
+          <p style={{ fontFamily: PXF, fontSize: 5, color:'rgba(255,255,255,0.3)', lineHeight:2 }}>还没有记录，多和宠物互动吧</p>
+        )}
+        {records.map(r => {
+          const f = freq[r.text]
+          const isTop = r.text === topText
+          const heat = Math.round((f / maxFreq) * 3)  // 0-3 heat level
+          const barColor = isTop ? '#fde68a' : heat >= 2 ? '#86efac' : 'rgba(255,255,255,0.25)'
+          return (
+            <div key={r.id} style={{ display:'flex', gap:6, marginBottom:6, alignItems:'flex-start', padding:'3px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+              <span style={{ fontFamily: PXF, fontSize: 4, color:'rgba(253,230,138,0.5)', flexShrink:0, marginTop:2, fontVariantNumeric:'tabular-nums', minWidth:52 }}>{fmt(r.createdAt)}</span>
+              <div style={{ flex:1 }}>
+                <p style={{ fontFamily: PXF, fontSize: 5, color: isTop ? '#fde68a' : 'rgba(255,255,255,0.72)', lineHeight:1.8, margin:0 }}>{r.text}</p>
+                {f > 1 && <div style={{ display:'flex', gap:2, marginTop:2 }}>
+                  {Array.from({length: Math.min(f, 5)}).map((_,i) => (
+                    <div key={i} style={{ width:4, height:4, background: barColor, opacity: 0.7+i*0.06 }} />
+                  ))}
+                  <span style={{ fontFamily: PXF, fontSize: 3, color: barColor, marginLeft:2 }}>×{f}</span>
+                </div>}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Bird-seed shop panel ───────────────────────────────────────────────────────
+const CATEGORY_LABELS: Record<string, string> = {
+  all: '全部', accessory: '装饰', toy: '玩具', food: '食物', deco: '摆件',
+}
+
+const ShopPanel: React.FC<{
+  pos:     { x: number; y: number }
+  onClose: () => void
+}> = ({ pos, onClose }) => {
+  const { seeds, purchases, buy } = useShopStore()
+  const [cat, setCat] = useState<'all'|'accessory'|'toy'|'food'|'deco'>('all')
+  const [flash, setFlash] = useState<string|null>(null)
+  const [msg, setMsg] = useState<string|null>(null)
+
+  const ownedIds = new Set(purchases.map(p => p.itemId))
+  const filtered = cat === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === cat)
+
+  const handleBuy = useCallback(async (item: ShopItem) => {
+    if (ownedIds.has(item.id)) { setMsg('已拥有～'); setTimeout(() => setMsg(null), 1500); return }
+    const ok = await buy(item)
+    if (ok) {
+      setFlash(item.id)
+      setMsg(`🎉 获得 ${item.name}！`)
+      setTimeout(() => { setFlash(null); setMsg(null) }, 1800)
+    } else {
+      setMsg('鸟粮不足…')
+      setTimeout(() => setMsg(null), 1500)
     }
-    setOpen(v => !v)
+  }, [buy, ownedIds])
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+      exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
+      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 296, zIndex: 200, pointerEvents: 'auto', ...pxBox() }}
+    >
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'7px 10px 5px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 7, color: '#fbbf24', textShadow: '0 0 6px #fbbf2466' }}>🌾 鸟粮商店</span>
+        <button onClick={onClose} style={{ fontFamily: PXF, fontSize: 7, color:'#fbbf24', background:'transparent', border:'none', cursor:'pointer' }}>✕</button>
+      </div>
+      {/* Seeds balance */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'5px 10px', borderBottom:'1px solid rgba(255,255,255,0.08)' }}>
+        <span style={{ fontFamily: PXF, fontSize: 6, color:'rgba(255,255,255,0.6)' }}>余额</span>
+        <span style={{ fontFamily: PXF, fontSize: 8, color:'#fde68a', textShadow:'0 0 8px #fde68a88' }}>🌾 {seeds}</span>
+      </div>
+      {/* Flash message */}
+      <AnimatePresence>
+        {msg && (
+          <motion.div initial={{ opacity:0, y:-4 }} animate={{ opacity:1, y:0 }} exit={{ opacity:0 }}
+            style={{ fontFamily: PXF, fontSize: 5, textAlign:'center', padding:'4px 8px',
+              color: msg.startsWith('🎉') ? '#86efac' : '#fca5a5',
+              background: msg.startsWith('🎉') ? 'rgba(134,239,172,0.10)' : 'rgba(252,165,165,0.10)' }}>
+            {msg}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Category tabs */}
+      <div style={{ display:'flex', borderBottom:'2px solid rgba(255,255,255,0.10)', padding:'4px 8px 0', gap:2 }}>
+        {(Object.keys(CATEGORY_LABELS) as Array<keyof typeof CATEGORY_LABELS>).map(c => (
+          <button key={c} onClick={() => setCat(c as typeof cat)} style={{
+            fontFamily: PXF, fontSize: 4, padding:'2px 5px',
+            background: cat===c ? 'rgba(251,191,36,0.18)' : 'transparent',
+            color: cat===c ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+            border: 'none', borderBottom: cat===c ? '2px solid #fbbf24' : '2px solid transparent',
+            cursor: 'pointer', marginBottom:-2,
+          }}>{CATEGORY_LABELS[c]}</button>
+        ))}
+      </div>
+      {/* Items grid */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:8, maxHeight:220, overflowY:'auto' }}>
+        {filtered.map(item => {
+          const owned   = ownedIds.has(item.id)
+          const isFired = flash === item.id
+          const canBuy  = seeds >= item.price && !owned
+          return (
+            <button key={item.id} onClick={() => void handleBuy(item)} title={item.desc} style={{
+              display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 4px',
+              background: isFired ? 'rgba(253,230,138,0.22)' : owned ? 'rgba(134,239,172,0.08)' : 'rgba(255,255,255,0.04)',
+              outline: isFired ? '2px solid rgba(253,200,50,0.9)' : owned ? '2px solid rgba(134,239,172,0.5)' : '1px solid rgba(255,255,255,0.18)',
+              outlineOffset:'1px', border:'1px solid rgba(0,0,0,0.5)',
+              cursor: canBuy ? 'pointer' : 'default',
+              opacity: !canBuy && !owned ? 0.55 : 1,
+              transition:'background 0.1s',
+              imageRendering:'pixelated',
+            }}>
+              <span style={{ fontSize:22, lineHeight:1 }}>{item.emoji}</span>
+              <span style={{ fontFamily:PXF, fontSize:4, fontWeight:'bold', color: owned ? '#86efac' : 'rgba(255,255,255,0.85)', lineHeight:1, textAlign:'center' }}>{item.name}</span>
+              <span style={{ fontFamily:PXF, fontSize:4, color: owned ? '#86efac' : canBuy ? '#fde68a' : 'rgba(255,255,255,0.35)' }}>
+                {owned ? '✓ 已有' : `🌾${item.price}`}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+      <div style={{ padding:'4px 10px 6px', fontFamily:PXF, fontSize:4, color:'rgba(255,255,255,0.25)', textAlign:'center' }}>
+        与宠物互动可获得鸟粮
+      </div>
+    </motion.div>
+  )
+}
+
+// helper — calc popup position from an anchor button
+function calcBubblePos(btn: HTMLButtonElement, panelW: number): { x: number; y: number } {
+  const r = btn.getBoundingClientRect()
+  const x = r.right + 10 + panelW > window.innerWidth ? r.left - panelW - 10 : r.right + 10
+  const y = Math.max(8, Math.min(r.top - 10, window.innerHeight - 360))
+  return { x, y }
+}
+
+type PanelKey = 'action' | 'charts' | 'advice' | 'shop' | null
+
+// ── Canopy bubbles — 5 entries scattered in the tree canopy ──────────────────
+// Positions are relative to the sceneLayer container (same as furniture %).
+// Canopy lives roughly at left 5–90%, top 3–26%.
+const CanopyBubbles: React.FC<{ series: ChartSeriesBundle | null; species: PetSpecies }> = ({ series, species }) => {
+  const { load: loadShop } = useShopStore()
+  useEffect(() => { void loadShop() }, [loadShop])
+
+  const [open, setOpen] = useState<PanelKey>(null)
+  const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
+
+  const toggle = useCallback((key: Exclude<PanelKey, null>, btn: HTMLButtonElement, panelW: number) => {
+    if (open === key) { setOpen(null); return }
+    setPanelPos(calcBubblePos(btn, panelW))
+    setOpen(key)
   }, [open])
+
+  // 5 distinct positions for the 4 unique entries (action appears once)
+  const entries: Array<{ key: Exclude<PanelKey,null>; icon:string; label:string; accent:string; left:string; top:string }> = [
+    { key:'action', icon:'🐦', label:'动作', accent:'#7dd3fc', left:'12%', top:'8%'  },
+    { key:'charts', icon:'📊', label:'图表', accent:'#86efac', left:'30%', top:'4%'  },
+    { key:'advice', icon:'💡', label:'建议', accent:'#fde68a', left:'55%', top:'10%' },
+    { key:'shop',   icon:'🌾', label:'商店', accent:'#fbbf24', left:'73%', top:'5%'  },
+    { key:'action', icon:'🐦', label:'动作', accent:'#7dd3fc', left:'88%', top:'14%' },
+  ]
+  // deduplicate so action only appears once at first position
+  const unique = entries.filter((e,i) => entries.findIndex(x=>x.key===e.key) === i)
 
   return (
     <>
-      {/* Entry bubble — floats near the treehouse rooftop (~50%, 28%) */}
-      <motion.div
-        animate={{ y: [0, -5, 0] }}
-        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-        style={{ position: 'absolute', left: '50%', top: '28%',
-                 transform: 'translateX(-50%)', pointerEvents: 'auto', zIndex: 5 }}
-      >
-        <button
-          ref={btnRef}
-          type="button"
-          onClick={handleToggle}
-          onMouseEnter={() => setHov(true)}
-          onMouseLeave={() => setHov(false)}
-          title="动作控制台"
-          style={{
-            display:        'flex',
-            alignItems:     'center',
-            gap:            5,
-            padding:        '5px 10px',
-            background:     hov || open ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.20)',
-            outline:        open ? '2px solid rgba(125,211,252,0.9)' : '2px solid rgba(255,255,255,0.85)',
-            outlineOffset:  '2px',
-            border:         '2px solid rgba(0,0,0,0.82)',
-            boxShadow:      '0 2px 10px rgba(0,0,0,0.5), inset -2px -2px 0px rgba(255,255,255,0.28)',
-            imageRendering: 'pixelated',
-            backdropFilter:       'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            cursor:         'pointer',
-            transition:     'background 0.1s, outline-color 0.1s',
-          }}
-        >
-          <PetSprite action="idle" species={species} size={22} />
-          <span style={{
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize:   6,
-            fontWeight: 'bold',
-            color:      'rgba(255,255,255,0.95)',
-            textShadow: '0 1px 3px rgba(0,0,0,0.85)',
-            lineHeight: 1,
-          }}>动作</span>
-        </button>
-      </motion.div>
+      {unique.map((e, i) => (
+        <CanopyBubble
+          key={e.key}
+          icon={e.icon}
+          label={e.label}
+          delay={i}
+          pos={{ left: e.left, top: e.top }}
+          active={open === e.key}
+          accent={e.accent}
+          onClick={(btn) => toggle(e.key, btn, e.key === 'shop' ? 296 : 280)}
+        />
+      ))}
 
-      {/* Popup panel */}
       <AnimatePresence>
-        {open && (
-          <ActionPanel
-            species={species}
-            pos={panelPos}
-            onClose={() => setOpen(false)}
-          />
+        {open === 'action' && (
+          <ActionPanel key="action" species={species} pos={panelPos} onClose={() => setOpen(null)} />
+        )}
+        {open === 'charts' && (
+          <ChartsPanel key="charts" series={series} pos={panelPos} onClose={() => setOpen(null)} />
+        )}
+        {open === 'advice' && (
+          <AdvicePanel key="advice" pos={panelPos} onClose={() => setOpen(null)} />
+        )}
+        {open === 'shop' && (
+          <ShopPanel key="shop" pos={panelPos} onClose={() => setOpen(null)} />
         )}
       </AnimatePresence>
     </>
@@ -735,8 +1040,8 @@ const TreehouseReport: React.FC = () => {
           onClick={onClickItem}
         />
       ))}
-      {/* Action bubbles floating in the tree canopy */}
-      <ActionBubbles species={(config?.species ?? 'sparrow') as PetSpecies} />
+      {/* Canopy entry bubbles — action / charts / advice / shop */}
+      <CanopyBubbles series={series} species={(config?.species ?? 'sparrow') as PetSpecies} />
     </div>
   )
 

@@ -1,0 +1,7 @@
+{
+  "seeds": 420,
+  "purchases": [
+    {"id":"p001","itemId":"hat_straw","quantity":1,"boughtAt":"2026-06-01T10:00:00.000Z"},
+    {"id":"p002","itemId":"toy_ball","quantity":1,"boughtAt":"2026-06-02T14:00:00.000Z"}
+  ]
+}
