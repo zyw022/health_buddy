@@ -21,9 +21,9 @@ function ensureFurnitureStyles() {
   style.textContent = `
     @keyframes furniturePulseScale {
       0%   { transform: scale(1); }
-      25%  { transform: scale(1.18); }
-      55%  { transform: scale(0.94); }
-      80%  { transform: scale(1.10); }
+      25%  { transform: scale(1.28); }
+      55%  { transform: scale(0.91); }
+      80%  { transform: scale(1.14); }
       100% { transform: scale(1); }
     }
     @keyframes furnitureGlowNormal {
@@ -224,22 +224,27 @@ const FurnitureItem: React.FC<{
   return (
     // Full-size overlay — same coordinate space as treehouse.png (object-contain)
     <div className="absolute inset-0 pointer-events-none">
-      {/* Scale + glow wrapper — both animations on the same element so
-          drop-shadow follows the actual pixel outline of the furniture image */}
+      {/* Outer: framer-motion handles opacity fade-in only — no transform */}
       <motion.div
-        className={`absolute inset-0 ${scaleClass} ${glowClass}`}
-        style={{ transformOrigin: `${ox} ${oy}` }}
+        className="absolute inset-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.12 + index * 0.04, duration: 0.4 }}
+        style={{ willChange: 'opacity' }}
       >
-        <img
-          src={item.src}
-          alt={item.label}
-          draggable={false}
-          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
-          style={{ imageRendering: 'pixelated' }}
-        />
+        {/* Inner: pure CSS handles scale + drop-shadow glow — framer never touches transform here */}
+        <div
+          className={`absolute inset-0 ${scaleClass} ${glowClass}`}
+          style={{ transformOrigin: `${ox} ${oy}` }}
+        >
+          <img
+            src={item.src}
+            alt={item.label}
+            draggable={false}
+            className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
+            style={{ imageRendering: 'pixelated' }}
+          />
+        </div>
       </motion.div>
 
       {/* Invisible hit-target sized to actual furniture silhouette */}
