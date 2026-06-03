@@ -69,7 +69,7 @@ export function getSpriteConfig(species: PetSpecies, action: PetAction): SpriteS
   if (BIRD_SPECIES.has(species)) {
     return { file: `${folder}/${file}`, cols: BIRD_COLS, rows: BIRD_ROWS, fps: BIRD_FPS[action] }
   }
-  return { file: `${folder}/${file}`, cols: 1, rows: 1, fps: BIRD_FPS[action] }
+  return { file: `${folder}/${file}`, cols: BIRD_COLS, rows: BIRD_ROWS, fps: BIRD_FPS[action] }
 }
 
 // Backward-compatible static export — bird sprites

@@ -127,6 +127,10 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
   const showBack  = phase !== 'species' && phase !== 'naming'
   const petLabel  = activeCard?.label ?? '小伙伴'
 
+  const handleClose = useCallback(() => {
+    getElectronAPI()?.closeTreehouse()
+  }, [])
+
   const titleNode = (
     <PixelHeader
       title={isChangeMode ? '更换宠物' : PHASE_HINTS[phase]}
@@ -142,16 +146,28 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
       fadePhase={fadePhase}
       onFadeOutComplete={() => { void handleFadeOutComplete() }}
       actions={
-        showBack ? (
-          <button
-            type="button"
-            onClick={goBack}
-            className="px-btn px-label"
-            style={{ padding: '4px 10px', fontSize: 9 }}
-          >
-            ← 返回
-          </button>
-        ) : undefined
+        <div style={{ display: 'flex', gap: 8 }}>
+          {showBack && (
+            <button
+              type="button"
+              onClick={goBack}
+              className="px-btn px-label"
+              style={{ padding: '4px 10px', fontSize: 9 }}
+            >
+              ← 返回
+            </button>
+          )}
+          {isChangeMode && (
+            <button
+              type="button"
+              onClick={handleClose}
+              className="px-btn px-label"
+              style={{ padding: '4px 10px', fontSize: 9, color: 'rgba(255,120,120,0.9)' }}
+            >
+              ✕ 退出
+            </button>
+          )}
+        </div>
       }
     >
       {/* ── Species selection: 2×2 pixel card grid ──────────────────── */}
