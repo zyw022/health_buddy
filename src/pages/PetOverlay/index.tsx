@@ -149,7 +149,7 @@ const PetOverlay: React.FC = () => {
         onMouseLeave={onInteractiveLeave}
       >
         {bubble && (
-          <div className="flex justify-center mb-1">
+          <div style={{ display:'flex', justifyContent:'center', marginBottom: 4, width:'100%' }}>
             <SpeechBubble
               text={bubble}
               onDismiss={dismissBubble}

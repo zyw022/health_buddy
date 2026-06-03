@@ -3,12 +3,15 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 interface Props {
   text:      string | null
-  duration?: number          // ms before auto-dismiss, default 4000
+  duration?: number
   onDismiss?: () => void
 }
 
-// Floating speech bubble shown above the pet.
-// Appears with a spring pop, auto-dismisses after `duration` ms.
+/**
+ * Pixel-art speech bubble shown above the pet.
+ * The tail always points straight down toward the pet.
+ * Scale origin is bottom-centre so the pop animation grows from the tail.
+ */
 export const SpeechBubble: React.FC<Props> = ({
   text,
   duration = 4000,
@@ -16,55 +19,79 @@ export const SpeechBubble: React.FC<Props> = ({
 }) => {
   useEffect(() => {
     if (!text) return
-    const timer = setTimeout(() => {
-      onDismiss?.()
-    }, duration)
+    const timer = setTimeout(() => onDismiss?.(), duration)
     return () => clearTimeout(timer)
   }, [text, duration, onDismiss])
+
+  const PXF = '"Press Start 2P", monospace'
+  // Tail height
+  const TAIL_H = 10
 
   return (
     <AnimatePresence>
       {text && (
         <motion.div
           key={text}
-          initial={{ scale: 0.4, opacity: 0, y: 10 }}
-          animate={{ scale: 1,   opacity: 1, y: 0 }}
-          exit={{    scale: 0.4, opacity: 0, y: 10 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          style={{ originX: '50%', originY: '100%' }}
-          className="relative max-w-[180px] min-w-[80px]"
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1,   opacity: 1 }}
+          exit={{    scale: 0.5, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
+          // originY=100% → scale from the bottom (where the tail is)
+          style={{ originX: '50%', originY: '100%', position: 'relative', display: 'inline-block' }}
           onClick={onDismiss}
         >
-          {/* Bubble body */}
-          <div className="
-            bg-white
-            text-gray-800
-            text-xs
-            leading-relaxed
-            px-3 py-2
-            rounded-2xl
-            shadow-lg
-            border border-gray-100
-            text-center
-            cursor-pointer
-            select-none
-          ">
-            {text}
+          {/* ── Bubble body — pixel double-border ── */}
+          <div style={{
+            position:   'relative',
+            maxWidth:   200,
+            minWidth:   90,
+            padding:    '8px 12px',
+            background: '#fffde8',
+            // Outer border + inner highlight via box-shadow
+            outline:    '2px solid #3d2b00',
+            outlineOffset: 0,
+            boxShadow:  'inset 0 0 0 2px #f5c842, 2px 2px 0 #3d2b00',
+            cursor:     'pointer',
+            userSelect: 'none',
+          }}>
+            {/* Corner pixel accents */}
+            {/* TL */}
+            <span style={{ position:'absolute', top:0, left:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
+            {/* TR */}
+            <span style={{ position:'absolute', top:0, right:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
+            {/* BL */}
+            <span style={{ position:'absolute', bottom:0, left:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
+            {/* BR */}
+            <span style={{ position:'absolute', bottom:0, right:0, width:4, height:4, background:'#3d2b00', display:'block' }}/>
+
+            <p style={{
+              fontFamily:  PXF,
+              fontSize:    10,
+              lineHeight:  1.7,
+              color:       '#2a1800',
+              margin:      0,
+              textAlign:   'center',
+              whiteSpace:  'pre-wrap',
+              wordBreak:   'break-word',
+            }}>
+              {text}
+            </p>
           </div>
 
-          {/* Tail pointing down toward the pet */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2"
-            style={{
-              top: '100%',
-              width: 0,
-              height: 0,
-              borderLeft: '7px solid transparent',
-              borderRight: '7px solid transparent',
-              borderTop: '8px solid white',
-              filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.08))',
-            }}
-          />
+          {/* ── Tail — pixel stepped triangle pointing DOWN toward the pet ── */}
+          {/* Layered 2-px-wide steps: outer (dark), mid (gold), inner (cream) */}
+          <div style={{ position:'absolute', left:'50%', top:'100%', transform:'translateX(-50%)', pointerEvents:'none' }}>
+            {/* Step 3 — widest, dark outline */}
+            <div style={{ width:18, height:2, background:'#3d2b00', margin:'0 auto' }}/>
+            {/* Step 2 — mid, gold */}
+            <div style={{ width:12, height:2, background:'#f5c842', margin:'0 auto' }}/>
+            {/* Step 1 — tip, dark */}
+            <div style={{ width:6,  height:2, background:'#3d2b00', margin:'0 auto' }}/>
+            <div style={{ width:2,  height:2, background:'#3d2b00', margin:'0 auto' }}/>
+          </div>
+
+          {/* Invisible spacer so the parent div's height includes the tail */}
+          <div style={{ height: TAIL_H }} />
         </motion.div>
       )}
     </AnimatePresence>
