@@ -178,8 +178,16 @@ const TreehouseReport: React.FC = () => {
         <button
           type="button"
           onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
-          className="px-2.5 h-6 rounded-full text-white/80 hover:text-white text-[10px] transition-all"
-          style={{ background: 'rgba(8,10,22,0.70)', backdropFilter: 'blur(6px)' }}
+          className="w-full h-full flex items-center justify-center transition-opacity hover:opacity-75"
+          style={{
+            fontFamily:  "'Courier New', monospace",
+            fontSize:    11,
+            fontWeight:  700,
+            color:       '#e8c97a',
+            textShadow:  '1px 1px 0 #1a1205',
+            letterSpacing: '0.02em',
+            background:  'transparent',
+          }}
         >
           更换宠物
         </button>
