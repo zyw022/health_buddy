@@ -473,7 +473,7 @@ const CanopyBubble: React.FC<{
         style={{
           display:        'flex',
           alignItems:     'center',
-          gap:            7,
+          gap:            5,
           padding:        '7px 12px',
           background:     active ? 'rgba(255,255,255,0.30)' : hov ? 'rgba(255,255,255,0.26)' : 'rgba(255,255,255,0.16)',
           outline:        active ? `2px solid ${accent}` : `2px solid rgba(255,255,255,0.80)`,
@@ -487,8 +487,8 @@ const CanopyBubble: React.FC<{
           transition:     'background 0.1s, outline-color 0.1s',
         }}
       >
-        <span style={{ fontSize: 20, lineHeight: 1 }}>{icon}</span>
-        <span style={{ fontFamily: PXF, fontSize: 10, fontWeight: 'bold',
+        <span style={{ fontSize: 14, lineHeight: 1 }}>{icon}</span>
+        <span style={{ fontFamily: PXF, fontSize: 8, fontWeight: 'bold',
           color: active ? accent : 'rgba(255,255,255,0.92)',
           textShadow: '0 1px 3px rgba(0,0,0,0.85)', lineHeight: 1 }}>
           {label}
@@ -536,6 +536,7 @@ const ActionPanel: React.FC<{
 }> = ({ species, pos, onClose }) => {
   const [fired, setFired] = useState<PetAction | null>(null)
   const PXF = '"Press Start 2P", monospace'
+  const { ref, clamped } = useClamped(pos)
 
   const trigger = useCallback((action: PetAction) => {
     void getElectronAPI()?.triggerPetAction(action)
@@ -545,14 +546,15 @@ const ActionPanel: React.FC<{
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, scale: 0.9, y: 6 }}
       animate={{ opacity: 1, scale: 1,   y: 0 }}
       exit={{    opacity: 0, scale: 0.9, y: 6 }}
       transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
       style={{
         position:     'fixed',
-        left:         pos.x,
-        top:          pos.y,
+        left:         clamped.x,
+        top:          clamped.y,
         zIndex:       9999,
         pointerEvents:'auto',
         width:        248,
@@ -621,6 +623,27 @@ const ActionPanel: React.FC<{
   )
 }
 
+// ── Shared hook: clamp a panel's position to viewport after render ────────────
+function useClamped(pos: { x: number; y: number }, margin = 8) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [clamped, setClamped] = useState(pos)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const ro = new ResizeObserver(() => {
+      const w = el.offsetWidth
+      const h = el.offsetHeight
+      setClamped({
+        x: Math.max(margin, Math.min(pos.x, window.innerWidth  - w - margin)),
+        y: Math.max(margin, Math.min(pos.y, window.innerHeight - h - margin)),
+      })
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [pos, margin])
+  return { ref, clamped }
+}
+
 // ── Charts overview panel ─────────────────────────────────────────────────────
 const ChartsPanel: React.FC<{
   series:  ChartSeriesBundle | null
@@ -637,12 +660,14 @@ const ChartsPanel: React.FC<{
   ] : []
   const [chartIdx, setChartIdx] = useState(0)
   const cur = charts[chartIdx]
+  const { ref, clamped } = useClamped(pos)
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 300, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: clamped.x, top: clamped.y, width: 300, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
         <span style={{ fontFamily: PXF, fontSize: 9, color: '#86efac', textShadow: '0 0 6px #86efac66' }}>📊 健康图表</span>
@@ -700,6 +725,7 @@ const AdvicePanel: React.FC<{
   onClose: () => void
 }> = ({ pos, onClose }) => {
   const { records, clear } = useAdviceHistoryStore()
+  const { ref, clamped } = useClamped(pos)
 
   // Count frequency of each message text
   const freq = records.reduce<Record<string,number>>((acc, r) => {
@@ -715,9 +741,10 @@ const AdvicePanel: React.FC<{
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: clamped.x, top: clamped.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
         <span style={{ fontFamily: PXF, fontSize: 9, color: '#fde68a', textShadow: '0 0 6px #fde68a66' }}>💡 历史建议</span>
@@ -777,6 +804,7 @@ const ShopPanel: React.FC<{
   const [cat, setCat] = useState<'all'|'accessory'|'toy'|'food'|'deco'>('all')
   const [flash, setFlash] = useState<string|null>(null)
   const [msg, setMsg] = useState<string|null>(null)
+  const { ref, clamped } = useClamped(pos)
 
   const ownedIds = new Set(purchases.map(p => p.itemId))
   const filtered = cat === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter(i => i.category === cat)
@@ -796,9 +824,10 @@ const ShopPanel: React.FC<{
 
   return (
     <motion.div
+      ref={ref}
       initial={{ opacity: 0, scale: 0.92, y: 6 }} animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.92, y: 6 }} transition={{ duration: 0.13 }}
-      style={{ position: 'fixed', left: pos.x, top: pos.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
+      style={{ position: 'fixed', left: clamped.x, top: clamped.y, width: 340, zIndex: 9999, pointerEvents: 'auto', ...pxBox() }}
     >
       {/* Header */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'8px 12px 6px', borderBottom:'2px solid rgba(255,255,255,0.12)' }}>
