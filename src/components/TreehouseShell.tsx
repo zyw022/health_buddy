@@ -23,93 +23,18 @@ const FADE_DURATION: Record<FadePhase, number> = {
   out:     0.9,
 }
 
-// ── Pixel-art speech bubble SVG backgrounds ─────────────────────────────────
-// Each bubble is drawn with a crisp 1-px pixel grid + a small bottom-left tail.
-// The outer border is dark (like a pixel game UI frame), inner fill is earthy wood tone.
+// ── Floating bubble — transparent glass style ────────────────────────────────
+// Gentle bob animation: each bubble floats at different phase so they feel alive
 
-/** Wide bubble — used for action labels like "更换宠物" */
-const PixelBubbleWide: React.FC<{ width: number; height: number }> = ({ width, height }) => {
-  const s = 4           // pixel size
-  const r = s * 2       // corner radius in pixels (2 px units)
-  const tailW = s * 3
-  const tailH = s * 2
-
-  // Outer rect
-  const x0 = 0, y0 = 0
-  const x1 = width, y1 = height - tailH
-
-  return (
-    <svg
-      width={width}
-      height={height}
-      style={{ imageRendering: 'pixelated', display: 'block', overflow: 'visible' }}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <filter id="px-shadow-w" x="-10%" y="-10%" width="120%" height="120%">
-          <feDropShadow dx="2" dy="3" stdDeviation="0" floodColor="#1a1205" floodOpacity="0.55" />
-        </filter>
-      </defs>
-      {/* Main body — pixel-rounded rect */}
-      <rect x={x0} y={y0} width={x1} height={y1} rx={r} ry={r}
-        fill="#3b2a14" filter="url(#px-shadow-w)" />
-      <rect x={x0} y={y0} width={x1} height={y1} rx={r} ry={r}
-        fill="none" stroke="#1a1205" strokeWidth={s / 2} />
-      {/* Inner lighter fill for pixel-art depth */}
-      <rect x={x0 + s} y={y0 + s} width={x1 - s * 2} height={y1 - s * 2} rx={r - s / 2} ry={r - s / 2}
-        fill="#5c3f1e" />
-      {/* Top highlight strip */}
-      <rect x={x0 + r} y={y0 + s} width={x1 - r * 2} height={s}
-        fill="#7a5530" />
-      {/* Tail — bottom-left pixel steps */}
-      <polygon
-        points={`${s * 2},${y1} ${s * 2 + tailW},${y1} ${s * 2},${y1 + tailH}`}
-        fill="#3b2a14" />
-      <polygon
-        points={`${s * 2},${y1} ${s * 2 + tailW},${y1} ${s * 2},${y1 + tailH}`}
-        fill="none" stroke="#1a1205" strokeWidth={s / 2} strokeLinejoin="round" />
-    </svg>
-  )
-}
-
-/** Square bubble — used for the × close button */
-const PixelBubbleSquare: React.FC<{ size: number }> = ({ size }) => {
-  const s = 4
-  const r = s * 2
-  const tailW = s * 2
-  const tailH = s * 2
-  const bodyH = size - tailH
-
-  return (
-    <svg
-      width={size}
-      height={size}
-      style={{ imageRendering: 'pixelated', display: 'block', overflow: 'visible' }}
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <defs>
-        <filter id="px-shadow-s" x="-10%" y="-10%" width="130%" height="130%">
-          <feDropShadow dx="2" dy="3" stdDeviation="0" floodColor="#1a1205" floodOpacity="0.55" />
-        </filter>
-      </defs>
-      <rect x={0} y={0} width={size} height={bodyH} rx={r} ry={r}
-        fill="#3b2a14" filter="url(#px-shadow-s)" />
-      <rect x={0} y={0} width={size} height={bodyH} rx={r} ry={r}
-        fill="none" stroke="#1a1205" strokeWidth={s / 2} />
-      <rect x={s} y={s} width={size - s * 2} height={bodyH - s * 2} rx={r - s / 2} ry={r - s / 2}
-        fill="#5c3f1e" />
-      <rect x={r} y={s} width={size - r * 2} height={s}
-        fill="#7a5530" />
-      {/* Tail — bottom-right */}
-      <polygon
-        points={`${size - s * 2 - tailW},${bodyH} ${size - s * 2},${bodyH} ${size - s * 2},${bodyH + tailH}`}
-        fill="#3b2a14" />
-      <polygon
-        points={`${size - s * 2 - tailW},${bodyH} ${size - s * 2},${bodyH} ${size - s * 2},${bodyH + tailH}`}
-        fill="none" stroke="#1a1205" strokeWidth={s / 2} strokeLinejoin="round" />
-    </svg>
-  )
-}
+const float = (delay: number) => ({
+  animate: { y: [0, -6, 0] },
+  transition: {
+    duration: 2.8,
+    repeat: Infinity,
+    ease: 'easeInOut' as const,
+    delay,
+  },
+})
 
 // ── Main component ───────────────────────────────────────────────────────────
 
@@ -155,95 +80,124 @@ export const TreehouseShell: React.FC<Props> = ({
         style={{ opacity: imageOpacity }}
       />
 
-      {/* ── Pixel-art bubble controls — always visible, sit in the canopy ── */}
+      {/* ── Floating bubble controls ── */}
       {!pureImage && (
         <div
-          className="absolute z-50 flex items-end gap-2"
-          style={{
-            // Anchor to top-right, inside the leafy canopy area
-            top:   '6%',
-            right: '4%',
-            WebkitAppRegion: 'no-drag',
-          }}
+          className="absolute inset-0 z-50"
+          style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }}
         >
-          {/* Action bubble (e.g. "更换宠物") — only rendered if actions prop provided */}
+          {/* ── Left bubble: action slot (更换宠物) ──────────────────────
+              Position: ~43% from left, ~22% from top — left canopy bright spot */}
           {actions && (
-            <div className="relative flex items-center justify-center" style={{ marginBottom: 8 }}>
-              {/* Pixel SVG bubble background */}
-              <div className="absolute inset-0 pointer-events-none" style={{ bottom: -8 }}>
-                <PixelBubbleWide width={96} height={44} />
+            <motion.div
+              {...float(0)}
+              className="absolute"
+              style={{
+                left: '38%',
+                top:  '18%',
+                pointerEvents: 'auto',
+              }}
+            >
+              <div className="relative flex flex-col items-center">
+                {/* Bubble body */}
+                <div
+                  className="flex items-center justify-center px-3 h-8 rounded-full"
+                  style={{
+                    background:    'rgba(255,255,255,0.12)',
+                    border:        '1.5px solid rgba(255,255,255,0.35)',
+                    backdropFilter:'blur(8px)',
+                    WebkitBackdropFilter: 'blur(8px)',
+                    boxShadow:     '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  }}
+                >
+                  {actions}
+                </div>
+                {/* Tail */}
+                <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
+                  <path d="M5 7 L0 0 L10 0 Z"
+                    fill="rgba(255,255,255,0.12)"
+                    stroke="rgba(255,255,255,0.30)"
+                    strokeWidth="1"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
-              {/* Label */}
-              <div
-                className="relative flex items-center gap-1"
-                style={{ width: 96, height: 36, paddingBottom: 0 }}
-              >
-                {actions}
-              </div>
-            </div>
+            </motion.div>
           )}
 
-          {/* × close bubble */}
-          <div className="relative flex items-center justify-center" style={{ marginBottom: 8 }}>
-            <div className="absolute inset-0 pointer-events-none" style={{ bottom: -8 }}>
-              <PixelBubbleSquare size={40} />
-            </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              className="relative flex items-center justify-center transition-opacity hover:opacity-75"
-              style={{
-                width: 40, height: 32,
-                WebkitAppRegion: 'no-drag',
-              }}
-              title="关闭树屋"
-            >
-              {/* Pixel × drawn in SVG for crispness */}
-              <svg width={14} height={14} viewBox="0 0 14 14" style={{ imageRendering: 'pixelated' }}>
-                <line x1="2" y1="2" x2="12" y2="12" stroke="#e8c97a" strokeWidth="2.5" strokeLinecap="square" />
-                <line x1="12" y1="2" x2="2" y2="12" stroke="#e8c97a" strokeWidth="2.5" strokeLinecap="square" />
+          {/* ── Right bubble: close × ────────────────────────────────────
+              Position: ~75% from left, ~14% from top — right canopy branch */}
+          <motion.div
+            {...float(0.9)}
+            className="absolute"
+            style={{
+              left: '72%',
+              top:  '12%',
+              pointerEvents: 'auto',
+            }}
+          >
+            <div className="relative flex flex-col items-center">
+              {/* Bubble body */}
+              <button
+                type="button"
+                onClick={handleClose}
+                className="flex items-center justify-center w-8 h-8 rounded-full transition-all"
+                style={{
+                  background:    'rgba(255,255,255,0.12)',
+                  border:        '1.5px solid rgba(255,255,255,0.35)',
+                  backdropFilter:'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  boxShadow:     '0 2px 12px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.25)',
+                  WebkitAppRegion: 'no-drag',
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,80,80,0.35)'
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,120,120,0.6)'
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)'
+                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.35)'
+                }}
+                title="关闭树屋"
+              >
+                <svg width={12} height={12} viewBox="0 0 12 12">
+                  <line x1="2" y1="2" x2="10" y2="10" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
+                  <line x1="10" y1="2" x2="2" y2="10" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              </button>
+              {/* Tail */}
+              <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
+                <path d="M5 7 L0 0 L10 0 Z"
+                  fill="rgba(255,255,255,0.12)"
+                  stroke="rgba(255,255,255,0.30)"
+                  strokeWidth="1"
+                  strokeLinejoin="round"
+                />
               </svg>
-            </button>
-          </div>
+            </div>
+          </motion.div>
         </div>
       )}
 
-      {/* Title / subtitle — small pixel label below the canopy (only in non-report views) */}
+      {/* Title / subtitle — pixel label, faint, bottom-left of canopy */}
       {!pureImage && (title || subtitle) && (
         <div
           className="absolute z-40 pointer-events-none select-none"
           style={{
-            top: 'calc(6% + 52px)',
-            right: '4%',
+            top:   '28%',
+            right: '5%',
             WebkitAppRegion: 'no-drag',
           }}
         >
           {title && (
-            <p
-              className="text-right leading-tight"
-              style={{
-                fontFamily:  "'Courier New', monospace",
-                fontSize:    11,
-                fontWeight:  700,
-                color:       '#e8c97a',
-                textShadow:  '1px 1px 0 #1a1205, -1px -1px 0 #1a1205',
-                letterSpacing: '0.03em',
-              }}
-            >
+            <p className="text-right text-white/70 text-[11px] font-semibold leading-tight"
+              style={{ textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}>
               {title}
             </p>
           )}
           {subtitle && (
-            <p
-              className="text-right"
-              style={{
-                fontFamily: "'Courier New', monospace",
-                fontSize:   9,
-                color:      '#a07840',
-                textShadow: '1px 1px 0 #1a1205',
-                marginTop:  2,
-              }}
-            >
+            <p className="text-right text-white/35 text-[9px] mt-0.5"
+              style={{ textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>
               {subtitle}
             </p>
           )}

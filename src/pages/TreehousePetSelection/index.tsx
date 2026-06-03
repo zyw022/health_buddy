@@ -122,16 +122,8 @@ const TreehousePetSelection: React.FC<Props> = ({ mode = 'onboard' }) => {
           <button
             type="button"
             onClick={goBack}
-            className="w-full h-full flex items-center justify-center transition-opacity hover:opacity-75"
-            style={{
-              fontFamily:  "'Courier New', monospace",
-              fontSize:    11,
-              fontWeight:  700,
-              color:       '#e8c97a',
-              textShadow:  '1px 1px 0 #1a1205',
-              letterSpacing: '0.02em',
-              background:  'transparent',
-            }}
+            className="text-white/85 hover:text-white text-[11px] font-medium tracking-wide transition-opacity"
+            style={{ background: 'transparent', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
           >
             ← 返回
           </button>
