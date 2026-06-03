@@ -90,61 +90,74 @@ const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
     color={BAR_COLORS[item.id] ?? '#86efac'} width={260} height={130} />
 }
 
-const PreferencesPanel: React.FC<PanelProps> = ({ onClose }) => {
+const PX = '"Press Start 2P", monospace'
+
+const PreferencesPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
   const { items, add, remove } = usePreferencesStore()
   const [draft, setDraft] = useState('')
   const submit = async () => { if (draft.trim()) { await add(draft); setDraft('') } }
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[#fde68a] text-[11px] font-semibold tracking-wide">✦ 偏好存档</span>
-        <button onClick={onClose} className="text-white/30 hover:text-white/70 text-[10px]">关闭</button>
-      </div>
-      <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1 mb-2">
-        {items.length === 0 && <p className="text-white/30 text-[10px] italic">还没有偏好，添加一条吧</p>}
+    <div style={{ width: '100%' }}>
+      <div style={{ maxHeight: 140, overflowY: 'auto', marginBottom: 10 }}>
+        {items.length === 0 && (
+          <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.3)', lineHeight: 2 }}>
+            还没有偏好，添加一条吧
+          </p>
+        )}
         {items.map(p => (
-          <div key={p.id} className="flex items-start gap-2 group">
-            <span className="text-[#fde68a]/80 text-[9px] mt-0.5 shrink-0">✦</span>
-            <p className="flex-1 text-white/75 text-[10px] leading-snug">{p.text}</p>
+          <div key={p.id} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: PX, fontSize: 6, color: '#fde68a', flexShrink: 0, marginTop: 1 }}>▸</span>
+            <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.75)', lineHeight: 1.9, flex: 1 }}>{p.text}</p>
             <button onClick={() => void remove(p.id)}
-              className="opacity-0 group-hover:opacity-100 text-white/30 hover:text-red-400 text-[9px] shrink-0 transition-opacity">✕</button>
+              style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.25)', background: 'none', border: 'none', cursor: 'pointer', flexShrink: 0 }}>✕</button>
           </div>
         ))}
       </div>
-      <div className="flex gap-1.5">
+      <div style={{ display: 'flex', gap: 6 }}>
         <input value={draft} onChange={e => setDraft(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') void submit() }}
           placeholder="新增偏好…" maxLength={50}
-          className="flex-1 bg-white/8 border border-white/15 rounded-lg px-2 py-1 text-white text-[10px] outline-none focus:border-[#fde68a]/50 placeholder-white/25" />
+          style={{
+            flex: 1, fontFamily: PX, fontSize: 5,
+            background: 'rgba(255,255,255,0.06)',
+            border: '1px solid rgba(253,230,138,0.3)',
+            color: 'white', padding: '6px 8px', outline: 'none',
+          }} />
         <button onClick={() => void submit()} disabled={!draft.trim()}
-          className="px-2 py-1 rounded-lg text-[10px] text-[#1a1205] font-bold transition-opacity disabled:opacity-30"
-          style={{ background: '#fde68a' }}>+</button>
+          style={{
+            fontFamily: PX, fontSize: 6, padding: '6px 10px',
+            background: '#fde68a', color: '#1a1205',
+            border: 'none', cursor: 'pointer', opacity: draft.trim() ? 1 : 0.35,
+          }}>+</button>
       </div>
     </div>
   )
 }
 
-const HistoryPanel: React.FC<PanelProps> = ({ onClose }) => {
+const HistoryPanel: React.FC<PanelProps> = ({ onClose: _onClose }) => {
   const { records, clear } = useAdviceHistoryStore()
   const fmt = (iso: string) => {
     const d = new Date(iso)
     return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`
   }
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[#fde68a] text-[11px] font-semibold tracking-wide">✦ 历史建议</span>
-        <div className="flex gap-2">
-          {records.length > 0 && <button onClick={() => void clear()} className="text-white/25 hover:text-red-400 text-[10px]">清空</button>}
-          <button onClick={onClose} className="text-white/30 hover:text-white/70 text-[10px]">关闭</button>
-        </div>
-      </div>
-      <div className="space-y-2 max-h-44 overflow-y-auto pr-1">
-        {records.length === 0 && <p className="text-white/30 text-[10px] italic">还没有记录，跟宠物多互动吧</p>}
+    <div style={{ width: '100%' }}>
+      {records.length > 0 && (
+        <button onClick={() => void clear()}
+          style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,80,80,0.6)', background: 'none', border: 'none', cursor: 'pointer', marginBottom: 8 }}>
+          CLEAR ALL
+        </button>
+      )}
+      <div style={{ maxHeight: 170, overflowY: 'auto' }}>
+        {records.length === 0 && (
+          <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.3)', lineHeight: 2 }}>
+            还没有记录，跟宠物多互动吧
+          </p>
+        )}
         {records.map(r => (
-          <div key={r.id} className="flex gap-2 items-start">
-            <span className="text-[#fde68a]/60 text-[9px] mt-0.5 shrink-0 font-mono">{fmt(r.createdAt)}</span>
-            <p className="text-white/70 text-[10px] leading-snug">{r.text}</p>
+          <div key={r.id} style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'flex-start' }}>
+            <span style={{ fontFamily: PX, fontSize: 4, color: 'rgba(253,230,138,0.5)', flexShrink: 0, marginTop: 2, fontVariantNumeric: 'tabular-nums' }}>{fmt(r.createdAt)}</span>
+            <p style={{ fontFamily: PX, fontSize: 5, color: 'rgba(255,255,255,0.65)', lineHeight: 1.9 }}>{r.text}</p>
           </div>
         ))}
       </div>
@@ -152,47 +165,135 @@ const HistoryPanel: React.FC<PanelProps> = ({ onClose }) => {
   )
 }
 
-const HoverPanel: React.FC<{
-  item: FurnitureDef
-  pos:  { x: number; y: number }
-  series: ChartSeriesBundle | null
-  onClose: () => void
-}> = ({ item, pos, series, onClose }) => {
-  const isGold = item.glowType === 'gold'
+// ── Pixel panel wrapper — CSS outline + corner sprites ───────────────────────
+const PixelPanel: React.FC<{
+  pos:      { x: number; y: number }
+  isGold:   boolean
+  children: React.ReactNode
+  onClose:  () => void
+  width?:   number
+}> = ({ pos, isGold, children, onClose, width = 292 }) => {
+  const accent = isGold ? '#fde68a' : '#7dd3fc'
+  const bg     = isGold ? 'rgba(16,12,2,0.97)' : 'rgba(4,8,20,0.97)'
+  const glow   = isGold
+    ? '0 0 28px rgba(253,230,138,0.28), 0 4px 20px rgba(0,0,0,0.8)'
+    : '0 0 20px rgba(125,211,252,0.18), 0 4px 20px rgba(0,0,0,0.8)'
+  const PXF = '"Press Start 2P", monospace'
+
+  // Pixel corner SVG (8×8 corner block with hollow centre)
+  const Corner: React.FC<{ style: React.CSSProperties }> = ({ style }) => (
+    <svg width={10} height={10} style={{ position: 'absolute', imageRendering: 'pixelated', ...style }}>
+      <rect x={0} y={0} width={10} height={10} fill={accent} />
+      <rect x={2} y={2} width={6}  height={6}  fill={bg} />
+      <rect x={3} y={3} width={4}  height={4}  fill={accent} opacity={0.4} />
+    </svg>
+  )
+
   return (
     <motion.div
-      key={item.id}
-      initial={{ opacity: 0, scale: 0.9, y: 8 }}
+      key="pixel-panel"
+      initial={{ opacity: 0, scale: 0.88, y: 10 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.9, y: 8 }}
-      transition={{ duration: 0.18, ease: 'easeOut' }}
-      className="absolute z-50 rounded-2xl p-3 pointer-events-auto"
+      exit={{ opacity: 0, scale: 0.88, y: 10 }}
+      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
       style={{
-        left:       pos.x,
-        top:        pos.y,
-        minWidth:   item.panelType === 'preferences' || item.panelType === 'history' ? 260 : 280,
-        maxWidth:   300,
-        background: 'rgba(10,12,25,0.95)',
-        border:     `1px solid ${isGold ? 'rgba(253,230,138,0.35)' : 'rgba(255,255,255,0.12)'}`,
-        boxShadow:  isGold
-          ? '0 8px 32px rgba(253,230,138,0.15), 0 2px 8px rgba(0,0,0,0.5)'
-          : '0 8px 28px rgba(0,0,0,0.5)',
+        position:   'absolute',
+        left: pos.x, top: pos.y,
+        width,
+        background: bg,
+        // Pixel-art double border: outer solid 2px, inner inset 1px
+        outline:    `2px solid ${accent}`,
+        outlineOffset: 0,
+        boxShadow:  `inset 0 0 0 1px rgba(255,255,255,0.08), ${glow}`,
+        padding:    '18px 14px 14px',
+        zIndex:     50,
+        pointerEvents: 'auto',
       }}
     >
-      {item.panelType !== 'preferences' && item.panelType !== 'history' && (
-        <>
-          <p className="text-[11px] font-semibold px-1 mb-0.5"
-            style={{ color: isGold ? '#fde68a' : 'rgba(255,255,255,0.9)' }}>
-            {item.label}
-          </p>
-          <p className="text-white/40 text-[10px] px-1 mb-2">{item.hint}</p>
-        </>
-      )}
+      {/* Pixel corners */}
+      <Corner style={{ top: -1, left: -1 }} />
+      <Corner style={{ top: -1, right: -1 }} />
+      <Corner style={{ bottom: -1, left: -1 }} />
+      <Corner style={{ bottom: -1, right: -1 }} />
+
+      {/* Top edge notch (pixel decoration) */}
+      <div style={{
+        position: 'absolute', top: -1, left: '50%', transform: 'translateX(-50%)',
+        width: 20, height: 4, background: accent,
+        imageRendering: 'pixelated',
+      }} />
+      <div style={{
+        position: 'absolute', top: 3, left: '50%', transform: 'translateX(-50%)',
+        width: 14, height: 2, background: bg,
+      }} />
+
+      {/* Close button */}
+      <button
+        onClick={onClose}
+        style={{
+          position: 'absolute', top: 5, right: 8,
+          fontFamily: PXF, fontSize: 7,
+          color: accent, background: 'transparent', border: 'none',
+          cursor: 'pointer', zIndex: 2, lineHeight: 1, padding: '1px 3px',
+        }}
+      >✕</button>
+
+      {children}
+    </motion.div>
+  )
+}
+
+const HoverPanel: React.FC<{
+  item:    FurnitureDef
+  pos:     { x: number; y: number }
+  series:  ChartSeriesBundle | null
+  onClose: () => void
+}> = ({ item, pos, series, onClose }) => {
+  const isGold  = item.glowType === 'gold'
+  const accent  = isGold ? '#fde68a' : '#7dd3fc'
+  const PX_FONT = '"Press Start 2P", monospace'
+
+  return (
+    <PixelPanel pos={pos} isGold={isGold} onClose={onClose}>
+      {/* Header — pixel font label + hint */}
+      <div style={{ marginBottom: 8 }}>
+        <p style={{
+          fontFamily: PX_FONT,
+          fontSize: 7,
+          color: accent,
+          marginBottom: 4,
+          lineHeight: 1.6,
+          letterSpacing: '0.05em',
+          textShadow: `0 0 8px ${accent}`,
+        }}>
+          {item.label.toUpperCase()}
+        </p>
+        <p style={{
+          fontFamily: PX_FONT,
+          fontSize: 5,
+          color: 'rgba(255,255,255,0.35)',
+          lineHeight: 1.8,
+        }}>
+          {item.hint}
+        </p>
+      </div>
+
+      {/* Pixel divider */}
+      <div style={{
+        height: 2,
+        background: `repeating-linear-gradient(to right, ${accent} 0px, ${accent} 4px, transparent 4px, transparent 8px)`,
+        marginBottom: 8,
+        opacity: 0.5,
+      }} />
+
+      {/* Content */}
       {(item.panelType === 'chart-line' || item.panelType === 'chart-bar' || item.panelType === 'chart-dimensions') &&
         <ChartPanel item={item} series={series} onClose={onClose} />}
-      {item.panelType === 'preferences' && <PreferencesPanel item={item} series={series} onClose={onClose} />}
-      {item.panelType === 'history'     && <HistoryPanel     item={item} series={series} onClose={onClose} />}
-    </motion.div>
+      {item.panelType === 'preferences' &&
+        <PreferencesPanel item={item} series={series} onClose={onClose} />}
+      {item.panelType === 'history' &&
+        <HistoryPanel item={item} series={series} onClose={onClose} />}
+    </PixelPanel>
   )
 }
 

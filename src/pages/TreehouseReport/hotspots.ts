@@ -28,49 +28,57 @@ export interface FurnitureDef {
 
 export const FURNITURE: FurnitureDef[] = [
   {
-    id: 'clock', label: '挂钟', hint: '今日久坐时间',
+    // 挂钟 → 久坐时间折线图（时间流逝感）
+    id: 'clock', label: '挂钟', hint: '久坐时间记录',
     src: 'materials/furniture/clock.png',
     hitbox: bboxes.clock, depth: 0.8,
     panelType: 'chart-line', glowType: 'normal', seriesKey: 'clock',
   },
   {
-    id: 'note', label: '便笺', hint: '睡眠时长与质量',
+    // 便笺 → 睡眠时长折线图（笔记记录睡眠）
+    id: 'note', label: '便笺', hint: '睡眠时长记录',
     src: 'materials/furniture/note.png',
     hitbox: bboxes.note, depth: 1.0,
     panelType: 'chart-line', glowType: 'normal', seriesKey: 'note',
   },
   {
-    id: 'bowl', label: '水池边的碗', hint: '每日饮水量',
+    // 碗 → 饮水量柱状图（碗盛水）
+    id: 'bowl', label: '饮水碗', hint: '每日饮水量',
     src: 'materials/furniture/bowl.png',
     hitbox: bboxes.bowl, depth: 0.9,
     panelType: 'chart-bar', glowType: 'normal', seriesKey: 'bowl',
   },
   {
-    id: 'sofa', label: '沙发抱枕', hint: '今日四维度健康评分',
+    // 抱枕/沙发 → 四维度综合图（休息放松）
+    id: 'sofa', label: '沙发抱枕', hint: '今日健康四维度',
     src: 'materials/furniture/pillow.png',
     hitbox: bboxes.sofa, depth: 1.1,
     panelType: 'chart-dimensions', glowType: 'normal', seriesKey: 'dimensions',
   },
   {
-    id: 'flower', label: '二楼的花', hint: '今日步数',
+    // 花 → 步数柱状图（生机活力）
+    id: 'flower', label: '绿植', hint: '今日步数',
     src: 'materials/furniture/flower.png',
     hitbox: bboxes.flower, depth: 0.7,
     panelType: 'chart-bar', glowType: 'normal', seriesKey: 'flower',
   },
   {
-    id: 'potion', label: '床边的药水', hint: '心率与压力指数',
+    // 药水 → 心率柱状图（健康指标）
+    id: 'potion', label: '药水瓶', hint: '心率监测',
     src: 'materials/furniture/potion.png',
     hitbox: bboxes.potion, depth: 1.0,
     panelType: 'chart-bar', glowType: 'normal', seriesKey: 'potion',
   },
   {
-    id: 'painting', label: '二楼的挂画', hint: '点击编辑你的偏好存档',
+    // 挂画 → 偏好存档（金光，特殊）
+    id: 'painting', label: '挂画', hint: '偏好存档 · 点击编辑',
     src: 'materials/furniture/painting.png',
     hitbox: bboxes.painting, depth: 0.5,
     panelType: 'preferences', glowType: 'gold',
   },
   {
-    id: 'lamp', label: '二楼的灯', hint: '宠物的所有历史建议',
+    // 灯 → 历史建议（金光，特殊）
+    id: 'lamp', label: '油灯', hint: '历史建议 · 点击查看',
     src: 'materials/furniture/lamp.png',
     hitbox: bboxes.lamp, depth: 0.6,
     panelType: 'history', glowType: 'gold',
