@@ -445,132 +445,191 @@ const ACTION_LABELS: Record<PetAction, string> = {
   drowsy:   '犯困',
 }
 
-// Positions (left%, top%) for 10 bubbles scattered across the canopy area.
-// The treehouse canopy occupies roughly left 5–95%, top 2–35% of the container.
-const ACTION_POSITIONS: [number, number][] = [
-  [8,   8 ],  // idle      — far left canopy
-  [22,  4 ],  // happy     — upper left
-  [36,  14],  // talk      — mid-left canopy
-  [50,  6 ],  // yawn      — top center
-  [62,  15],  // sleep     — mid-right
-  [74,  5 ],  // worried   — upper right
-  [85,  13],  // stretch   — far right canopy
-  [15,  20],  // takeoff   — lower left branch
-  [45,  22],  // drowsy    — lower center
-  [70,  21],  // flyhappy  — lower right branch
-]
-
 const ACTIONS_ORDER: PetAction[] = [
   'idle','happy','talk','yawn','sleep','worried','stretch','takeoff','drowsy','flyhappy',
 ]
 
-// ── Single action bubble ──────────────────────────────────────────────────────
-const ActionBubble: React.FC<{
-  action:   PetAction
-  species:  PetSpecies
-  pos:      [number, number]
-  delay:    number
-}> = ({ action, species, pos, delay }) => {
-  const [hov, setHov] = useState(false)
-  const [fired, setFired] = useState(false)
+// Shared pixel-box style (same as OvalBubble but inline for the panel)
+const pixelBox = (bg = 'rgba(8,12,28,0.96)'): React.CSSProperties => ({
+  background:           bg,
+  outline:              '2px solid rgba(255,255,255,0.85)',
+  outlineOffset:        '2px',
+  border:               '2px solid rgba(0,0,0,0.85)',
+  boxShadow:            '0 4px 18px rgba(0,0,0,0.6), inset -3px -3px 0px rgba(255,255,255,0.12)',
+  imageRendering:       'pixelated',
+  backdropFilter:       'blur(6px)',
+  WebkitBackdropFilter: 'blur(6px)',
+})
 
-  const handleClick = useCallback(() => {
+// ── Action panel (popup menu, same HoverPanel style) ─────────────────────────
+const ActionPanel: React.FC<{
+  species:  PetSpecies
+  pos:      { x: number; y: number }
+  onClose:  () => void
+}> = ({ species, pos, onClose }) => {
+  const [fired, setFired] = useState<PetAction | null>(null)
+  const PXF = '"Press Start 2P", monospace'
+
+  const trigger = useCallback((action: PetAction) => {
     void getElectronAPI()?.triggerPetAction(action)
-    setFired(true)
-    setTimeout(() => setFired(false), 900)
-  }, [action])
+    setFired(action)
+    setTimeout(() => setFired(null), 800)
+  }, [])
 
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.6 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ delay: delay * 0.07 + 0.2, duration: 0.35, ease: [0, 0, 0.2, 1] }}
+      initial={{ opacity: 0, scale: 0.9, y: 6 }}
+      animate={{ opacity: 1, scale: 1,   y: 0 }}
+      exit={{    opacity: 0, scale: 0.9, y: 6 }}
+      transition={{ duration: 0.14, ease: [0, 0, 0.2, 1] }}
       style={{
-        position:   'absolute',
-        left:       `${pos[0]}%`,
-        top:        `${pos[1]}%`,
-        pointerEvents: 'auto',
-        zIndex:     5,
+        position:     'absolute',
+        left:         pos.x,
+        top:          pos.y,
+        zIndex:       60,
+        pointerEvents:'auto',
+        width:        248,
+        ...pixelBox(),
       }}
     >
-      <motion.div
-        animate={{ y: [0, -4, 0] }}
-        transition={{ duration: 2.6 + delay * 0.3, repeat: Infinity, ease: 'easeInOut', delay: delay * 0.4 }}
-      >
-        <button
-          type="button"
-          onClick={handleClick}
-          onMouseEnter={() => setHov(true)}
-          onMouseLeave={() => setHov(false)}
-          title={ACTION_LABELS[action]}
-          style={{
-            display:        'flex',
-            flexDirection:  'column',
-            alignItems:     'center',
-            justifyContent: 'center',
-            width:          34,
-            height:         34,
-            /* pixel square — no border-radius */
-            background:     hov
-              ? 'rgba(255,255,255,0.38)'
-              : fired
-                ? 'rgba(253,230,138,0.50)'
-                : 'rgba(255,255,255,0.20)',
-            /* pixel double-border: white outer outline + black inner border */
-            outline:        fired
-              ? '2px solid rgba(253,200,50,0.95)'
-              : '2px solid rgba(255,255,255,0.85)',
-            outlineOffset:  '2px',
-            border:         `2px solid rgba(0,0,0,0.82)`,
-            boxShadow:      [
-              '0 2px 8px rgba(0,0,0,0.5)',
-              /* bottom-right inner highlight */
-              'inset -2px -2px 0px rgba(255,255,255,0.30)',
-            ].join(', '),
-            backdropFilter:       'blur(4px)',
-            WebkitBackdropFilter: 'blur(4px)',
-            imageRendering: 'pixelated',
-            cursor:         'pointer',
-            transition:     'background 0.1s, outline-color 0.1s',
-            padding:        0,
-            gap:            0,
-          }}
-        >
-          {/* Mini sprite preview */}
-          <PetSprite action={action} species={species} size={20} />
-          {/* Label */}
-          <span style={{
-            display:    'block',
-            fontFamily: '"Press Start 2P", monospace',
-            fontSize:   4,
-            fontWeight: 'bold',
-            color:      'rgba(255,255,255,0.95)',
-            textShadow: '0 1px 2px rgba(0,0,0,0.9)',
-            lineHeight: 1,
-            marginTop:  1,
-          }}>
-            {ACTION_LABELS[action]}
-          </span>
-        </button>
-      </motion.div>
+      {/* Title bar */}
+      <div style={{
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'space-between',
+        padding:        '7px 10px 5px',
+        borderBottom:   '2px solid rgba(255,255,255,0.15)',
+      }}>
+        <span style={{ fontFamily: PXF, fontSize: 7, color: '#7dd3fc',
+          textShadow: '0 0 6px #7dd3fc66' }}>动作控制台</span>
+        <button onClick={onClose} style={{
+          fontFamily: PXF, fontSize: 7, color: '#7dd3fc',
+          background: 'transparent', border: 'none', cursor: 'pointer', lineHeight: 1,
+        }}>✕</button>
+      </div>
+
+      {/* 2-column grid of actions */}
+      <div style={{
+        display:             'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap:                 6,
+        padding:             8,
+      }}>
+        {ACTIONS_ORDER.map((action) => {
+          const isFired = fired === action
+          return (
+            <button
+              key={action}
+              type="button"
+              onClick={() => trigger(action)}
+              style={{
+                display:        'flex',
+                flexDirection:  'column',
+                alignItems:     'center',
+                gap:            3,
+                padding:        '5px 4px',
+                background:     isFired ? 'rgba(253,230,138,0.22)' : 'rgba(255,255,255,0.05)',
+                outline:        isFired ? '2px solid rgba(253,200,50,0.9)' : '2px solid rgba(255,255,255,0.25)',
+                outlineOffset:  '1px',
+                border:         '1px solid rgba(0,0,0,0.6)',
+                cursor:         'pointer',
+                transition:     'background 0.1s, outline-color 0.1s',
+                imageRendering: 'pixelated',
+              }}
+            >
+              <PetSprite action={action} species={species} size={38} />
+              <span style={{
+                fontFamily: PXF,
+                fontSize:   5,
+                fontWeight: 'bold',
+                color:      isFired ? '#fde68a' : 'rgba(255,255,255,0.85)',
+                textShadow: '0 1px 3px rgba(0,0,0,0.9)',
+                lineHeight: 1,
+              }}>{ACTION_LABELS[action]}</span>
+            </button>
+          )
+        })}
+      </div>
     </motion.div>
   )
 }
 
-// ── All action bubbles layer ──────────────────────────────────────────────────
-const ActionBubbles: React.FC<{ species: PetSpecies }> = ({ species }) => (
-  <>
-    {ACTIONS_ORDER.map((action, i) => (
-      <ActionBubble
-        key={action}
-        action={action}
-        species={species}
-        pos={ACTION_POSITIONS[i]}
-        delay={i}
-      />
-    ))}
-  </>
-)
+// ── Entry bubble — sits atop the treehouse roof ───────────────────────────────
+const ActionBubbles: React.FC<{ species: PetSpecies }> = ({ species }) => {
+  const [open,   setOpen]   = useState(false)
+  const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const [hov, setHov] = useState(false)
+
+  const handleToggle = useCallback(() => {
+    if (!open && btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect()
+      const pw = 248
+      const x = r.right + 8 + pw > window.innerWidth ? r.left - pw - 8 : r.right + 8
+      const y = Math.max(8, r.top - 10)
+      setPanelPos({ x, y })
+    }
+    setOpen(v => !v)
+  }, [open])
+
+  return (
+    <>
+      {/* Entry bubble — floats near the treehouse rooftop (~50%, 28%) */}
+      <motion.div
+        animate={{ y: [0, -5, 0] }}
+        transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+        style={{ position: 'absolute', left: '50%', top: '28%',
+                 transform: 'translateX(-50%)', pointerEvents: 'auto', zIndex: 5 }}
+      >
+        <button
+          ref={btnRef}
+          type="button"
+          onClick={handleToggle}
+          onMouseEnter={() => setHov(true)}
+          onMouseLeave={() => setHov(false)}
+          title="动作控制台"
+          style={{
+            display:        'flex',
+            alignItems:     'center',
+            gap:            5,
+            padding:        '5px 10px',
+            background:     hov || open ? 'rgba(255,255,255,0.32)' : 'rgba(255,255,255,0.20)',
+            outline:        open ? '2px solid rgba(125,211,252,0.9)' : '2px solid rgba(255,255,255,0.85)',
+            outlineOffset:  '2px',
+            border:         '2px solid rgba(0,0,0,0.82)',
+            boxShadow:      '0 2px 10px rgba(0,0,0,0.5), inset -2px -2px 0px rgba(255,255,255,0.28)',
+            imageRendering: 'pixelated',
+            backdropFilter:       'blur(4px)',
+            WebkitBackdropFilter: 'blur(4px)',
+            cursor:         'pointer',
+            transition:     'background 0.1s, outline-color 0.1s',
+          }}
+        >
+          <PetSprite action="idle" species={species} size={22} />
+          <span style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize:   6,
+            fontWeight: 'bold',
+            color:      'rgba(255,255,255,0.95)',
+            textShadow: '0 1px 3px rgba(0,0,0,0.85)',
+            lineHeight: 1,
+          }}>动作</span>
+        </button>
+      </motion.div>
+
+      {/* Popup panel */}
+      <AnimatePresence>
+        {open && (
+          <ActionPanel
+            species={species}
+            pos={panelPos}
+            onClose={() => setOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+    </>
+  )
+}
 
 // ── Main component ────────────────────────────────────────────────────────────
 

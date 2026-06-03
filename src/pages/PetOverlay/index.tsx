@@ -105,11 +105,22 @@ const PetOverlay: React.FC = () => {
       })
     })
 
+    let actionRestoreTimer = 0
+    api.onPetAction((raw) => {
+      const act = raw as import('../../store/types').PetAction
+      setAction(act)
+      clearTimeout(actionRestoreTimer)
+      // Return to idle after action plays (~3 s)
+      actionRestoreTimer = window.setTimeout(() => setAction('idle'), 3000)
+    })
+
     return () => {
       api.removeAllListeners('show-speech-bubble')
       api.removeAllListeners('add-water-record')
       api.removeAllListeners('add-steps')
       api.removeAllListeners('pet-config-updated')
+      api.removeAllListeners('pet-action-trigger')
+      clearTimeout(actionRestoreTimer)
     }
   }, [setBubble, initFromFile, setAction, pushAdvice])
 
