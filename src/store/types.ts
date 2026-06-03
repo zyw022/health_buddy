@@ -55,6 +55,7 @@ export interface HealthState {
 export interface SpriteSheetDef {
   file: string    // path relative to assetstore (served at /)
   cols: number
+  rows: number    // sprite sheet rows (birds: 2)
   fps:  number
 }
 

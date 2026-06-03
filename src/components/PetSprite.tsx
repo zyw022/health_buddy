@@ -9,8 +9,7 @@ interface Props {
   className?: string
 }
 
-// Canvas-based sprite sheet animation component.
-// Slices the sheet horizontally: frame i starts at sx = i * (imgW / cols).
+// Canvas sprite animation: grid slice cols × rows, row-major frame order.
 export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size = 120, className = '' }) => {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const stateRef   = useRef({
@@ -23,13 +22,11 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
 
   const [loaded, setLoaded] = useState(false)
 
-  // Load / reload sprite sheet when action or species changes
   useEffect(() => {
     const cfg = getSpriteConfig(species, action)
-    const src = cfg.file  // served from assetstore/ via Vite publicDir
+    const src = cfg.file
 
     if (stateRef.current.currentSrc === src && stateRef.current.img?.complete) {
-      // Same sheet — just reset frame index
       stateRef.current.frameIdx = 0
       return
     }
@@ -50,7 +47,6 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
     }
   }, [action, species])
 
-  // rAF animation loop
   useEffect(() => {
     const s = stateRef.current
     if (!loaded) return
@@ -65,9 +61,13 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
       const img = s.img
       if (!img || !img.complete || img.naturalWidth === 0) return
 
-      const cfg     = getSpriteConfig(species, action)
-      const frameW  = img.naturalWidth / cfg.cols
-      const frameH  = img.naturalHeight
+      const cfg        = getSpriteConfig(species, action)
+      const frameW     = img.naturalWidth / cfg.cols
+      const frameH     = img.naturalHeight / cfg.rows
+      const col        = s.frameIdx % cfg.cols
+      const row        = Math.floor(s.frameIdx / cfg.cols)
+      const srcX       = col * frameW
+      const srcY       = row * frameH
 
       ctx.clearRect(0, 0, canvas.width, canvas.height)
 
@@ -79,26 +79,26 @@ export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size =
 
       ctx.drawImage(
         img,
-        s.frameIdx * frameW, 0,   // source x, y
-        frameW, frameH,            // source w, h
-        dx, dy, dw, dh,            // dest x, y, w, h
+        srcX, srcY, frameW, frameH,
+        dx, dy, dw, dh,
       )
     }
 
     function loop(ts: number) {
       const cfg = getSpriteConfig(species, action)
+      const totalFrames = cfg.cols * cfg.rows
       const interval = 1000 / cfg.fps
 
       if (ts - s.lastTick >= interval) {
-        s.frameIdx  = (s.frameIdx + 1) % cfg.cols
-        s.lastTick  = ts
+        s.frameIdx = (s.frameIdx + 1) % totalFrames
+        s.lastTick = ts
         draw()
       }
 
       s.animId = requestAnimationFrame(loop)
     }
 
-    draw()  // draw immediately on first load
+    draw()
     s.animId = requestAnimationFrame(loop)
 
     return () => {

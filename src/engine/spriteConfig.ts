@@ -1,6 +1,8 @@
 import type { PetAction, PetSpecies, SpriteSheetDef } from '../store/types'
 
-// All bird sprite sheets: 6590×2209 px, 3 horizontal frames (2197×2209 each)
+// Bird sprite sheets: 6 cols × 2 rows = 12 frames per action
+const BIRD_COLS = 6
+const BIRD_ROWS = 2
 
 /** English filename (within the species folder) for each action */
 const BIRD_ACTION_FILES: Record<PetAction, string> = {
@@ -64,7 +66,10 @@ export function getSpriteConfig(species: PetSpecies, action: PetAction): SpriteS
   const file   = BIRD_SPECIES.has(species)
     ? BIRD_ACTION_FILES[action]
     : NON_BIRD_ACTION_FILES[action]
-  return { file: `${folder}/${file}`, cols: 3, fps: BIRD_FPS[action] }
+  if (BIRD_SPECIES.has(species)) {
+    return { file: `${folder}/${file}`, cols: BIRD_COLS, rows: BIRD_ROWS, fps: BIRD_FPS[action] }
+  }
+  return { file: `${folder}/${file}`, cols: 1, rows: 1, fps: BIRD_FPS[action] }
 }
 
 // Backward-compatible static export — bird sprites
