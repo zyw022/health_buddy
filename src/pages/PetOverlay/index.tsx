@@ -396,11 +396,17 @@ const PetOverlay: React.FC = () => {
     getElectronAPI()?.openTreehouse('report')
   }, [])
 
+  const closeCtxMenu = useCallback(() => {
+    setCtxMenu(null)
+    // Return to passthrough only if nothing else interactive is open
+    if (!chatOpen) setPassthrough(true)
+  }, [chatOpen, setPassthrough])
+
   const onPetContextMenu = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
-    // Show pixel context menu at mouse position
+    setPassthrough(false)   // must be interactive while menu is visible
     setCtxMenu({ x: e.clientX, y: e.clientY })
-  }, [])
+  }, [setPassthrough])
 
   // Context menu items
   const petName = config?.name ?? '小伙伴'
@@ -539,26 +545,29 @@ const PetOverlay: React.FC = () => {
         </div>
       </div>
 
-      {/* Pixel context menu — portalled via state, rendered outside pet div */}
-      <AnimatePresence>
-        {ctxMenu && (
+      {/* Pixel context menu — portal to body, escapes window overflow + transform clipping */}
+      {ctxMenu && createPortal(
+        <AnimatePresence>
           <motion.div
-            key="ctx"
-            initial={{ opacity:0, scale:0.93 }}
-            animate={{ opacity:1, scale:1 }}
-            exit={{    opacity:0, scale:0.93 }}
-            transition={{ duration:0.1 }}
+            key="ctx-backdrop"
+            initial={{ opacity:0 }}
+            animate={{ opacity:1 }}
+            exit={{    opacity:0 }}
+            transition={{ duration:0.08 }}
             style={{ position:'fixed', inset:0, zIndex:9998, pointerEvents:'auto' }}
-            onClick={() => setCtxMenu(null)}
+            onMouseDown={closeCtxMenu}
           >
-            <PixelContextMenu
-              items={contextMenuItems}
-              pos={ctxMenu}
-              onClose={() => setCtxMenu(null)}
-            />
+            <div onMouseDown={e => e.stopPropagation()}>
+              <PixelContextMenu
+                items={contextMenuItems}
+                pos={ctxMenu}
+                onClose={closeCtxMenu}
+              />
+            </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </AnimatePresence>,
+        document.body,
+      )}
     </div>
   )
 }
