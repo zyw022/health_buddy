@@ -12,32 +12,39 @@ import {
   type HotspotId,
 } from './hotspots'
 
-// ── Hover animation variants ─────────────────────────────────────────────────
-// Pulse: scale cycles 1→1.08→0.96→1, opacity cycles for the glow overlay
-const PULSE_SCALE = {
-  animate: {
-    scale: [1, 1.08, 0.96, 1.04, 1],
-    transition: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' },
-  },
-  idle: { scale: 1, transition: { duration: 0.25 } },
-}
-
-const PULSE_GLOW_NORMAL = {
-  animate: {
-    opacity: [0.0, 0.6, 0.1, 0.7, 0.0],
-    transition: { duration: 1.4, repeat: Infinity, ease: 'easeInOut' },
-  },
-  idle: { opacity: 0, transition: { duration: 0.3 } },
-}
-const PULSE_GLOW_GOLD = {
-  animate: {
-    opacity: [0.3, 1.0, 0.4, 1.0, 0.3],
-    transition: { duration: 2.2, repeat: Infinity, ease: 'easeInOut' },
-  },
-  idle: {
-    opacity: [0.15, 0.5, 0.15],
-    transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' },
-  },
+// ── CSS keyframe animations (injected once) ──────────────────────────────────
+const FURNITURE_STYLE_ID = 'furniture-anim-styles'
+function ensureFurnitureStyles() {
+  if (document.getElementById(FURNITURE_STYLE_ID)) return
+  const style = document.createElement('style')
+  style.id = FURNITURE_STYLE_ID
+  style.textContent = `
+    @keyframes furniturePulseScale {
+      0%   { transform: scale(1); }
+      25%  { transform: scale(1.09); }
+      50%  { transform: scale(0.95); }
+      75%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes furnitureGlowNormal {
+      0%,100% { opacity: 0;    box-shadow: 0 0 0px 0px rgba(140,210,255,0); }
+      40%     { opacity: 0.85; box-shadow: 0 0 16px 6px rgba(140,210,255,0.55); }
+      70%     { opacity: 0.3;  box-shadow: 0 0 6px  2px rgba(140,210,255,0.2); }
+    }
+    @keyframes furnitureGlowGoldHover {
+      0%,100% { opacity: 0.4;  box-shadow: 0 0 8px  3px rgba(255,200,30,0.4); }
+      50%     { opacity: 1;    box-shadow: 0 0 22px 8px rgba(255,200,30,0.75); }
+    }
+    @keyframes furnitureGlowGoldIdle {
+      0%,100% { opacity: 0.2;  box-shadow: 0 0 6px  2px rgba(255,190,20,0.25); }
+      50%     { opacity: 0.6;  box-shadow: 0 0 14px 5px rgba(255,200,30,0.5); }
+    }
+    .furn-pulse { animation: furniturePulseScale 1.3s ease-in-out infinite; }
+    .furn-glow-normal { animation: furnitureGlowNormal 1.3s ease-in-out infinite; }
+    .furn-glow-gold-hover { animation: furnitureGlowGoldHover 1.0s ease-in-out infinite; }
+    .furn-glow-gold-idle  { animation: furnitureGlowGoldIdle  2.6s ease-in-out infinite; }
+  `
+  document.head.appendChild(style)
 }
 
 // ── Panel sub-components ──────────────────────────────────────────────────────
@@ -204,67 +211,49 @@ const FurnitureItem: React.FC<{
   const isActive = hovered || isPinned
   const { x, y, w, h } = item.hitbox
 
-  // Glow colour
-  const glowColor = isGold
-    ? 'rgba(255,210,60,0.85)'
-    : 'rgba(180,230,255,0.8)'
-  const glowShadow = isGold
-    ? '0 0 18px 6px rgba(255,200,30,0.5)'
-    : '0 0 14px 4px rgba(140,210,255,0.45)'
+  // Scale origin at the centre of the hitbox (in % of container)
+  const ox = `${x + w / 2}%`
+  const oy = `${y + h / 2}%`
+
+  // CSS animation classes
+  const scaleClass = isActive ? 'furn-pulse' : ''
+  const glowClass  = isActive
+    ? (isGold ? 'furn-glow-gold-hover' : 'furn-glow-normal')
+    : (isGold ? 'furn-glow-gold-idle' : '')
 
   return (
     // Full-size overlay — same coordinate space as treehouse.png (object-contain)
     <div className="absolute inset-0 pointer-events-none">
-      {/* Furniture image — always visible, scale-pulse on hover */}
+      {/* Scale wrapper — animates only scale, origin at hitbox centre */}
       <motion.div
-        className="absolute inset-0"
-        style={{ originX: `${x + w / 2}%`, originY: `${y + h / 2}%` }}
-        variants={PULSE_SCALE}
-        animate={isActive ? 'animate' : 'idle'}
+        className={`absolute inset-0 ${scaleClass}`}
+        style={{ transformOrigin: `${ox} ${oy}` }}
         initial={{ opacity: 0 }}
-        transition={{ opacity: { delay: 0.12 + index * 0.04, duration: 0.4 } }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.12 + index * 0.04, duration: 0.4 }}
       >
-        <motion.img
+        <img
           src={item.src}
           alt={item.label}
           draggable={false}
-          className="absolute inset-0 w-full h-full object-contain select-none"
+          className="absolute inset-0 w-full h-full object-contain select-none pointer-events-none"
           style={{ imageRendering: 'pixelated' }}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.12 + index * 0.04, duration: 0.4 }}
         />
-
-        {/* Glow overlay — flickering on hover; gold always glows */}
-        <motion.div
-          className="absolute inset-0 pointer-events-none"
-          variants={isGold ? PULSE_GLOW_GOLD : PULSE_GLOW_NORMAL}
-          animate={isActive || isGold ? 'animate' : 'idle'}
-          style={{
-            background: 'transparent',
-            // Use a radial glow centred on the hitbox
-            boxShadow:  `inset 0 0 0 0 transparent`,
-          }}
-        >
-          {/* Actual glow — absolute div covering hitbox area */}
-          <div
-            style={{
-              position: 'absolute',
-              left:   `${x}%`,
-              top:    `${y}%`,
-              width:  `${w}%`,
-              height: `${h}%`,
-              borderRadius: '4px',
-              boxShadow: isActive || isGold ? glowShadow : 'none',
-              border: isActive || isGold
-                ? `1px solid ${glowColor}`
-                : 'none',
-              transition: 'box-shadow 0.2s, border 0.2s',
-              pointerEvents: 'none',
-            }}
-          />
-        </motion.div>
       </motion.div>
+
+      {/* Glow box — covers hitbox area, CSS animation for flicker */}
+      <div
+        className={glowClass}
+        style={{
+          position:     'absolute',
+          left:         `${x}%`,
+          top:          `${y}%`,
+          width:        `${w}%`,
+          height:       `${h}%`,
+          borderRadius: '6px',
+          pointerEvents: 'none',
+        }}
+      />
 
       {/* Invisible hit-target sized to actual furniture silhouette */}
       <button
@@ -303,6 +292,7 @@ const TreehouseReport: React.FC = () => {
   const [panelPos, setPanelPos] = useState({ x: 0, y: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => { ensureFurnitureStyles() }, [])
   useEffect(() => { void loadPrefs()   }, [loadPrefs])
   useEffect(() => { void loadHistory() }, [loadHistory])
 
