@@ -887,13 +887,24 @@ type PanelKey = 'action' | 'charts' | 'advice' | 'shop' | null
 //  4. centre-right canopy  ≈ left 59%, top 25%
 //  5. right-mid    canopy  ≈ left 73%, top 29%
 //  6. right-lower  branch  ≈ left 84%, top 37%
+// Positions are % of the depth-2.0 parallax layer container, which has
+// inset: -54px (bleed=54px), making it 708×630px vs the 600×522 window.
+// Formula: containerLeft = (windowLeft% × 600 + 54) / 708
+//          containerTop  = (windowTop%  × 522 + 54) / 630
+// Target window positions (where the red circles sit on the leaves):
+//  换宠物: win  9%, 38%  → ctr 16%, 37%
+//  动作:   win 20%, 27%  → ctr 26%, 29%
+//  图表:   win 37%, 18%  → ctr 40%, 23%
+//  建议:   win 53%, 23%  → ctr 53%, 28%
+//  商店:   win 68%, 27%  → ctr 66%, 31%
+//  关闭:   win 80%, 33%  → ctr 75%, 37%
 const CANOPY_ENTRIES = [
-  { key:'changePet' as const, icon:'🔄', label:'换宠物', accent:'rgba(255,255,255,0.9)', left:'14%', top:'43%', delay:0 },
-  { key:'action'   as const, icon:'🐦', label:'动作',   accent:'#7dd3fc',               left:'23%', top:'33%', delay:1 },
-  { key:'charts'   as const, icon:'📊', label:'图表',   accent:'#86efac',               left:'40%', top:'24%', delay:2 },
-  { key:'advice'   as const, icon:'💡', label:'建议',   accent:'#fde68a',               left:'56%', top:'30%', delay:3 },
-  { key:'shop'     as const, icon:'🌾', label:'商店',   accent:'#fbbf24',               left:'72%', top:'36%', delay:4 },
-  { key:'close'    as const, icon:'✕',  label:'关闭',   accent:'rgba(255,120,120,0.9)', left:'83%', top:'43%', delay:5 },
+  { key:'changePet' as const, icon:'🔄', label:'换宠物', accent:'rgba(255,255,255,0.9)', left:'16%', top:'37%', delay:0 },
+  { key:'action'   as const, icon:'🐦', label:'动作',   accent:'#7dd3fc',               left:'26%', top:'29%', delay:1 },
+  { key:'charts'   as const, icon:'📊', label:'图表',   accent:'#86efac',               left:'40%', top:'23%', delay:2 },
+  { key:'advice'   as const, icon:'💡', label:'建议',   accent:'#fde68a',               left:'53%', top:'28%', delay:3 },
+  { key:'shop'     as const, icon:'🌾', label:'商店',   accent:'#fbbf24',               left:'66%', top:'31%', delay:4 },
+  { key:'close'    as const, icon:'✕',  label:'关闭',   accent:'rgba(255,120,120,0.9)', left:'75%', top:'37%', delay:5 },
 ] as const
 
 type EntryKey = typeof CANOPY_ENTRIES[number]['key']
