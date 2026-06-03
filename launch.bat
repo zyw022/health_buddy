@@ -27,8 +27,8 @@ if not exist "node_modules\" (
   exit /b 1
 )
 
-if not exist "assetstore\treehouse\treehouseorigin.jpg" (
-  echo   [ERROR] Missing assetstore\treehouse\treehouseorigin.jpg
+if not exist "assetstore\materials\treehouse\treehouse.png" (
+  echo   [ERROR] Missing assetstore\materials\treehouse\treehouse.png
   echo.
   pause
   exit /b 1

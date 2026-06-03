@@ -77,11 +77,11 @@ New-Item -ItemType Directory -Path 'assetstore\data' -Force | Out-Null
 New-Item -ItemType Directory -Path 'assetstore\icons' -Force | Out-Null
 
 $assets = @(
-  'assetstore\treehouse\treehouseorigin.jpg',
-  'assetstore\pets\birds\gentle\usual.png',
-  'assetstore\pets\birds\gentle\chat.png',
-  'assetstore\pets\birds\gentle\tired.png',
-  'assetstore\pets\birds\gentle\prompt.png'
+  'assetstore\materials\treehouse\treehouse.png',
+  'assetstore\pets\birds\gentle\idle.png',
+  'assetstore\pets\birds\gentle\happy.png',
+  'assetstore\pets\birds\gentle\talk.png',
+  'assetstore\pets\birds\gentle\yawn.png'
 )
 $missing = $assets | Where-Object { -not (Test-Path $_) }
 if ($missing) {
