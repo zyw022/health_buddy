@@ -56,14 +56,23 @@ interface PanelProps {
 }
 
 const LINE_COLORS: Partial<Record<HotspotId, string>> = {
-  note: '#c4b5fd', clock: '#7dd3fc',
+  note:    '#c4b5fd',   // 紫 — 睡眠
+  clock:   '#7dd3fc',   // 蓝 — 久坐
+  potion:  '#fb7185',   // 红 — 心率
 }
 const BAR_COLORS: Partial<Record<HotspotId, string>> = {
-  bowl: '#67e8f9', flower: '#86efac', lamp: '#fde68a', potion: '#fca5a5',
+  bowl:    '#67e8f9',   // 青 — 饮水
+  flower:  '#86efac',   // 绿 — 步数
+  lamp:    '#fde68a',   // 金 — 活跃
+  painting:'#a78bfa',   // 紫 — 睡眠质量
 }
 
 const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
-  if (!series) return <p className="text-white/40 text-xs px-1 py-2">数据加载中…</p>
+  if (!series) return (
+    <p style={{ fontFamily:'"Press Start 2P",monospace', fontSize:5, color:'rgba(255,255,255,0.35)', padding:'6px 0' }}>
+      数据加载中…
+    </p>
+  )
   if (item.panelType === 'chart-dimensions') {
     const d = series.dimensions
     return (
@@ -75,19 +84,18 @@ const ChartPanel: React.FC<PanelProps> = ({ item, series }) => {
           { label: '过劳', value: d.burnout,   color: '#fdba74' },
           { label: '久坐', value: d.sedentary, color: '#93c5fd' },
         ]}
-        width={260} height={130}
       />
     )
   }
-  const key = item.seriesKey as keyof Omit<ChartSeriesBundle, 'dimensions'> | undefined
+  const key = item.seriesKey as keyof Omit<ChartSeriesBundle, 'dimensions' | 'generatedAt' | 'sourceDays'> | undefined
   if (!key) return null
   const s = series[key]
   if (!s || !('points' in s)) return null
   if (item.panelType === 'chart-line')
     return <LineChart title={s.title} unit={s.unit} points={s.points}
-      color={LINE_COLORS[item.id] ?? '#7dd3fc'} width={260} height={130} />
+      color={LINE_COLORS[item.id] ?? '#7dd3fc'} />
   return <BarChart title={s.title} unit={s.unit} points={s.points}
-    color={BAR_COLORS[item.id] ?? '#86efac'} width={260} height={130} />
+    color={BAR_COLORS[item.id] ?? '#86efac'} />
 }
 
 const PX = '"Press Start 2P", monospace'
@@ -443,17 +451,20 @@ const TreehouseReport: React.FC = () => {
         const d  = new Date().toISOString().split('T')[0]
         const pt = (v: number) => [{ date: d, label: d, value: v }]
         const slh = Math.round((today.raw.sleepMinutes ?? 0) / 60 * 10) / 10
+        const slq = (today.raw.sleepQuality ?? 3) * 20
         setSeries({
-          book:     { title: '睡眠时长', unit: '小时', points: pt(slh) },
-          note:     { title: '睡眠时长', unit: '小时', points: pt(slh) },
-          clock:    { title: '久坐分钟', unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
-          cup:      { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
-          bowl:     { title: '饮水杯数', unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
-          shoes:    { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
-          flower:   { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
-          lamp:     { title: '活跃时长', unit: '分钟', points: pt(today.raw.activeMinutes ?? 0) },
-          painting: { title: '睡眠质量', unit: '分',   points: pt((today.raw.sleepQuality ?? 3) * 20) },
-          potion:   { title: '心率',     unit: 'bpm',  points: pt(today.raw.heartRate ?? 0) },
+          book:         { title: '睡眠时长', unit: '小时', points: pt(slh) },
+          note:         { title: '睡眠时长', unit: '小时', points: pt(slh) },
+          clock:        { title: '久坐时长', unit: '分钟', points: pt(today.raw.sedentaryMinutes ?? 0) },
+          cup:          { title: '饮水量',   unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          bowl:         { title: '饮水量',   unit: '杯',   points: pt(today.raw.waterCups ?? 0) },
+          shoes:        { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
+          flower:       { title: '步数',     unit: '步',   points: pt(today.raw.steps ?? 0) },
+          lamp:         { title: '活跃时长', unit: '分钟', points: pt(today.raw.activeMinutes ?? 0) },
+          painting:     { title: '睡眠质量', unit: '分',   points: pt(slq) },
+          sleepQuality: { title: '睡眠质量', unit: '分',   points: pt(slq) },
+          potion:       { title: '心率',     unit: 'bpm',  points: pt(today.raw.heartRate ?? 0) },
+          screenTime:   { title: '屏幕时间', unit: '分钟', points: pt(today.raw.screenTimeMinutes ?? 0) },
           dimensions: {
             title:     '今日四维度',
             energy:    today.state.energy    ?? 0,
@@ -520,8 +531,18 @@ const TreehouseReport: React.FC = () => {
         <button
           type="button"
           onClick={() => getElectronAPI()?.openTreehouse('change-pet')}
-          className="text-white/85 hover:text-white text-[11px] font-medium tracking-wide transition-opacity"
-          style={{ background: 'transparent', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+          style={{
+            background:  'transparent',
+            border:      'none',
+            cursor:      'pointer',
+            color:       'rgba(255,255,255,0.9)',
+            fontFamily:  '"Press Start 2P", monospace',
+            fontSize:    7,
+            letterSpacing: '0.04em',
+            textShadow:  '0 1px 4px rgba(0,0,0,0.8)',
+            padding:     0,
+            lineHeight:  1,
+          }}
         >
           更换宠物
         </button>
