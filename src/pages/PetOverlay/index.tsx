@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef } from 'react'
 import { PetSprite } from '../../components/PetSprite'
 import { SpeechBubble } from '../../components/SpeechBubble'
 import { usePetStore, getElectronAPI } from '../../store/petStore'
+import { useAdviceHistoryStore } from '../../store/adviceHistoryStore'
 import { useHealthSnapshot } from '../../hooks/useHealthSnapshot'
 import { usePetBrain } from '../../hooks/usePetBrain'
 import { usePromptScheduler } from '../../features/health-prompt/promptScheduler'
@@ -14,6 +15,7 @@ const PetOverlay: React.FC = () => {
   const setBubble = usePetStore((s) => s.setBubble)
   const setAction = usePetStore((s) => s.setAction)
   const initFromFile = usePetStore((s) => s.initFromFile)
+  const pushAdvice = useAdviceHistoryStore((s) => s.push)
 
   useHealthSnapshot()
   usePetBrain()
@@ -85,7 +87,10 @@ const PetOverlay: React.FC = () => {
     const api = getElectronAPI()
     if (!api) return
 
-    api.onSpeechBubble(({ text }) => setBubble(text))
+    api.onSpeechBubble(({ text }) => {
+      setBubble(text)
+      void pushAdvice(text, 'system')
+    })
     api.onWaterRecord((cups) => {
       setBubble(cups > 0 ? `✅ 已记录 +${cups} 杯水，继续保持！` : '好的，我记录了！')
     })
@@ -106,7 +111,7 @@ const PetOverlay: React.FC = () => {
       api.removeAllListeners('add-steps')
       api.removeAllListeners('pet-config-updated')
     }
-  }, [setBubble, initFromFile, setAction])
+  }, [setBubble, initFromFile, setAction, pushAdvice])
 
   const dismissBubble = useCallback(() => setBubble(null), [setBubble])
 
