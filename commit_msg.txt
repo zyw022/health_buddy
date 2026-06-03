@@ -1,0 +1,29 @@
+﻿feat: frontend refactor - treehouse launch flow, pet selection, animations, multi-pet support
+
+P0 data layer:
+- types.ts: add cat/fox/bear to PetSpecies, add adopted field to PetConfig
+- petStore.ts: initFromFile checks adopted for isOnboarded, add setAdopted method
+- spriteConfig.ts: refactor to getSpriteConfig(species,action), map Chinese sprite filenames
+- PetSprite.tsx: add species prop, load sprites per species
+- pet-config.json: add adopted:true
+- new assetstore/pets/cat, fox, bear placeholder sprite directories
+
+P1 animation layer:
+- TreehouseShell: add pureImage/fadePhase/onFadeIn|OutComplete props
+  use new treehouse image materials/treehouse/tree.png, window 600x522
+- TreehouseEntry: 3-phase FSM fading-in->visible->fading-out
+  adopted=true: click to dismiss and spawn pet; adopted=false: navigate to pet selection
+
+P2 pet selection flow:
+- config.ts: replace SPECIES_SPOTS with SPECIES_CARDS (sparrow/cat/fox/bear 4 cards)
+- TreehousePetSelection: step 1 is now 2x2 card grid with hover glow and spring tap
+  saves adopted:true, uses fadePhase to fade out after completion
+
+P3 treehouse panel:
+- hotspots.ts: refactor to FURNITURE, bind actual furniture image paths
+- TreehouseReport: far-to-near entry animation (scale+blur), Framer Motion mouse
+  parallax (two depth layers), furniture hover float+glow
+
+Other:
+- electron/main.ts: tray menu add reset-adoption option
+- electron-css.d.ts: declare WebkitAppRegion CSS property globally

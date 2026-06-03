@@ -1,21 +1,45 @@
 import type { PetSpecies, PetGender, Personality, FeatherColor } from '../../store/types'
 
-export type SelectionPhase = 'explore' | 'appearance' | 'personality' | 'naming'
+export type SelectionPhase = 'species' | 'appearance' | 'personality' | 'naming'
 
-export interface SpeciesSpot {
-  id:    PetSpecies
-  label: string
-  emoji: string
-  /** Anchor point on treehouse image (percent) */
-  x:     number
-  y:     number
+export interface SpeciesCard {
+  id:       PetSpecies
+  label:    string
+  emoji:    string
+  desc:     string
+  /** Accent color for the card border / glow */
+  accent:   string
 }
 
-export const SPECIES_SPOTS: SpeciesSpot[] = [
-  { id: 'sparrow',   label: '麻雀',     emoji: '🐦', x: 16, y: 58 },
-  { id: 'cockatiel', label: '玄凤鹦鹉', emoji: '🦜', x: 40, y: 50 },
-  { id: 'shrike',    label: '伯劳',     emoji: '🐤', x: 62, y: 42 },
-  { id: 'swift',     label: '雨燕',     emoji: '🦅', x: 84, y: 55 },
+export const SPECIES_CARDS: SpeciesCard[] = [
+  {
+    id:     'sparrow',
+    label:  '麻雀',
+    emoji:  '🐦',
+    desc:   '活泼好动，叽叽喳喳',
+    accent: '#86efac',
+  },
+  {
+    id:     'cat',
+    label:  '猫咪',
+    emoji:  '🐱',
+    desc:   '慵懒优雅，偶尔撒娇',
+    accent: '#fda4af',
+  },
+  {
+    id:     'fox',
+    label:  '小狐狸',
+    emoji:  '🦊',
+    desc:   '机灵调皮，充满好奇',
+    accent: '#fdba74',
+  },
+  {
+    id:     'bear',
+    label:  '小熊',
+    emoji:  '🐻',
+    desc:   '憨厚温暖，最爱睡觉',
+    accent: '#c4b5fd',
+  },
 ]
 
 export const COLOR_OPTIONS: { id: FeatherColor; label: string; hex: string }[] = [
@@ -46,3 +70,10 @@ export const PERSONALITY_BUBBLE_LAYOUT: { x: number; y: number }[] = [
   { x: 18, y: 62 },
   { x: 78, y: 58 },
 ]
+
+export const PHASE_HINTS: Record<SelectionPhase, string> = {
+  species:     '选择你的宠物伙伴',
+  appearance:  '选择性别与毛色',
+  personality: '点击漂浮的性格气泡',
+  naming:      '给你的伙伴取个名字',
+}

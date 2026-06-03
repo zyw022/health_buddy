@@ -1,16 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import type { PetAction } from '../store/types'
-import { SPRITE_CONFIG } from '../engine/spriteConfig'
+import type { PetAction, PetSpecies } from '../store/types'
+import { getSpriteConfig } from '../engine/spriteConfig'
 
 interface Props {
-  action: PetAction
-  size?:  number
+  action:   PetAction
+  species?: PetSpecies
+  size?:    number
   className?: string
 }
 
 // Canvas-based sprite sheet animation component.
 // Slices the sheet horizontally: frame i starts at sx = i * (imgW / cols).
-export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' }) => {
+export const PetSprite: React.FC<Props> = ({ action, species = 'sparrow', size = 120, className = '' }) => {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const stateRef   = useRef({
     img:        null as HTMLImageElement | null,
@@ -22,9 +23,9 @@ export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' 
 
   const [loaded, setLoaded] = useState(false)
 
-  // Load / reload sprite sheet when action changes file
+  // Load / reload sprite sheet when action or species changes
   useEffect(() => {
-    const cfg = SPRITE_CONFIG[action]
+    const cfg = getSpriteConfig(species, action)
     const src = cfg.file  // served from assetstore/ via Vite publicDir
 
     if (stateRef.current.currentSrc === src && stateRef.current.img?.complete) {
@@ -47,7 +48,7 @@ export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' 
     img.onerror = () => {
       console.warn(`[PetSprite] failed to load ${src}`)
     }
-  }, [action])
+  }, [action, species])
 
   // rAF animation loop
   useEffect(() => {
@@ -64,7 +65,7 @@ export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' 
       const img = s.img
       if (!img || !img.complete || img.naturalWidth === 0) return
 
-      const cfg     = SPRITE_CONFIG[action]
+      const cfg     = getSpriteConfig(species, action)
       const frameW  = img.naturalWidth / cfg.cols
       const frameH  = img.naturalHeight
 
@@ -85,7 +86,7 @@ export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' 
     }
 
     function loop(ts: number) {
-      const cfg = SPRITE_CONFIG[action]
+      const cfg = getSpriteConfig(species, action)
       const interval = 1000 / cfg.fps
 
       if (ts - s.lastTick >= interval) {
@@ -103,7 +104,7 @@ export const PetSprite: React.FC<Props> = ({ action, size = 120, className = '' 
     return () => {
       cancelAnimationFrame(s.animId)
     }
-  }, [loaded, action])
+  }, [loaded, action, species])
 
   return (
     <div

@@ -9,6 +9,7 @@ interface PetStore {
 
   setConfig(c: PetConfig): void
   setAction(a: PetAction): void
+  setAdopted(v: boolean): void
   completeOnboarding(): void
   setBubble(text: string | null): void
   reset(): void
@@ -27,6 +28,14 @@ export const usePetStore = create<PetStore>((set, _get) => ({
 
   setConfig: (c) => set({ config: c }),
   setAction: (a) => set({ currentAction: a }),
+  setAdopted: (v) => {
+    const { config } = (usePetStore as unknown as { getState: () => PetStore }).getState()
+    if (!config) return
+    const updated = { ...config, adopted: v }
+    set({ config: updated, isOnboarded: v })
+    const api = (window as unknown as { electronAPI?: ElectronAPI }).electronAPI
+    void api?.writeData('pet-config.json', updated)
+  },
   completeOnboarding: () => set({ isOnboarded: true }),
   setBubble: (text) => set({ bubbleText: text }),
   reset: () => set({ config: null, isOnboarded: false, currentAction: 'idle', bubbleText: null }),
@@ -36,7 +45,9 @@ export const usePetStore = create<PetStore>((set, _get) => ({
       const api = (window as unknown as { electronAPI: ElectronAPI }).electronAPI
       const data = await api.readData('pet-config.json') as PetConfig | null
       if (data && data.name) {
-        set({ config: data, isOnboarded: true })
+        // adopted=false means re-run adoption flow; missing adopted on old configs = treat as adopted
+        const isAdopted = data.adopted !== false
+        set({ config: data, isOnboarded: isAdopted })
       }
     } catch {
       // No config file yet — first run

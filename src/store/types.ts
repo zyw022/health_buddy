@@ -1,6 +1,6 @@
 // ── Shared type definitions ───────────────────────────────────────────────
 
-export type PetSpecies   = 'sparrow' | 'cockatiel' | 'shrike' | 'swift'
+export type PetSpecies   = 'sparrow' | 'cockatiel' | 'shrike' | 'swift' | 'cat' | 'fox' | 'bear'
 export type PetGender    = 'male' | 'female'
 export type Personality  = 'coach' | 'friend' | 'roast' | 'healer'
 export type FeatherColor = 'yellow' | 'blue' | 'green' | 'white' | 'brown' | 'orange'
@@ -12,6 +12,8 @@ export interface PetConfig {
   gender:       PetGender
   personality:  Personality
   featherColor: FeatherColor
+  /** true = skip adoption flow on next launch; false/undefined = show adoption flow */
+  adopted?:     boolean
 }
 
 // Seven animation states driven by Pet Brain

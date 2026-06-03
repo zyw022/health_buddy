@@ -1,73 +1,99 @@
 import type { ChartPoint } from '../../components/HealthChart'
 
-export type HotspotId = 'book' | 'clock' | 'cup' | 'window' | 'shoes'
+export type HotspotId = 'clock' | 'note' | 'bowl' | 'sofa' | 'flower'
 
-export interface HotspotDef {
-  id:          HotspotId
-  label:       string
-  hint:        string
-  /** Percentage of image box (0–100) */
-  x:           number
-  y:           number
-  w:           number
-  h:           number
-  chartType:   'line' | 'bar' | 'dimensions'
-  seriesKey:   HotspotId | 'dimensions'
+export interface FurnitureDef {
+  id:        HotspotId
+  label:     string
+  hint:      string
+  /** Image path served from assetstore (Vite publicDir) */
+  src:       string
+  /** Position on treehouse canvas (percentage) */
+  x:         number
+  y:         number
+  /** Rendered size (px, square) */
+  size:      number
+  /** Parallax depth — higher = more movement on mouse */
+  depth:     number
+  chartType: 'line' | 'bar' | 'dimensions'
+  seriesKey: HotspotId | 'dimensions'
 }
 
-export const HOTSPOTS: HotspotDef[] = [
+export const FURNITURE: FurnitureDef[] = [
   {
-    id: 'book',
-    label: '桌上的书',
-    hint: '睡眠时长与质量',
-    x: 14, y: 52, w: 14, h: 12,
-    chartType: 'line',
-    seriesKey: 'book',
-  },
-  {
-    id: 'clock',
-    label: '挂钟',
-    hint: '久坐与屏幕时间',
-    x: 68, y: 18, w: 12, h: 14,
+    id:        'clock',
+    label:     '挂钟',
+    hint:      '久坐与屏幕时间',
+    src:       'materials/furniture/6-时钟.png',
+    x: 55, y: 38,
+    size:      48,
+    depth:     0.8,
     chartType: 'line',
     seriesKey: 'clock',
   },
   {
-    id: 'cup',
-    label: '茶杯',
-    hint: '每日饮水量',
-    x: 55, y: 58, w: 10, h: 12,
-    chartType: 'bar',
-    seriesKey: 'cup',
+    id:        'note',
+    label:     '便笺',
+    hint:      '睡眠时长与质量',
+    src:       'materials/furniture/7-便笺.png',
+    x: 16, y: 50,
+    size:      40,
+    depth:     1.0,
+    chartType: 'line',
+    seriesKey: 'note',
   },
   {
-    id: 'window',
-    label: '窗边的光',
-    hint: '四维度健康评分',
-    x: 32, y: 22, w: 18, h: 18,
+    id:        'bowl',
+    label:     '水池边的碗',
+    hint:      '每日饮水量',
+    src:       'materials/furniture/5-水池边的碗.png',
+    x: 88, y: 54,
+    size:      44,
+    depth:     0.9,
+    chartType: 'bar',
+    seriesKey: 'bowl',
+  },
+  {
+    id:        'sofa',
+    label:     '沙发抱枕',
+    hint:      '四维度健康评分',
+    src:       'materials/furniture/8-沙发上的抱枕.png',
+    x: 44, y: 56,
+    size:      44,
+    depth:     1.1,
     chartType: 'dimensions',
     seriesKey: 'dimensions',
   },
   {
-    id: 'shoes',
-    label: '门口的运动鞋',
-    hint: '每日步数',
-    x: 78, y: 68, w: 14, h: 12,
+    id:        'flower',
+    label:     '二楼的花',
+    hint:      '今日步数',
+    src:       'materials/furniture/1-二楼的花.png',
+    x: 83, y: 32,
+    size:      42,
+    depth:     0.7,
     chartType: 'bar',
-    seriesKey: 'shoes',
+    seriesKey: 'flower',
   },
 ]
 
 export interface ChartSeriesBundle {
   book:    { title: string; unit: string; points: ChartPoint[] }
   clock:   { title: string; unit: string; points: ChartPoint[] }
+  note:    { title: string; unit: string; points: ChartPoint[] }
   cup:     { title: string; unit: string; points: ChartPoint[] }
+  bowl:    { title: string; unit: string; points: ChartPoint[] }
   shoes:   { title: string; unit: string; points: ChartPoint[] }
+  flower:  { title: string; unit: string; points: ChartPoint[] }
   dimensions: {
-    title: string
+    title:     string
     energy:    number
     stress:    number
     burnout:   number
     sedentary: number
   }
 }
+
+// Legacy type alias kept for backward compat
+export type HotspotDef = FurnitureDef
+export const HOTSPOTS  = FURNITURE

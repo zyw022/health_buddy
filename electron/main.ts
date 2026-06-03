@@ -26,8 +26,9 @@ const DATA_DIR = isDev
 
 // ── TreehouseWindow (floating image, like pet) ────────────────────────────
 
-const TREEHOUSE_W = 520
-const TREEHOUSE_H = 347
+// Treehouse window sized to match 树屋.png aspect ratio (6395×5557 ≈ 1.15:1)
+const TREEHOUSE_W = 600
+const TREEHOUSE_H = 522
 
 function loadTreehouseWindow(win: BrowserWindow, route: TreehouseRoute = 'entry'): void {
   const query: Record<string, string> = { mode: 'treehouse' }
@@ -200,6 +201,19 @@ function createTray(): void {
         label: '更换宠物',
         click: () => {
           createTreehouseWindow('change-pet')
+        },
+      },
+      {
+        label: '重置领养状态（重新选宠）',
+        click: async () => {
+          try {
+            const filePath = path.join(DATA_DIR, 'pet-config.json')
+            const raw  = await fs.readFile(filePath, 'utf-8')
+            const data = JSON.parse(raw) as Record<string, unknown>
+            data['adopted'] = false
+            await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8')
+            createTreehouseWindow('entry')
+          } catch { /* ignore */ }
         },
       },
       { type: 'separator' },

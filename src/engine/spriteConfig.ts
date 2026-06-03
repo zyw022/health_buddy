@@ -1,15 +1,68 @@
-import type { PetAction, SpriteSheetDef } from '../store/types'
+import type { PetAction, PetSpecies, SpriteSheetDef } from '../store/types'
 
-// All 4 sprite sheets are 1536×1024 with 3 horizontal frames (512×1024 each).
-// Confirmed by pixel analysis: seam columns at x=512 and x=1024 are fully transparent in prompt.png,
-// and all images show 3 visually distinct animation frames when split at cols=3.
+// All bird sprite sheets: 6590×2209 px, 3 horizontal frames (2197×2209 each)
 
+/** File name within the species folder for each action group */
+const BIRD_ACTION_FILES: Record<PetAction, string> = {
+  idle:    '眨眼.png',
+  happy:   '散发爱心.png',
+  talk:    '提示.png',
+  yawn:    '打哈欠.png',
+  sleep:   '趴下.png',
+  worried: '轻微摇头.png',
+  stretch: '抬脚.png',
+}
+
+const BIRD_FPS: Record<PetAction, number> = {
+  idle:    8,
+  happy:   10,
+  talk:    10,
+  yawn:    6,
+  sleep:   5,
+  worried: 8,
+  stretch: 8,
+}
+
+/** Sprite folder per species (relative to assetstore public dir) */
+const SPECIES_FOLDER: Record<PetSpecies, string> = {
+  sparrow:   'pets/birds/gentle',
+  cockatiel: 'pets/birds/gentle',
+  shrike:    'pets/birds/gentle',
+  swift:     'pets/birds/gentle',
+  // New species: own folders, fall back to bird sprites until real assets are added
+  cat:       'pets/cat',
+  fox:       'pets/fox',
+  bear:      'pets/bear',
+}
+
+/** Action→file for non-bird species (English-named placeholders in their folders) */
+const NEW_SPECIES_ACTION_FILES: Record<PetAction, string> = {
+  idle:    'usual.png',
+  happy:   'usual.png',
+  talk:    'chat.png',
+  yawn:    'tired.png',
+  sleep:   'tired.png',
+  worried: 'prompt.png',
+  stretch: 'prompt.png',
+}
+
+const BIRD_SPECIES = new Set<PetSpecies>(['sparrow', 'cockatiel', 'shrike', 'swift'])
+
+export function getSpriteConfig(species: PetSpecies, action: PetAction): SpriteSheetDef {
+  const folder = SPECIES_FOLDER[species] ?? 'pets/birds/gentle'
+  const file   = BIRD_SPECIES.has(species)
+    ? BIRD_ACTION_FILES[action]
+    : NEW_SPECIES_ACTION_FILES[action]
+  return { file: `${folder}/${file}`, cols: 3, fps: BIRD_FPS[action] }
+}
+
+// Backward-compatible static export — still points at bird sprites for existing callers
 export const SPRITE_CONFIG: Record<PetAction, SpriteSheetDef> = {
-  idle:    { file: 'pets/birds/gentle/usual.png',  cols: 3, fps: 8  },
-  happy:   { file: 'pets/birds/gentle/usual.png',  cols: 3, fps: 10 },
-  talk:    { file: 'pets/birds/gentle/chat.png',   cols: 3, fps: 10 },
-  yawn:    { file: 'pets/birds/gentle/tired.png',  cols: 3, fps: 6  },
-  sleep:   { file: 'pets/birds/gentle/tired.png',  cols: 3, fps: 5  },
-  worried: { file: 'pets/birds/gentle/prompt.png', cols: 3, fps: 8  },
-  stretch: { file: 'pets/birds/gentle/prompt.png', cols: 3, fps: 8  },
+  idle:    getSpriteConfig('sparrow', 'idle'),
+  happy:   getSpriteConfig('sparrow', 'happy'),
+  talk:    getSpriteConfig('sparrow', 'talk'),
+  yawn:    getSpriteConfig('sparrow', 'yawn'),
+  sleep:   getSpriteConfig('sparrow', 'sleep'),
+  worried: getSpriteConfig('sparrow', 'worried'),
+  stretch: getSpriteConfig('sparrow', 'stretch'),
 }

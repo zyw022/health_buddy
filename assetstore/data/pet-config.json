@@ -4,5 +4,6 @@
   "species": "shrike",
   "featherColor": "blue",
   "gender": "female",
-  "personality": "coach"
+  "personality": "coach",
+  "adopted": true
 }
