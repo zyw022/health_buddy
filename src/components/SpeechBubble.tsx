@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 interface Props {
@@ -17,6 +17,19 @@ export const SpeechBubble: React.FC<Props> = ({
   duration = 4000,
   onDismiss,
 }) => {
+  // Delay visibility by two rAF frames so framer-motion has a stable layout
+  // before the entrance animation begins — prevents the 1-frame jump.
+  const [ready, setReady] = useState(false)
+  useEffect(() => {
+    if (!text) { setReady(false); return }
+    let id1: number
+    let id2: number
+    id1 = requestAnimationFrame(() => {
+      id2 = requestAnimationFrame(() => setReady(true))
+    })
+    return () => { cancelAnimationFrame(id1); cancelAnimationFrame(id2) }
+  }, [text])
+
   useEffect(() => {
     if (!text) return
     const timer = setTimeout(() => onDismiss?.(), duration)
@@ -29,12 +42,12 @@ export const SpeechBubble: React.FC<Props> = ({
 
   return (
     <AnimatePresence>
-      {text && (
+      {text && ready && (
         <motion.div
           key={text}
-          initial={{ opacity: 0, y: 12 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0  }}
-          exit={{    opacity: 0, y: 12 }}
+          exit={{    opacity: 0, y: 10 }}
           transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
           style={{ position: 'relative', display: 'inline-block' }}
           onClick={onDismiss}
