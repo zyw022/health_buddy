@@ -72,7 +72,7 @@ const PixelCorners: React.FC<{ w: number; h: number; color: string }> = ({ w, h,
 export const LineChart: React.FC<LineChartProps> = ({
   title, unit, points,
   color = '#7dd3fc',
-  width = 260, height = 130,
+  width = 224, height = 110,
 }) => {
   if (points.length === 0) return <EmptyChart title={title} unit={unit} width={width} height={height} color={color} />
 
@@ -157,7 +157,7 @@ export const LineChart: React.FC<LineChartProps> = ({
 export const BarChart: React.FC<BarChartProps> = ({
   title, unit, points,
   color = '#86efac',
-  width = 260, height = 130,
+  width = 224, height = 110,
 }) => {
   if (points.length === 0) return <EmptyChart title={title} unit={unit} width={width} height={height} color={color} />
 
@@ -209,7 +209,7 @@ export const BarChart: React.FC<BarChartProps> = ({
 
 export const DimensionChart: React.FC<DimensionChartProps> = ({
   title, dims,
-  width = 260, height = 140,
+  width = 224, height = 120,
 }) => {
   const innerW = width  - PAD.left - PAD.right - 20
   const rowH   = (height - PAD.top - PAD.bottom) / dims.length
