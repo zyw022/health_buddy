@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import { PetSprite } from '../../components/PetSprite'
 import { SpeechBubble } from '../../components/SpeechBubble'
@@ -486,8 +487,10 @@ const PetOverlay: React.FC = () => {
       className="w-full h-full flex flex-col items-center justify-end"
       style={{ background: 'transparent' }}
     >
+      {/* Interactive zone — FIXED width = pet size so the bubble's centering
+          reference never changes (canvas sizing can't move it). */}
       <div
-        style={{ position: 'relative', display: 'inline-block' }}
+        style={{ position: 'relative', width: 110 }}
         onMouseEnter={onInteractiveEnter}
         onMouseLeave={onInteractiveLeave}
       >
@@ -504,12 +507,13 @@ const PetOverlay: React.FC = () => {
           )}
         </AnimatePresence>
 
-        {/* Speech bubble */}
+        {/* Speech bubble — centred deterministically: parent is 110px, bubble is
+            200px, so left = (110-200)/2 = -45px. Fixed pixels mean it is in the
+            correct place on the very first paint (no measured-width dependence). */}
         <div style={{
           position:      'absolute',
           bottom:        '100%',
-          left:          '50%',
-          transform:     'translateX(-50%)',
+          left:          -45,
           paddingBottom: 4,
           width:         200,
           display:       'flex',
@@ -524,7 +528,7 @@ const PetOverlay: React.FC = () => {
 
         <div
           className="cursor-grab active:cursor-grabbing select-none"
-          style={{ marginBottom: 8 }}
+          style={{ marginBottom: 8, display: 'flex', justifyContent: 'center' }}
           onMouseDown={onMouseDown}
           onClick={onPetClick}
           onDoubleClick={onPetDoubleClick}
