@@ -32,12 +32,11 @@ export const SpeechBubble: React.FC<Props> = ({
       {text && (
         <motion.div
           key={text}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1,   opacity: 1 }}
-          exit={{    scale: 0.5, opacity: 0 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-          // originY=100% → scale from the bottom (where the tail is)
-          style={{ originX: '50%', originY: '100%', position: 'relative', display: 'inline-block' }}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0  }}
+          exit={{    opacity: 0, y: 12 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          style={{ position: 'relative', display: 'inline-block' }}
           onClick={onDismiss}
         >
           {/* ── Bubble body — pixel double-border ── */}
