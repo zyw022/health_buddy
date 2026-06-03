@@ -1,5 +1,5 @@
-import React from 'react'
-import { motion } from 'framer-motion'
+import React, { useCallback, useRef } from 'react'
+import { motion, useMotionValue, useSpring, type MotionValue } from 'framer-motion'
 import { getElectronAPI } from '../store/petStore'
 
 export type FadePhase = 'in' | 'visible' | 'out'
@@ -23,20 +23,28 @@ const FADE_DURATION: Record<FadePhase, number> = {
   out:     0.9,
 }
 
-// ── Floating bubble — transparent glass style ────────────────────────────────
-// Gentle bob animation: each bubble floats at different phase so they feel alive
+// Background parallax layers — ordered back to front.
+// depth: how much this layer moves relative to mouse (higher = more movement = closer to viewer)
+const BG_LAYERS = [
+  { src: 'materials/background/01-sky.png',       depth: 0.4 },
+  { src: 'materials/background/02-mountain.png',  depth: 0.7 },
+  { src: 'materials/background/03-forest.png',    depth: 1.0 },
+  { src: 'materials/background/04-littletree.png',depth: 1.3 },
+  { src: 'materials/background/05-bottom.png',    depth: 1.5 },
+  { src: 'materials/background/06-grass.png',     depth: 1.7 },
+  { src: 'materials/background/07-foretree.png',  depth: 2.0 },
+]
 
-const float = (delay: number) => ({
-  animate: { y: [0, -6, 0] },
-  transition: {
-    duration: 2.8,
-    repeat: Infinity,
-    ease: 'easeInOut' as const,
-    delay,
+// Max pixel shift at deepest layer when mouse is at window edge
+const MAX_SHIFT_PX = 18
+
+// Floating bob for buttons
+const floatVariants = (delay: number) => ({
+  animate: {
+    y: [0, -6, 0],
+    transition: { duration: 2.8, repeat: Infinity, ease: 'easeInOut' as const, delay },
   },
 })
-
-// ── Main component ───────────────────────────────────────────────────────────
 
 export const TreehouseShell: React.FC<Props> = ({
   children,
@@ -56,8 +64,32 @@ export const TreehouseShell: React.FC<Props> = ({
   const duration      = FADE_DURATION[fadePhase]
   const ease          = fadePhase === 'out' ? 'easeIn' : 'easeOut'
 
+  // Mouse position normalised to –1…+1 relative to window center
+  const rawX = useMotionValue(0)
+  const rawY = useMotionValue(0)
+  const springX = useSpring(rawX, { stiffness: 60, damping: 18 })
+  const springY = useSpring(rawY, { stiffness: 60, damping: 18 })
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const el = containerRef.current
+    if (!el) return
+    const { left, top, width, height } = el.getBoundingClientRect()
+    const nx = ((e.clientX - left) / width  - 0.5) * 2   // –1 … +1
+    const ny = ((e.clientY - top)  / height - 0.5) * 2
+    rawX.set(nx)
+    rawY.set(ny)
+  }, [rawX, rawY])
+
+  const handleMouseLeave = useCallback(() => {
+    rawX.set(0)
+    rawY.set(0)
+  }, [rawX, rawY])
+
   return (
     <motion.div
+      ref={containerRef}
       className="w-full h-full relative overflow-hidden"
       style={{
         background: 'transparent',
@@ -70,36 +102,54 @@ export const TreehouseShell: React.FC<Props> = ({
         if (fadePhase === 'in')  onFadeInComplete?.()
         if (fadePhase === 'out') onFadeOutComplete?.()
       }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
-      {/* Treehouse image */}
-      <img
-        src="materials/treehouse/treehouse.png"
-        alt="树屋"
-        draggable={false}
-        className="absolute inset-0 w-full h-full object-contain pointer-events-none select-none"
-        style={{ opacity: imageOpacity }}
-      />
+      {/* ── Background parallax layers ───────────────────────────────── */}
+      {BG_LAYERS.map((layer) => (
+        <ParallaxLayer
+          key={layer.src}
+          springX={springX}
+          springY={springY}
+          depth={layer.depth}
+          bleed={MAX_SHIFT_PX * layer.depth * 1.5}
+        >
+          <img
+            src={layer.src}
+            alt=""
+            draggable={false}
+            className="w-full h-full object-cover"
+            style={{ opacity: imageOpacity }}
+          />
+        </ParallaxLayer>
+      ))}
 
-      {/* ── Floating bubble controls ── */}
+      {/* ── Treehouse image — sits on top of bg, same depth as front layer ── */}
+      <ParallaxLayer springX={springX} springY={springY} depth={2.0} bleed={MAX_SHIFT_PX * 2.0 * 1.5}>
+        <img
+          src="materials/treehouse/treehouse.png"
+          alt="树屋"
+          draggable={false}
+          className="w-full h-full object-contain pointer-events-none select-none"
+          style={{ opacity: imageOpacity }}
+        />
+      </ParallaxLayer>
+
+      {/* ── Floating bubble controls ────────────────────────────────── */}
       {!pureImage && (
         <div
           className="absolute inset-0 z-50"
           style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }}
         >
-          {/* ── Left bubble: action slot (更换宠物) ──────────────────────
-              Position: ~43% from left, ~22% from top — left canopy bright spot */}
+          {/* Left bubble: actions slot */}
           {actions && (
             <motion.div
-              {...float(0)}
+              variants={floatVariants(0)}
+              animate="animate"
               className="absolute"
-              style={{
-                left: '38%',
-                top:  '18%',
-                pointerEvents: 'auto',
-              }}
+              style={{ left: '38%', top: '18%', pointerEvents: 'auto' }}
             >
               <div className="relative flex flex-col items-center">
-                {/* Bubble body */}
                 <div
                   className="flex items-center justify-center px-3 h-8 rounded-full"
                   style={{
@@ -112,36 +162,23 @@ export const TreehouseShell: React.FC<Props> = ({
                 >
                   {actions}
                 </div>
-                {/* Tail */}
-                <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
-                  <path d="M5 7 L0 0 L10 0 Z"
-                    fill="rgba(255,255,255,0.12)"
-                    stroke="rgba(255,255,255,0.30)"
-                    strokeWidth="1"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <BubbleTail />
               </div>
             </motion.div>
           )}
 
-          {/* ── Right bubble: close × ────────────────────────────────────
-              Position: ~75% from left, ~14% from top — right canopy branch */}
+          {/* Right bubble: close × */}
           <motion.div
-            {...float(0.9)}
+            variants={floatVariants(0.9)}
+            animate="animate"
             className="absolute"
-            style={{
-              left: '72%',
-              top:  '12%',
-              pointerEvents: 'auto',
-            }}
+            style={{ left: '72%', top: '12%', pointerEvents: 'auto' }}
           >
             <div className="relative flex flex-col items-center">
-              {/* Bubble body */}
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex items-center justify-center w-8 h-8 rounded-full transition-all"
+                className="flex items-center justify-center w-8 h-8 rounded-full transition-all group"
                 style={{
                   background:    'rgba(255,255,255,0.12)',
                   border:        '1.5px solid rgba(255,255,255,0.35)',
@@ -151,12 +188,14 @@ export const TreehouseShell: React.FC<Props> = ({
                   WebkitAppRegion: 'no-drag',
                 }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,80,80,0.35)'
-                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,120,120,0.6)'
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.background  = 'rgba(255,80,80,0.35)'
+                  b.style.borderColor = 'rgba(255,120,120,0.6)'
                 }}
                 onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.12)'
-                  ;(e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.35)'
+                  const b = e.currentTarget as HTMLButtonElement
+                  b.style.background  = 'rgba(255,255,255,0.12)'
+                  b.style.borderColor = 'rgba(255,255,255,0.35)'
                 }}
                 title="关闭树屋"
               >
@@ -165,29 +204,17 @@ export const TreehouseShell: React.FC<Props> = ({
                   <line x1="10" y1="2" x2="2" y2="10" stroke="rgba(255,255,255,0.85)" strokeWidth="1.8" strokeLinecap="round" />
                 </svg>
               </button>
-              {/* Tail */}
-              <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
-                <path d="M5 7 L0 0 L10 0 Z"
-                  fill="rgba(255,255,255,0.12)"
-                  stroke="rgba(255,255,255,0.30)"
-                  strokeWidth="1"
-                  strokeLinejoin="round"
-                />
-              </svg>
+              <BubbleTail />
             </div>
           </motion.div>
         </div>
       )}
 
-      {/* Title / subtitle — pixel label, faint, bottom-left of canopy */}
+      {/* Title / subtitle */}
       {!pureImage && (title || subtitle) && (
         <div
           className="absolute z-40 pointer-events-none select-none"
-          style={{
-            top:   '28%',
-            right: '5%',
-            WebkitAppRegion: 'no-drag',
-          }}
+          style={{ top: '28%', right: '5%', WebkitAppRegion: 'no-drag' }}
         >
           {title && (
             <p className="text-right text-white/70 text-[11px] font-semibold leading-tight"
@@ -226,4 +253,57 @@ export const TreehouseShell: React.FC<Props> = ({
       )}
     </motion.div>
   )
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Bubble tail SVG */
+const BubbleTail: React.FC = () => (
+  <svg width={10} height={7} viewBox="0 0 10 7" style={{ display: 'block', marginTop: -1 }}>
+    <path d="M5 7 L0 0 L10 0 Z"
+      fill="rgba(255,255,255,0.12)"
+      stroke="rgba(255,255,255,0.30)"
+      strokeWidth="1"
+      strokeLinejoin="round"
+    />
+  </svg>
+)
+
+/** Wraps a child in a parallax-shifted absolute layer */
+const ParallaxLayer: React.FC<{
+  children: React.ReactNode
+  springX:  ReturnType<typeof useSpring>
+  springY:  ReturnType<typeof useSpring>
+  depth:    number
+  bleed:    number
+}> = ({ children, springX, springY, depth, bleed }) => {
+  const tx = useSpringLayerX(springX, depth)
+  const ty = useSpringLayerY(springY, depth)
+  return (
+    <motion.div
+      className="absolute pointer-events-none select-none"
+      style={{ inset: `-${bleed}px`, x: tx, y: ty }}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+/** Compute per-layer translated x from spring mouse value */
+function useSpringLayerX(
+  springX: MotionValue<number>,
+  depth: number,
+): MotionValue<number> {
+  const derived = useMotionValue(0)
+  springX.on('change', (v) => derived.set(-v * depth * MAX_SHIFT_PX))
+  return derived
+}
+
+function useSpringLayerY(
+  springY: MotionValue<number>,
+  depth: number,
+): MotionValue<number> {
+  const derived = useMotionValue(0)
+  springY.on('change', (v) => derived.set(-v * depth * MAX_SHIFT_PX * 0.6))
+  return derived
 }
