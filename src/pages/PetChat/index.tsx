@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { motion } from 'framer-motion'
 import { usePetStore, getElectronAPI } from '../../store/petStore'
 import { getChatReply } from '../../engine/chatReplies'
-import { PetSprite } from '../../components/PetSprite'
 import type { Personality } from '../../store/types'
 
 const PXF = '"Press Start 2P", monospace'
@@ -134,59 +132,33 @@ const PetChat: React.FC = () => {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() }
   }
 
-  const currentAction = usePetStore((s) => s.currentAction)
-  const species = config?.species ?? 'sparrow'
-
   return (
     <div style={{
       width: '100vw', height: '100vh',
       display: 'flex', flexDirection: 'column',
-      background: 'transparent',
+      background: '#060814',
+      outline: '2px solid rgba(125,211,252,0.6)',
+      outlineOffset: -2,
+      boxShadow: 'inset 0 0 0 1px #000',
       overflow: 'hidden',
     }}>
-
-      {/* ── Bird sprite — floats above the chat box, transparent area ── */}
-      <div style={{
-        height: 90, flexShrink: 0,
-        display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-        paddingBottom: 4,
-        background: 'transparent',
-        WebkitAppRegion: 'drag',
-        pointerEvents: 'auto',
-      }}>
-        <motion.div
-          animate={{ y: [0, -6, 0] }}
-          transition={{ duration: 2.6, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ WebkitAppRegion: 'no-drag', pointerEvents: 'none' }}
-        >
-          <PetSprite action={currentAction} species={species} size={72} />
-        </motion.div>
-      </div>
-
-      {/* ── Chat box ── */}
-      <div style={{
-        flex: 1, display: 'flex', flexDirection: 'column',
-        background: '#060814',
-        outline: '2px solid rgba(125,211,252,0.6)',
-        outlineOffset: -2,
-        boxShadow: 'inset 0 0 0 1px #000',
-        overflow: 'hidden',
-        position: 'relative',
-      }}>
       {/* Corner accents */}
-      <span style={{ position:'absolute', top:2, left:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
-      <span style={{ position:'absolute', top:2, right:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
-      <span style={{ position:'absolute', bottom:2, left:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
-      <span style={{ position:'absolute', bottom:2, right:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
+      <span style={{ position:'fixed', top:2, left:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
+      <span style={{ position:'fixed', top:2, right:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
+      <span style={{ position:'fixed', bottom:2, left:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
+      <span style={{ position:'fixed', bottom:2, right:2, width:5, height:5, background:'rgba(125,211,252,0.8)', zIndex:2 }}/>
 
-      {/* Header */}
+      {/* Header — draggable title bar */}
       <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between',
-        padding:'9px 12px 8px', borderBottom:'2px solid rgba(125,211,252,0.2)', flexShrink:0 }}>
-        <span style={{ fontFamily:PXF, fontSize:9, color:'#7dd3fc', textShadow:'0 0 6px #7dd3fc66' }}>
+        padding:'9px 12px 8px', borderBottom:'2px solid rgba(125,211,252,0.2)', flexShrink:0,
+        WebkitAppRegion: 'drag', cursor: 'move' }}>
+        <span style={{ fontFamily:PXF, fontSize:9, color:'#7dd3fc', textShadow:'0 0 6px #7dd3fc66',
+          pointerEvents:'none', userSelect:'none' }}>
           💬 和{petName}聊天
         </span>
         <button onClick={close} style={{ fontFamily:PXF, fontSize:9, color:'rgba(125,211,252,0.85)',
-          background:'transparent', border:'none', cursor:'pointer', lineHeight:1, padding:'0 2px' }}>✕</button>
+          background:'transparent', border:'none', cursor:'pointer', lineHeight:1, padding:'0 2px',
+          WebkitAppRegion: 'no-drag' }}>✕</button>
       </div>
 
       {/* Messages */}
@@ -234,8 +206,6 @@ const PetChat: React.FC = () => {
           }}
         >发送</button>
       </div>
-
-      </div>{/* end chat box */}
     </div>
   )
 }
