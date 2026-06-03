@@ -19,11 +19,19 @@ export const SpeechBubble: React.FC<Props> = ({
 }) => {
   // Delay visibility by two rAF frames so framer-motion has a stable layout
   // before the entrance animation begins — prevents the 1-frame jump.
-  const [ready, setReady] = useState(false)
+  // Two-phase render: first frame invisible (layout stabilises), second frame visible.
+  // This prevents the "jump from wrong position" that happens when transform:translateX(-50%)
+  // is calculated before the parent has its final width.
+  const [visible, setVisible] = useState(false)
   useEffect(() => {
-    if (!text) { setReady(false); return }
-    const t = setTimeout(() => setReady(true), 150)
-    return () => clearTimeout(t)
+    if (!text) { setVisible(false); return }
+    // Phase 1: mount with visibility:hidden so layout settles
+    setVisible(false)
+    const t = requestAnimationFrame(() => {
+      // Phase 2: after one paint cycle, make it visible and start animation
+      setVisible(true)
+    })
+    return () => cancelAnimationFrame(t)
   }, [text])
 
   useEffect(() => {
@@ -38,14 +46,14 @@ export const SpeechBubble: React.FC<Props> = ({
 
   return (
     <AnimatePresence>
-      {text && ready && (
+      {text && (
         <motion.div
           key={text}
           initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0  }}
+          animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : 10 }}
           exit={{    opacity: 0, y: 10 }}
           transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-          style={{ position: 'relative', display: 'inline-block' }}
+          style={{ position: 'relative', display: 'inline-block', visibility: visible ? 'visible' : 'hidden' }}
           onClick={onDismiss}
         >
           {/* ── Bubble body — pixel double-border ── */}
